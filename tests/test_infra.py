@@ -243,3 +243,10 @@ def test_the_lxd_test_acts_only_on_apply_containers():
     lib = (INFRA / "lib.sh").read_text()
     assert '[[ $1 == apply-* ]] || die' in lib
     assert 'name="apply-app-' in (INFRA / "test.sh").read_text()
+
+
+def test_the_site_never_turns_on_http2():
+    # droplet-infra #9: 1.24.0's HTTP/2 RCEs are why the host keeps HTTP/2 off on every site.
+    # Turning it on is a decision for its own PR, after the host's Nginx is patched.
+    site = (ROLE / "files" / "apply.seandesmet.com").read_text()
+    assert not re.search(r"\bhttp2\b", site)

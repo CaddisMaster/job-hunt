@@ -88,6 +88,17 @@ echo "ok: refused, named the certificate"
 
 stand_in_certificate "$name"
 
+# --- #19: the first check, before anything of the app layer exists ------------
+step "check mode on a host without the app layer (must not fail)"
+play app.yml --check --diff | tee "$tmp/first-check.log" || true
+grep -qE "^$name +: ok=[0-9]+ +changed=[1-9][0-9]* +unreachable=0 +failed=0" "$tmp/first-check.log" \
+  || die "the first check mode failed, or reported nothing to change; see the recap above"
+grep -q 'TASK \[job_hunt_app : The apply site is enabled\]' "$tmp/first-check.log" || die "the first check skipped the site link"
+grep -q 'apply-backup.timer would be enabled and started' "$tmp/first-check.log" || die "the first check didn't report the timer"
+ct test ! -e /etc/nginx/sites-enabled/apply.seandesmet.com || die "check mode created the site link"
+ct test ! -e /etc/systemd/system/apply-backup.timer || die "check mode installed the timer"
+echo "ok: the first check reports changes and fails nothing"
+
 # --- first full run, then nothing to do ---------------------------------------
 step "first run"
 play app.yml
