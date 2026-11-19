@@ -9,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app import admin, invites
+from app.config import get_settings
 from app.db import get_db
 from app.flash import flash
 from app.models import User
@@ -19,7 +20,14 @@ router = APIRouter(prefix="/admin")
 
 
 def _page(request: Request, db: Session, me: User, *, status: int = 200, **extra) -> HTMLResponse:
-    context = {"user": me, "accounts": admin.accounts(db), "pending": invites.pending(db), **extra}
+    context = {
+        "user": me,
+        "accounts": admin.accounts(db),
+        "pending": invites.pending(db),
+        "spend": admin.month_spend(db),
+        "user_budget_cents": get_settings().ai_monthly_budget_cents_per_user,
+        **extra,
+    }
     return templates.TemplateResponse(request, "admin.html", context, status_code=status)
 
 

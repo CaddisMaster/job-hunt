@@ -37,6 +37,8 @@ app/models.py        ORM models
 app/security.py      argon2 passwords, sessions (require_user, require_admin), CSRF, CSP + security headers
 app/rate_limit.py    the Postgres-backed fixed-window limiter (login)
 app/invites.py       one-time set-password links (invite, and reset a forgotten password)
+app/ai.py            every Claude call's seam: models, prices, AIUnavailable and its page messages
+app/spend.py         the AI spend ledger and the two monthly caps (per user, and the key's); spend.run() makes every call
 app/admin.py         the admin panel's queries — accounts only, never anyone's private data
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
