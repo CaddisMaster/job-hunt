@@ -1,0 +1,16 @@
+"""The shared Jinja environment. Every template gets `request`, from which it
+reads the CSP nonce (request.state.csp_nonce)."""
+
+from pathlib import Path
+
+from fastapi.templating import Jinja2Templates
+
+from app.config import get_settings
+from app.flash import pop_flash
+from app.static_files import static_url
+
+templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
+templates.env.auto_reload = get_settings().templates_auto_reload
+templates.env.globals["pop_flash"] = pop_flash
+templates.env.globals["app_version"] = get_settings().app_version
+templates.env.globals["static_url"] = static_url

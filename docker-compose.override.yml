@@ -1,0 +1,26 @@
+# Local development overrides. Compose reads this automatically; it is NOT
+# present on the droplet.
+services:
+  db:
+    # Dev only, for a database client. 5432, 5434 and 5435 are the other apps'
+    # dev databases. Production's db stays unpublished.
+    ports:
+      - "127.0.0.1:5436:5432"
+  web:
+    build:
+      context: .
+      target: dev
+    image: ""
+    # ./test.sh runs pytest-xdist workers inside this container.
+    mem_limit: 2g
+    pids_limit: 1000
+    tmpfs: !override
+      - /tmp:exec
+    volumes:
+      - .:/app
+      - /app/.venv
+      - /app/.ruff_cache
+      - /app/.pytest_cache
+    environment:
+      TEMPLATES_AUTO_RELOAD: "1"
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "app"]

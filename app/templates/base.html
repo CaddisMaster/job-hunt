@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  {# htmx injects an inline <style> unless told not to; style-src 'self' would block it. #}
+  <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
+  <title>{% block title %}Job Hunt{% endblock %}</title>
+  <link rel="stylesheet" href="{{ static_url('css/style.css') }}">
+  <script src="{{ static_url('htmx.min.js') }}" defer></script>
+  {% block scripts %}{% endblock %}
+</head>
+<body {% block body_attrs %}{% endblock %}>
+  <header class="topbar">
+    <a class="brand" href="/">Job Hunt</a>
+    {% block nav %}{% endblock %}
+  </header>
+  <main class="container">
+    {% set flash_message = pop_flash(request) %}
+    {% if flash_message %}<p class="flash" role="status">{{ flash_message }}</p>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer class="footer muted">{% block footer %}{% endblock %}{% if app_version != 'dev' %}v{% endif %}{{ app_version }}</footer>
+</body>
+</html>

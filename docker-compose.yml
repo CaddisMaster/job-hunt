@@ -1,0 +1,78 @@
+# Job Hunt is the third tenant on the shared droplet. Ports in use on the host:
+#   budget-buddy web 127.0.0.1:5001, orbit-ops web 127.0.0.1:5002
+#   job-hunt     web 127.0.0.1:5004, db: NOT PUBLISHED (dev: 127.0.0.1:5436,
+#   from docker-compose.override.yml)
+# Docker port publishing bypasses ufw, so every published port is bound to
+# 127.0.0.1 and host Nginx is the only public entry point.
+#
+# `worker` (0.3) and `applier` (0.6) join this file in their milestones.
+services:
+  db:
+    # Pinned by patch tag and digest: a bare `postgres:16` lets any pull change
+    # the database under a running release. ci.yml uses the same reference
+    # (tests/test_repo_hardening.py).
+    image: postgres:16.15@sha256:9e2cf6287f25c3151f4c9421ccce2b17f3e60061c111a29165e0d2cdd9ff0a97
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    # Sized for a 2 GB droplet running three apps.
+    command: ["postgres", "-c", "shared_buffers=64MB", "-c", "max_connections=20",
+              "-c", "work_mem=4MB", "-c", "maintenance_work_mem=32MB"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # No `ports:` at all: nothing outside this compose network needs Postgres.
+    mem_limit: 256m
+    # no-new-privileges, but NOT cap_drop: [ALL]: the entrypoint starts as root
+    # and needs CHOWN, SETUID, SETGID, FOWNER and DAC_OVERRIDE to drop to postgres.
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -q -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  web:
+    # ⚠️ No default TAG on purpose (Budget Buddy #190): a stale local `latest`
+    # once rolled production back three releases silently.
+    image: ghcr.io/caddismaster/job-hunt:${TAG:?TAG is not set — pass TAG=<version>}
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+    ports:
+      - "127.0.0.1:5004:8000"
+    mem_limit: 256m
+    # Locked down: nothing writes to disk at runtime, so the root filesystem is
+    # read-only and /tmp is the only writable place.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5).status == 200 else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  postgres_data:

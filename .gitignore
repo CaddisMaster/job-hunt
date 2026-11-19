@@ -1,0 +1,32 @@
+# Secrets — never commit. .env.example is the tracked template.
+.env
+*.env
+.env.bak*
+
+# Local-only Claude Code context (host names, vault paths).
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+
+# pg_dump output. Never commit: from 0.2 it holds other people's resumes.
+backups/
+*.dump
+*.sql.gz
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# Editors and macOS
+.vscode/
+.idea/
+.DS_Store
+
+# Ansible: the real inventory holds the droplet's address.
+infra/ansible/inventory.yml
+infra/ansible/collections/
+infra/ansible/vendor/
