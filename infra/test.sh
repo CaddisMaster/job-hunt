@@ -55,11 +55,12 @@ tail -3 "$tmp/host.log"
 unmanaged='ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIApplyTestUnmanagedKeyxxxxxxxxxxxxxxxxxxxxxxxxx another-tenant'
 ct sh -c "echo '$unmanaged' >> /home/deploy/.ssh/authorized_keys"
 
-# --- refusals: .env, then the certificate ------------------------------------
+# --- refusals: the key, .env, then the certificate ------------------------------------
 step "no deploy key: the run must fail and say so"
 if ansible-playbook -i "$tmp/inventory.yml" app.yml >"$tmp/no-key.log" 2>&1; then die "the run passed with no deploy key"; fi
 grep -q 'job_hunt_deploy_key is not set' "$tmp/no-key.log" || { cat "$tmp/no-key.log"; die "the failure doesn't name the key"; }
-echo "ok: refused without Job Hunt's own deploy key"
+ct test ! -e /opt/apply || die "the role changed the host before refusing for a missing key"
+echo "ok: refused without Job Hunt's own deploy key, changed nothing"
 
 step "no .env: the run must fail and name the file"
 if play app.yml >"$tmp/no-env.log" 2>&1; then die "the run passed with no .env"; fi

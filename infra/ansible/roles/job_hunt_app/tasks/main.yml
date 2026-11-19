@@ -4,6 +4,14 @@
 #     and only checked here; compose and backup_db.sh arrive with each release.
 #   - request a certificate, or touch another app's Nginx site.
 
+# A variable, checked before anything changes on the host.
+- name: The deploy key is set
+  ansible.builtin.assert:
+    that: job_hunt_deploy_key is match('^ssh-ed25519 \\S+ github-actions job-hunt deploy$')
+    fail_msg: >-
+      job_hunt_deploy_key is not set to Job Hunt's own deploy key (RUNBOOK §4).
+    quiet: true
+
 - name: The host layer is there
   ansible.builtin.getent:
     database: passwd
@@ -45,13 +53,6 @@
       {{ job_hunt_dir }}/.env must exist as a regular file, mode 600,
       {{ job_hunt_user }}:{{ job_hunt_user }}. This role never writes it:
       restore it from its recovery copy (RUNBOOK §3), then run again.
-    quiet: true
-
-- name: The deploy key is set
-  ansible.builtin.assert:
-    that: job_hunt_deploy_key is match('^ssh-ed25519 \\S+ github-actions job-hunt deploy$')
-    fail_msg: >-
-      job_hunt_deploy_key is not set to Job Hunt's own deploy key (RUNBOOK §4).
     quiet: true
 
 - name: Job Hunt's deploy key
