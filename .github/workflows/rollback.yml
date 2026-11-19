@@ -81,9 +81,19 @@ jobs:
                printf 'TAG=%s\n' '${VERSION}' >> .env.tmp
                mv .env.tmp .env
                docker compose pull web
-               docker compose up -d --no-deps --remove-orphans web
-               RUNNING=\"\$(docker compose exec -T web printenv APP_VERSION | tr -d '\r')\"
-               [ \"\$RUNNING\" = '${VERSION}' ] || { echo \"::error::Asked for ${VERSION}, running '\$RUNNING'\"; exit 1; }
+               # A version from before the worker (0.3) has no worker service:
+               # --remove-orphans stops a running one, and only web is named.
+               if docker compose config --services | grep -qx worker; then
+                 docker compose up -d --no-deps --remove-orphans web worker
+                 SERVICES='web worker'
+               else
+                 docker compose up -d --no-deps --remove-orphans web
+                 SERVICES=web
+               fi
+               for SERVICE in \$SERVICES; do
+                 RUNNING=\"\$(docker compose exec -T \$SERVICE printenv APP_VERSION | tr -d '\r')\"
+                 [ \"\$RUNNING\" = '${VERSION}' ] || { echo \"::error::Asked for ${VERSION}, \$SERVICE is running '\$RUNNING'\"; exit 1; }
+               done
                docker compose ps"
       - name: Verify the rolled-back app is healthy
         run: |

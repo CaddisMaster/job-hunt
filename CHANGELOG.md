@@ -6,6 +6,14 @@ and why it matters, not what the diff says.
 
 ## [Unreleased]
 
+### Added
+- A `worker` service (#41) that runs scheduled jobs outside the web app: it's where the nightly
+  search for postings will run from 0.3. Each job runs once a day at its time in New York time; if
+  the server was down for a few nights, it runs once when it's back, not once per missed night,
+  and two workers can never run the same job at once. A job that fails is recorded and logged, and
+  the others still run. The admin page lists each job with its last run and how it went. The first
+  job is housekeeping, which keeps 90 days of that history.
+
 ## [0.2.0] - 2026-11-19
 
 The profile milestone: upload your resume, get a profile built from it that you check and

@@ -5,7 +5,7 @@
 # Docker port publishing bypasses ufw, so every published port is bound to
 # 127.0.0.1 and host Nginx is the only public entry point.
 #
-# `worker` (0.3) and `applier` (0.6) join this file in their milestones.
+# `worker` runs the scheduled jobs (0.3); `applier` joins in 0.6.
 services:
   db:
     # Pinned by patch tag and digest: a bare `postgres:16` lets any pull change
@@ -66,6 +66,38 @@ services:
       timeout: 10s
       retries: 3
       start_period: 20s
+    depends_on:
+      db:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  worker:
+    # #41 — the scheduled jobs (app/worker.py), in their own process. The SAME
+    # image and tag as web: release.yml's `pull web` fetches it for both, and its
+    # version check asks both. Migrations run before either is swapped.
+    image: ghcr.io/caddismaster/job-hunt:${TAG:?TAG is not set — pass TAG=<version>}
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+    command: ["python", "-m", "app.worker"]
+    # No ports: nothing connects to it. Measure with `docker stats` after the
+    # first deploy; the droplet is 2 GB until 0.6.
+    mem_limit: 192m
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 100
+    # No healthcheck (Budget Buddy #498's reasoning): the loop is the main
+    # process, so if it dies the container exits and `restart: always` brings it
+    # back. A hung worker shows as a stale last run on /admin.
     depends_on:
       db:
         condition: service_healthy

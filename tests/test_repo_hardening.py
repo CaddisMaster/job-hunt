@@ -90,12 +90,16 @@ def test_every_service_caps_its_logs_and_its_memory():
         assert service.get("mem_limit"), f"{name} has no memory limit (the droplet is shared)"
 
 
-def test_the_web_service_is_locked_down():
-    web = _services()["web"]
-    assert web["read_only"] is True
-    assert web["tmpfs"] == ["/tmp"]
-    assert web["cap_drop"] == ["ALL"]
-    assert "no-new-privileges:true" in web["security_opt"]
+@pytest.mark.parametrize("name", ["web", "worker"])
+def test_the_app_services_are_locked_down(name):
+    service = _services()[name]
+    assert service["read_only"] is True
+    assert service["tmpfs"] == ["/tmp"]
+    assert service["cap_drop"] == ["ALL"]
+    assert "no-new-privileges:true" in service["security_opt"]
+    assert service["pids_limit"] == _services()["web"]["pids_limit"]
+    assert "${TAG:?" in service["image"]
+    assert name == "web" or "ports" not in service
     dev = _dev_web()
     assert "read_only" not in dev and "cap_drop" not in dev and "security_opt" not in dev and "cap_add" not in dev
 
@@ -162,5 +166,9 @@ def test_the_release_smoke_test_runs_the_image_locked_down():
     runs = {step.get("name"): step.get("run", "") for step in smoke}
     lockdown = re.search(r'LOCKDOWN=([^"]+)"', runs["Write the smoke env"]).group(1).split()
     assert ("--pids-limit", str(_services()["web"]["pids_limit"])) in set(zip(lockdown, lockdown[1:], strict=False))
-    for name in ("Migrations apply from the pushed image", "Run the pushed image"):
+    for name in (
+        "Migrations apply from the pushed image",
+        "The pushed image's worker runs what is due and exits cleanly",
+        "Run the pushed image",
+    ):
         assert "$LOCKDOWN" in runs[name]

@@ -18,7 +18,12 @@ longer original of most of this.
 
 Every published port is bound to `127.0.0.1`: Docker's port publishing bypasses ufw.
 
-**Memory.** The droplet has 2 GB (`s-1vcpu-2gb`). Job Hunt caps `web` and `db` at 256 MB each.
+**Services.** `web` serves the app; `worker` (from 0.3) runs the scheduled jobs from the same
+image (`app/worker.py`); `db` is Postgres. `web` and `worker` both read `.env`, so a change to it
+needs both restarted.
+
+**Memory.** The droplet has 2 GB (`s-1vcpu-2gb`). Job Hunt caps `web` and `db` at 256 MB each,
+and `worker` at 192 MB (60 MB idle in dev, 2026-11-19; measure on the droplet after 0.3 ships).
 Check headroom before the first deploy:
 
 ```bash
@@ -84,8 +89,8 @@ DDL and **no password**. After the first deploy has run the migrations:
 cd /opt/apply && set -a && . ./.env && set +a
 PW="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 docker compose exec -T db psql -U "$DB_USER" -d "$DB_NAME" -c "ALTER ROLE apply_app PASSWORD '$PW'"
-# put DB_APP_USER=apply_app and DB_APP_PASSWORD=$PW in .env, then:
-docker compose up -d --no-deps web
+# put DB_APP_USER=apply_app and DB_APP_PASSWORD=$PW in .env, then (worker from 0.3):
+docker compose up -d --no-deps web worker
 curl -s http://127.0.0.1:5004/healthz      # {"status":"ok",...}
 ```
 
@@ -117,8 +122,8 @@ Edit the droplet's `.env` first, then the item.
 - **Deploy:** publish a GitHub Release `vX.Y.Z` (`VERSIONING.md`). `release.yml` builds and pushes
   the image, migrates and boots it locked down against a scratch database, scans it, then waits
   for approval on `production`. After approval it ships `docker-compose.yml` and `backup_db.sh`,
-  takes a verified dump, migrates from the new image while the old one serves, swaps `web`, and
-  checks `https://apply.seandesmet.com/healthz` reports the version.
+  takes a verified dump, migrates from the new image while the old one serves, swaps `web` and
+  `worker`, and checks `https://apply.seandesmet.com/healthz` reports the version.
 - **Roll back:** run `rollback.yml` with an older version. It never runs migrations: they're
   expand-only within a release, so the old image runs on the new schema. To undo a schema too,
   restore the pre-deploy dump (§6).
@@ -167,13 +172,13 @@ To **rotate** the key: make a new one on the Mac (`age-keygen`), replace the Bit
 VM's recipient file. Old `.age` files need the old identity, so keep the old note until they've
 aged out (14 days).
 
-**Restore** (the database only; stop `web` first):
+**Restore** (the database only; stop `web` and `worker` first):
 
 ```bash
-cd /opt/apply && docker compose stop web
+cd /opt/apply && docker compose stop web worker
 set -a && . ./.env && set +a
 gunzip -c backups/<file>.sql.gz | docker compose exec -T db psql -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
-docker compose start web
+docker compose start web worker
 ```
 
 (The dump is a plain `pg_dump`; restore into an empty database, or drop and recreate it first.)
@@ -183,5 +188,7 @@ docker compose start web
 ```bash
 curl -s https://apply.seandesmet.com/healthz
 cd /opt/apply && docker compose ps && docker compose logs --tail 100 web
+docker compose logs --tail 100 worker          # each job's start and outcome; a failure's traceback
+docker compose exec -T worker python -m app.worker --once   # run whatever is due now
 systemctl list-timers apply-backup.timer && systemctl --failed
 ```
