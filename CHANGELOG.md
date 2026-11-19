@@ -7,6 +7,12 @@ and why it matters, not what the diff says.
 ## [Unreleased]
 
 ### Added
+- The truthfulness rule in code (#26). Anything Job Hunt will ever write for you, starting with the
+  drafted answers in 0.5, is first checked against the profile you confirmed and your answer bank:
+  a claim is made only if they support it, dropped if they don't, and brought to you as a question
+  if only you can answer it. The check is exact and doesn't use a model: a related skill isn't the
+  skill, years are never rounded up, and "Prefer not to say" is respected. Building a profile
+  uses the same check to drop anything not actually in your resume.
 - An answer bank (#25), linked from the Profile page: the questions applications ask that a resume
   doesn't answer, such as work authorization, sponsorship, salary, start date, relocation, contact
   details and links. Anything left blank stays blank and means "ask me": it's never guessed or
