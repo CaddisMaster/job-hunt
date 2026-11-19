@@ -66,7 +66,7 @@ def current_user(request: Request, db: Session = Depends(get_db)) -> User | None
     if uid is None or tok is None:
         return None
     user = db.scalar(select(User).where(User.id == uid))
-    if user is None or not hmac.compare_digest(user.session_token, tok):
+    if user is None or user.disabled_at is not None or not hmac.compare_digest(user.session_token, tok):
         request.session.clear()
         return None
     return user

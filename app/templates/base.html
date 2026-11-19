@@ -30,6 +30,9 @@
     {% if flash_message %}<p class="flash" role="status">{{ flash_message }}</p>{% endif %}
     {% block content %}{% endblock %}
   </main>
-  <footer class="footer muted">{% block footer %}{% endblock %}{% if app_version != 'dev' %}v{% endif %}{{ app_version }}</footer>
+  <footer class="footer muted">
+    {% if user %}{% include "_admin_notice.html" %}{% endif %}
+    <p>{% if app_version != 'dev' %}v{% endif %}{{ app_version }}</p>
+  </footer>
 </body>
 </html>

@@ -7,7 +7,7 @@ Shared tables (employers, postings) arrive in 0.3."""
 import secrets
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, false, func
+from sqlalchemy import DateTime, ForeignKey, String, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -29,6 +29,23 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(default=False, server_default=false())
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Set by the admin (#3). A disabled account can't log in, and disabling it
+    # rotates session_token, which ends any session it already has.
+    disabled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Invite(Base):
+    """A one-time set-password link (app/invites.py). Only the token's hash is stored."""
+
+    __tablename__ = "invites"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(String(254), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
 
 class RateLimit(Base):

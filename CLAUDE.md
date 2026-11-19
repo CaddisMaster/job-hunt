@@ -36,10 +36,12 @@ app/db.py            engine, SessionLocal, get_db dependency, Base
 app/models.py        ORM models
 app/security.py      argon2 passwords, sessions (require_user, require_admin), CSRF, CSP + security headers
 app/rate_limit.py    the Postgres-backed fixed-window limiter (login)
+app/invites.py       one-time set-password links (invite, and reset a forgotten password)
+app/admin.py         the admin panel's queries — accounts only, never anyone's private data
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz), auth.py (login/logout)
-alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin)
+alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at)
 scripts/             create_user.py (bootstrap the first admin)
 ```
 
