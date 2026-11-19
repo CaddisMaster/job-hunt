@@ -1,0 +1,30 @@
+# Secrets: never bake them into the image. The app reads .env at runtime via
+# compose's `env_file:`.
+.env
+.env.*
+*.pem
+*.key
+backups/
+*.dump
+
+.git
+.gitignore
+__pycache__/
+*.py[cod]
+.pytest_cache/
+# Not optional tidiness: a host-populated cache makes the same source build
+# different images on different machines (Orbit Ops #333).
+.ruff_cache/
+.venv/
+venv/
+.vscode/
+.idea/
+.DS_Store
+
+# Docs and local-only files. `**/*.md` (not `*.md`), so nested docs go too.
+**/*.md
+docs/
+.claude/
+docker-compose*.yml
+test.sh
+infra/

@@ -1,0 +1,30 @@
+"""The dashboard and the health check."""
+
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse, JSONResponse
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from app.config import get_settings
+from app.db import get_db
+from app.templating import templates
+
+router = APIRouter()
+
+
+@router.get("/healthz")
+def healthz(db: Session = Depends(get_db)) -> JSONResponse:
+    """Liveness + database reachability, and the version this image was built
+    as, so the release workflow can confirm what is actually serving."""
+    settings = get_settings()
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse({"status": "db_unavailable", "version": settings.app_version}, status_code=503)
+    return JSONResponse({"status": "ok", "version": settings.app_version, "commit": settings.app_commit})
+
+
+@router.get("/", response_class=HTMLResponse)
+def dashboard(request: Request):
+    # Behind login from #2. Empty until 0.4 brings the morning queue.
+    return templates.TemplateResponse(request, "dashboard.html", {})

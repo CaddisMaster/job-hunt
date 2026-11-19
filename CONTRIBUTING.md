@@ -1,0 +1,86 @@
+# Contributing to Job Hunt
+
+The workflow is Orbit Ops's (itself Budget Buddy's), deliberately: it has been tested on a real
+deployment and its rules each exist because something went wrong without them. This file gives the rules and the
+reasons; `CLAUDE.md` is the short form.
+
+## 1. Get it running
+
+```bash
+cp .env.example .env   # set SECRET_KEY and DB_PASSWORD
+docker compose up -d --build
+# http://localhost:5004
+```
+
+Everything runs in containers; nothing is run from outside `web`.
+Templates and Python reload live (the override bind-mounts the source and runs
+`uvicorn --reload`). Changing `requirements*.txt` or the `Dockerfile` needs
+`docker compose up -d --build web`.
+
+## 2. The workflow
+
+1. **Issue first.** Features use the Feature template with acceptance criteria in
+   Given/When/Then form. "Done" is agreed before code exists.
+2. **Branch** `<issue#>-short-slug` from `main`.
+3. **Test first where you can.** Each scenario in the issue becomes a test claimed with
+   `@pytest.mark.criterion(<issue>, "<Scenario title>")`. CI's *Acceptance criteria* check fails a
+   PR whose issue promises a scenario no test claims (or that the PR body does not mark
+   `Verified by hand:`).
+4. **PR** with `Closes #N`, the template filled in honestly, `CHANGELOG.md` updated if `app/`
+   changed. **Squash-merge.** No direct pushes to `main`.
+5. **After merging, check the CI run on `main`**, not just the PR's.
+
+### Milestones
+
+One open at a time; each is a MINOR release (`docs/plan.md` §9). An issue that does not
+belong to the open milestone waits.
+
+### How much goes in one PR
+
+Batch by **coherence** — a shared file surface, test surface or one user-facing story — never by
+calendar. An Alembic revision **always stands alone**: bundling it obscures the deploy ordering
+it depends on.
+
+### Commit messages
+
+Imperative, capitalised subject ("Score matches against the profile"); the body explains *why*.
+
+## 3. Gotchas
+
+Orbit Ops's `docs/gotchas.md` applies here too. The ones most likely to bite a first PR:
+
+- **Jinja typos render as empty strings, not errors.** Tests must assert on rendered content.
+- **Forgetting the CSRF token** on a plain `<form method="post">` gives a 403 "session expired"
+  page. htmx requests get it automatically.
+- **Inline scripts without the nonce** are silently blocked by the CSP — check the browser console.
+- **`get_settings()` is cached.** Tests that need different settings must build a `Settings`
+  directly rather than mutating the environment after import.
+
+## 4. Database changes
+
+```bash
+# -u: the container user (uid 10001) cannot write into the bind-mounted source tree
+docker compose exec -u "$(id -u):$(id -g)" web alembic revision --autogenerate -m "add profiles" --rev-id 0004
+# review the generated file — autogenerate misses server defaults and renames
+docker compose exec web alembic upgrade head
+docker compose exec web alembic check       # models and migrations agree
+```
+
+Rules: expand-only within a release (add columns nullable or with a default; drop/rename in a
+later release); the app role's grants are automatic (default privileges, migration `0001`); CI
+round-trips every migration (`downgrade base` → `upgrade head`), so write real `downgrade()`s.
+
+## 5. Other people's data (from 0.2)
+
+Resumes, answers and applications belong to the people who invited themselves in on trust.
+
+- Every private table has `user_id`; every query is scoped to it. A test for each new query
+  logs in as a second user and checks they see nothing.
+- Admin views show accounts, never anyone's private data.
+- Nothing personal goes to a log line, an error page, or an issue.
+
+## 6. Security expectations
+
+- No secrets in the repo. `.env` is gitignored and `.dockerignore`d.
+- New env vars go in `app/config.py` **and** `.env.example` (a test enforces this).
+- Report vulnerabilities privately via GitHub Security Advisories.
