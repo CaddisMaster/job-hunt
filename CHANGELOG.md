@@ -6,9 +6,11 @@ and why it matters, not what the diff says.
 
 ## [Unreleased]
 
-### Changed
-- The app now runs on Python 3.15 (3.15.2), as Budget Buddy does. CI, the linter's target and the
-  docs moved with it.
+## [0.2.0] - 2026-11-19
+
+The profile milestone: upload your resume, get a profile built from it that you check and
+confirm, and fill in the answers applications ask for. The first Claude calls, within a monthly
+budget.
 
 ### Added
 - A `worker` service (#41) that runs scheduled jobs outside the web app: it's where the nightly
@@ -50,6 +52,14 @@ and why it matters, not what the diff says.
   for the month, never what it was spent on. Nothing calls Claude yet; the profile builder (#24) is
   the first.
 
+### Changed
+- The app now runs on Python 3.15 (3.15.2), as Budget Buddy does. CI, the linter's target and the
+  docs moved with it.
+- Job Hunt's database backups are encrypted once they leave the droplet (#21). From this release
+  they hold people's resumes, so the nightly copy kept off the server is encrypted before it touches
+  disk there, and the key that opens it lives only in Sean's password manager. A restore from one
+  was rehearsed end to end before this release.
+
 ## [0.1.0] - 2026-11-19
 
 The skeleton milestone: an empty app you can log in to, deployed at `apply.seandesmet.com`.
@@ -75,5 +85,6 @@ The skeleton milestone: an empty app you can log in to, deployed at `apply.seand
   on droplet-infra's host role pinned by SHA, with an LXD test. `RUNBOOK.md` covers first-time
   setup, the database role, deploys, backups and restore.
 
-[Unreleased]: https://github.com/CaddisMaster/job-hunt/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/CaddisMaster/job-hunt/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/CaddisMaster/job-hunt/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/CaddisMaster/job-hunt/releases/tag/v0.1.0

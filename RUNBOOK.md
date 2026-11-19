@@ -156,6 +156,18 @@ rm -P "$tmp/id"                        # the identity's local copy goes first
 # then load $tmp/dump.sql as below (into a scratch database for a drill), and rm -P it after
 ```
 
+**A drill into a scratch Postgres 16** (first done 2026-11-19, #21): the dump names its owners, so
+make the roles and the database before loading it, or `ON_ERROR_STOP` stops at the first
+`ALTER … OWNER`:
+
+```bash
+psql -d postgres -c "CREATE ROLE apply LOGIN" -c "CREATE ROLE apply_app LOGIN" \
+                 -c "CREATE DATABASE apply OWNER apply"
+psql -d apply -v ON_ERROR_STOP=1 -f "$tmp/dump.sql"
+psql -d apply -c "SELECT count(*), bool_or(is_admin) FROM users" -c "SELECT version_num FROM alembic_version"
+# then drop the scratch cluster and rm -P "$tmp/dump.sql"
+```
+
 To **rotate** the key: make a new one on the Mac (`age-keygen`), replace the Bitwarden note and the
 VM's recipient file. Old `.age` files need the old identity, so keep the old note until they've
 aged out (14 days).
