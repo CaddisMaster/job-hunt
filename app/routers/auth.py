@@ -36,8 +36,9 @@ def login(
             request, "login.html", {"error": "Too many attempts. Wait a minute and try again."}, status_code=429
         )
     user = db.scalar(select(User).where(User.email == normalize_email(email)))
-    if not verify_password(user.password_hash if user else None, password):
-        # One message for both cases: never reveal whether the account exists.
+    if not verify_password(user.password_hash if user else None, password) or user.disabled_at is not None:
+        # One message for every case: never reveal whether the account exists
+        # or is disabled.
         return templates.TemplateResponse(
             request, "login.html", {"error": "Wrong email or password."}, status_code=401
         )
