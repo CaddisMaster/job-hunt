@@ -6,6 +6,11 @@ updates:
   # arrive if something opens the PR, hence this file.
   - package-ecosystem: pip
     directory: "/"
+    # Not infra/: its pins follow droplet-infra's host-role pin and the VM's Python
+    # 3.12 (infra/requirements-infra.txt says why). Scanning "/" picked it up anyway,
+    # and #29 bumped ansible-core to 2.22, which needs Python 3.13.
+    exclude-paths:
+      - "infra/**"
     schedule:
       interval: weekly
       day: monday
