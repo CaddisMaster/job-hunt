@@ -1,5 +1,5 @@
-"""The profile area (plan §3). For now, resumes (#23); the profile built from one
-(#24) and the answer bank (#25) join this page.
+"""The profile area (plan §3): resumes (#23) and the profile built from one (#24).
+The answer bank (#25) joins this page.
 
 ⚠️ Every route here is the current user's own data: app.resumes scopes every query
 to them, and someone else's resume id is a 404."""
@@ -11,7 +11,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile  # what request.form() holds (FastAPI's is a subclass)
 
-from app import resumes
+from app import ai, resumes, spend
+from app import profile as profiles
 from app.db import get_db
 from app.flash import flash
 from app.models import User
@@ -21,8 +22,25 @@ from app.templating import templates
 router = APIRouter(prefix="/profile")
 
 
-def _page(request: Request, db: Session, user: User, *, status: int = 200, error: str | None = None) -> HTMLResponse:
-    context = {"user": user, "resumes": resumes.for_user(db, user), "error": error, "max_mb": resumes.MAX_BYTES // (1024 * 1024)}
+def _page(
+    request: Request, db: Session, user: User, *, status: int = 200, error: str | None = None, build_error: str | None = None
+) -> HTMLResponse:
+    found = resumes.for_user(db, user)
+    base = found[0] if found else None
+    profile = profiles.get(db, user)
+    refusal = spend.refusal(db, user.id)
+    context = {
+        "user": user,
+        "resumes": found,
+        "error": error,
+        "max_mb": resumes.MAX_BYTES // (1024 * 1024),
+        "base": base,
+        "profile": profile,
+        "stale": bool(profile and base and profile.resume_id != base.id),
+        "ai_message": ai.MESSAGES[refusal] if refusal else None,
+        "build_error": build_error,
+        "role_line": profiles.role_line,
+    }
     return templates.TemplateResponse(request, "profile.html", context, status_code=status)
 
 
@@ -65,3 +83,42 @@ def download(resume_id: int, user: User = Depends(require_user), db: Session = D
         media_type=resumes.MEDIA_TYPES[resume.kind],
         headers={"Content-Disposition": disposition, "Cache-Control": "private, no-store"},
     )
+
+
+@router.post("/build", response_class=HTMLResponse)
+async def build(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    """Build the profile from the base resume: one Claude call, charged to this user."""
+    form = await request.form()
+    existing = profiles.get(db, user)
+    if existing and form.get("replace") != "yes":
+        return _page(request, db, user, status=400, build_error="Tick the box to replace your current profile first.")
+    base = profiles.base_resume(db, user)
+    if base is None or not base.text:
+        return _page(request, db, user, status=400, build_error="Upload a resume with text in it first.")
+    try:
+        profiles.build(db, user)
+    except ai.AIUnavailable as exc:
+        return _page(request, db, user, status=503 if exc.reason == "error" else 200, build_error=exc.message)
+    flash(request, "Your profile is built. Check every line below against your resume, fix anything wrong, then confirm.")
+    return RedirectResponse("/profile/review", status_code=303)
+
+
+@router.get("/review", response_class=HTMLResponse)
+def review(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    profile = profiles.get(db, user)
+    if profile is None:
+        return RedirectResponse("/profile", status_code=303)
+    context = {"user": user, "profile": profile, "seniority": profiles.SENIORITY, "role_line": profiles.role_line, "edited": profiles.EDITED}
+    return templates.TemplateResponse(request, "profile_review.html", context)
+
+
+@router.post("/review")
+async def confirm(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    profile = profiles.get(db, user)
+    if profile is None:
+        return RedirectResponse("/profile", status_code=303)
+    form = await request.form()
+    fields = ("roles", "skills", "education", "certifications", "total_years", "seniority", "target_titles")
+    profiles.confirm(db, profile, {k: v for k in fields if isinstance(v := form.get(k, ""), str)})
+    flash(request, "Your profile is confirmed.")
+    return RedirectResponse("/profile", status_code=303)
