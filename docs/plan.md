@@ -83,6 +83,25 @@ Claude Code CLI into the image when no other app needs them.
   honest answer is "I don't have this," it says that or flags the question for the user. It
   never invents experience.
 
+**The contract for anything written on a user's behalf** (from #26, `app/grounding.py`; drafting in
+0.5 builds on it):
+
+1. **Only confirmed facts.** Claims are checked against the profile its owner *confirmed* and their
+   answer bank. Before the profile is confirmed, nothing can be claimed for them at all.
+2. **Every claim gets a verdict before anyone sees it:** *supported* (the facts say so),
+   *unsupported* (they don't: the claim is not made), or *needs the user* (only they can say: ask,
+   never guess).
+3. **Exact, not "close enough".** Matching ignores case, punctuation, dashes, quotes and spacing,
+   and nothing else. A skill from the same family is not the skill (SQL is not PostgreSQL). Years
+   are numbers compared as they are, never rounded up, and years in a title come from that role's
+   own dates. A target title is something to search for, not a title held.
+4. **Blank means ask.** An unanswered question, or one the bank doesn't have, goes to the user.
+   "Prefer not to say" and "Decline to answer" are answers: nothing else is stated in their place.
+5. **Deterministic.** No model decides whether a claim is true. A model may draft; this check
+   decides what survives.
+6. **The eval set is the spec.** `tests/test_grounding.py` holds the cases. Changing a verdict
+   starts with changing a case there.
+
 ## 4. Finding jobs in the Pittsburgh area
 
 **"Greater Pittsburgh" needs a fixed definition.** Proposed: the Pittsburgh metro area, the

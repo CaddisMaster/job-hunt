@@ -4,7 +4,7 @@ and confirmed by its owner (plan §3).
 Non-negotiable 7 starts here. The model is told to extract, never infer, and to
 copy the resume line behind every role, skill, degree and certification. Then
 `ground()` keeps only items whose line really is in the resume and whose value
-really is in that line. The model's word is never taken for it. What survives is
+really is in that line (app/grounding.py's `in_source`). The model's word is never taken for it. What survives is
 shown to the owner beside its line; only a profile they confirm is used later.
 
 ⚠️ Every function takes the current user and touches only their rows
@@ -12,30 +12,20 @@ shown to the owner beside its line; only a profile they confirm is used later.
 """
 
 import re
-import unicodedata
 from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import ai, resumes, spend
+from app import ai, grounding, resumes, spend
 from app.models import Profile, Resume, User
 
 EDITED = "added or changed by you"  # the source of anything the owner typed in themselves
-_DASHES = dict.fromkeys(map(ord, "‐‑‒–—―−"), "-")
-_QUOTES = {ord("‘"): "'", ord("’"): "'", ord("“"): '"', ord("”"): '"'}
-
-
-def normalize(text: str) -> str:
-    """For comparing a quoted line with the resume: case, Unicode forms, dashes, quotes and
-    runs of whitespace (PDF extraction breaks lines and spaces unpredictably) don't count."""
-    text = unicodedata.normalize("NFKC", text).translate(_DASHES).translate(_QUOTES).casefold()
-    return re.sub(r"\s+", " ", text).strip()
+normalize = grounding.normalize
 
 
 def _grounded(value: str, source: str, resume: str) -> bool:
-    value, source = normalize(value), normalize(source)
-    return bool(value) and bool(source) and source in resume and value in source
+    return grounding.in_source(value, source, resume)
 
 
 def ground(data: ai.ProfileData, resume_text: str) -> dict:
