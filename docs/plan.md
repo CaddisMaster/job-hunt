@@ -71,8 +71,9 @@ Claude Code CLI into the image when no other app needs them.
 - **Upload (PDF or DOCX).** Claude turns it into a structured profile: titles, skills, years,
   seniority, education, certifications. The user checks and edits it once.
 - **Search targets come from the profile, not keywords the user types:**
-  - Target titles plus nearby ones (e.g. "DevOps Engineer" → SRE, Platform Engineer, Cloud
-    Engineer).
+  - Target titles plus nearby ones (e.g. "Accountant" → Staff Accountant, Senior Accountant).
+    No role is assumed for anyone, Sean included: the targets are blank until a resume is
+    uploaded.
   - Seniority band.
   - Must-have and nice-to-have skills.
 - **Answer bank:** work authorization, sponsorship, salary expectation, start date, contact
@@ -93,9 +94,8 @@ default** (decided, §10).
 
 1. **Pittsburgh employer registry (shared).** Many employers' careers pages expose a public API
    through their hiring system (Greenhouse, Lever, Ashby, SmartRecruiters, Workday's JSON
-   endpoints). The first user is Sean alone (§10), so seed it first with employers hiring
-   DevOps/SRE/platform/cloud roles: Duolingo, Aurora, Gecko Robotics, the tech teams at PNC, BNY,
-   Highmark and UPMC, CMU and Pitt IT, and so on. Widen it when other users join. Most reliable because the data is
+   endpoints). Seed it from the target titles in the users' profiles (§3), not from a list
+   decided up front: the first seed waits for Sean's resume (0.2). Widen it when other users join. Most reliable because the data is
    clean and structured.
 2. **Aggregator APIs:** Adzuna (free tier, radius search) and USAJobs (federal, free). These catch
    employers missing from the registry, and a new one can be suggested for the registry.
@@ -212,4 +212,4 @@ a 2 GB droplet) comes after the matching has proven worth it.
 | 3 | Droplet | **Resize to 4 GB before 0.6.** One host and one host role. The applier still runs one browser at a time with a memory limit. |
 | 4 | Remote jobs | **Per-user toggle, off by default.** Pittsburgh metro only unless the user turns remote on. |
 | 5 | Auto-submit | **Never.** A person always clicks the final Submit after seeing the screenshot. Not a setting, and not on the roadmap. |
-| 6 | First users | **Sean only** for now. Seed the registry for DevOps/SRE/platform/cloud roles and widen it when others are invited. Multi-user scoping (§2) still gets built from 0.1. |
+| 6 | First users | **Sean only** for now. No target roles are decided here: they come from Sean's uploaded resume (§3), and the registry is seeded from them (0.3). Multi-user scoping (§2) still gets built from 0.1. |
