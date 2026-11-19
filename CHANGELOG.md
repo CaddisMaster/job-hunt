@@ -6,6 +6,10 @@ and why it matters, not what the diff says.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-19
+
+The skeleton milestone: an empty app you can log in to, deployed at `apply.seandesmet.com`.
+
 ### Added
 - The skeleton, copied from Orbit Ops (#1): a FastAPI app with Postgres in its own unpublished
   container, Alembic with a least-privilege `apply_app` role, a strict CSP, an error page that never
@@ -26,3 +30,6 @@ and why it matters, not what the diff says.
   `apply.seandesmet.com` (its directory, Nginx site, own deploy key and a nightly backup timer),
   on droplet-infra's host role pinned by SHA, with an LXD test. `RUNBOOK.md` covers first-time
   setup, the database role, deploys, backups and restore.
+
+[Unreleased]: https://github.com/CaddisMaster/job-hunt/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/CaddisMaster/job-hunt/releases/tag/v0.1.0
