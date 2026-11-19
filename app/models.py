@@ -7,7 +7,7 @@ Shared tables (employers, postings) arrive in 0.3."""
 import secrets
 from datetime import datetime
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, String, false, func
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, LargeBinary, String, Text, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -89,4 +89,33 @@ class AiSpend(Base):
     cache_read_tokens: Mapped[int] = mapped_column(default=0, server_default="0")
     cache_write_tokens: Mapped[int] = mapped_column(default=0, server_default="0")
     cost_microcents: Mapped[int] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Resume(Base):
+    """An uploaded resume (#23): private to its owner (non-negotiable 1).
+
+    The file itself is in Postgres (bytea), not on a volume, so the nightly dump and
+    its encryption on the VM (#21) cover resumes with nothing else to back up. It is
+    at most 5 MB (app/resumes.py), and a user has a few. The newest is the base
+    resume; older ones are kept. `filename` is only ever displayed, never used as a
+    path. `text` is what extraction got out of it, empty when the PDF has no text
+    layer. Deleting the user deletes their resumes.
+    """
+
+    __tablename__ = "resumes"
+    __table_args__ = (
+        CheckConstraint("size_bytes > 0 AND size_bytes <= 5242880", name="resumes_size"),
+        CheckConstraint("kind IN ('pdf', 'docx')", name="resumes_kind"),
+        Index("resumes_user_newest", "user_id", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    filename: Mapped[str] = mapped_column(String(255))
+    kind: Mapped[str] = mapped_column(String(8))
+    size_bytes: Mapped[int]
+    sha256: Mapped[str] = mapped_column(String(64))
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+    text: Mapped[str] = mapped_column(Text, default="", server_default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
