@@ -18,3 +18,7 @@ and why it matters, not what the diff says.
   it themselves; there's no public sign-up. The same kind of link resets a forgotten password, so
   the admin never picks or sees one. The admin can disable an account, which ends its sessions.
   The set-password page and every page's footer say what the admin can see.
+- The release pipeline (#4): publishing a GitHub Release builds the image to ghcr, boots it locked
+  down against a scratch database, scans it, then waits for approval before deploying, with a
+  verified database dump first. `rollback.yml` puts an older version back. PRs must update the
+  changelog when they change `app/`, and must claim every acceptance-criteria scenario.
