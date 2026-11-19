@@ -8,6 +8,7 @@ import secrets
 from datetime import datetime
 
 from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, LargeBinary, String, Text, false, func
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -119,3 +120,26 @@ class Resume(Base):
     content: Mapped[bytes] = mapped_column(LargeBinary)
     text: Mapped[str] = mapped_column(Text, default="", server_default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class Profile(Base):
+    """The structured profile built from a resume (#24), one per user, private to them.
+
+    `data` is the extraction (app/profile.py's ProfileData): roles, skills,
+    education, certifications, seniority, years and target titles, each title and
+    skill with the resume line it came from. Search targets come only from here,
+    never assumed (plan §3). Later steps use a profile only once `reviewed_at` is
+    set: its owner has checked and confirmed it.
+    """
+
+    __tablename__ = "profiles"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), unique=True)
+    # The resume it was built from; kept if that resume is ever deleted.
+    resume_id: Mapped[int | None] = mapped_column(ForeignKey("resumes.id", ondelete="SET NULL"))
+    data: Mapped[dict] = mapped_column(JSONB)
+    model: Mapped[str] = mapped_column(String(64))
+    built_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
