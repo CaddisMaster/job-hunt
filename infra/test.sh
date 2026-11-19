@@ -57,7 +57,8 @@ ct sh -c "echo '$unmanaged' >> /home/deploy/.ssh/authorized_keys"
 
 # --- refusals: the key, .env, then the certificate ------------------------------------
 step "no deploy key: the run must fail and say so"
-if ansible-playbook -i "$tmp/inventory.yml" app.yml >"$tmp/no-key.log" 2>&1; then die "the run passed with no deploy key"; fi
+# Production's key is in defaults/main.yml, so "no key" means overriding it empty.
+if ansible-playbook -i "$tmp/inventory.yml" -e "job_hunt_deploy_key=''" app.yml >"$tmp/no-key.log" 2>&1; then die "the run passed with no deploy key"; fi
 grep -q 'job_hunt_deploy_key is not set' "$tmp/no-key.log" || { cat "$tmp/no-key.log"; die "the failure doesn't name the key"; }
 ct test ! -e /opt/apply || die "the role changed the host before refusing for a missing key"
 echo "ok: refused without Job Hunt's own deploy key, changed nothing"

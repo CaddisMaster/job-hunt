@@ -7,9 +7,11 @@ job_hunt_user: deploy
 job_hunt_domain: apply.seandesmet.com
 
 # The restricted line release.yml deploys through (RUNBOOK §4). Only the public
-# half goes here, and it is Job Hunt's own key, not another tenant's: generate
-# it once (RUNBOOK §4) and paste the .pub line here. Until then the role stops
-# at "The deploy key is set". Managed non-exclusively: every other line in the
-# file (other tenants' keys, the backup-export key) is left as it is.
-job_hunt_deploy_key: ""
+# half is here, and it is Job Hunt's own key, not another tenant's; the private
+# half is the DROPLET_SSH_KEY secret and nowhere else. Generated 2026-11-19. To
+# rotate: a new key here and in the secret, then delete the old line on the
+# droplet. Without a key the role stops at "The deploy key is set". Managed
+# non-exclusively: every other line in the file (other tenants' keys, the
+# backup-export key) is left as it is.
+job_hunt_deploy_key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBuZhpyo7jFSYSs6Rj3hmfpoTAHH+EEZChQ2bqaVlJcU github-actions job-hunt deploy
 job_hunt_deploy_key_options: no-agent-forwarding,no-port-forwarding,no-X11-forwarding
