@@ -7,10 +7,12 @@ from fastapi.templating import Jinja2Templates
 
 from app.config import get_settings
 from app.flash import pop_flash
+from app.security import csrf_token
 from app.static_files import static_url
 
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 templates.env.auto_reload = get_settings().templates_auto_reload
+templates.env.globals["csrf_token"] = csrf_token
 templates.env.globals["pop_flash"] = pop_flash
 templates.env.globals["app_version"] = get_settings().app_version
 templates.env.globals["static_url"] = static_url

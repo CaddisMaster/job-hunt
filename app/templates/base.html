@@ -11,10 +11,19 @@
   <script src="{{ static_url('htmx.min.js') }}" defer></script>
   {% block scripts %}{% endblock %}
 </head>
-<body {% block body_attrs %}{% endblock %}>
+<body hx-headers='{"X-CSRF-Token": "{{ csrf_token(request) }}"}'>
   <header class="topbar">
     <a class="brand" href="/">Job Hunt</a>
-    {% block nav %}{% endblock %}
+    {% if user %}
+    <nav>
+      {% if user.is_admin %}<a href="/admin">Admin</a>{% endif %}
+      <span class="muted">{{ user.email }}</span>
+      <form method="post" action="/logout" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button type="submit" class="link">Log out</button>
+      </form>
+    </nav>
+    {% endif %}
   </header>
   <main class="container">
     {% set flash_message = pop_flash(request) %}
