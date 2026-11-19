@@ -13,6 +13,12 @@ and why it matters, not what the diff says.
   and two workers can never run the same job at once. A job that fails is recorded and logged, and
   the others still run. The admin page lists each job with its last run and how it went. The first
   job is housekeeping, which keeps 90 days of that history.
+- A shared registry of Pittsburgh-area employers (#43), at Admin → The employer registry. The admin
+  pastes an employer's careers page on Greenhouse, Lever or Ashby. Job Hunt reads which hiring
+  system it is and the board's name from the URL, asks that system once to make sure the board
+  exists, and only then saves it. Any other URL is refused with the list of what's supported. An
+  employer can be disabled, and the nightly search (coming in 0.3) skips it. The registry is
+  shared by everyone and shows employers only, never whose search led to one.
 
 ## [0.2.0] - 2026-11-19
 
