@@ -38,9 +38,13 @@
     mode: "0644"
   notify: apply site changed
 
+# #19: on a host without the site, check mode only pretends to write the file
+# above, and `state: link` refuses a missing target. force lets check mode report
+# the link as a change instead of failing; a real run has written the file first.
 - name: The apply site is enabled
   ansible.builtin.file:
     src: /etc/nginx/sites-available/{{ job_hunt_domain }}
     dest: /etc/nginx/sites-enabled/{{ job_hunt_domain }}
     state: link
+    force: "{{ ansible_check_mode }}"
   notify: apply site changed

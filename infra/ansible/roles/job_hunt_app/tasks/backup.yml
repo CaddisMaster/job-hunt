@@ -21,8 +21,17 @@
     daemon_reload: true
   when: job_hunt_backup_units is changed
 
+# #19: when check mode has only pretended to install the units, systemd can't
+# find the timer. Report that it would be started, as a change, instead of failing.
+- name: The backup timer would be started (check mode, units not yet installed)
+  ansible.builtin.debug:
+    msg: apply-backup.timer would be enabled and started once its units are installed
+  changed_when: true
+  when: ansible_check_mode and job_hunt_backup_units is changed
+
 - name: The backup timer runs and starts at boot
   ansible.builtin.systemd_service:
     name: apply-backup.timer
     state: started
     enabled: true
+  when: not (ansible_check_mode and job_hunt_backup_units is changed)
