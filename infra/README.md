@@ -25,6 +25,15 @@ KEEP=1 infra/test.sh    # leave the container up
 ⚠️ **Warn Sean before a run.** The VM is on his Mac, and a run is about 5 minutes of load. It
 creates and deletes only containers named `apply-*`.
 
+⚠️ Docker's iptables `FORWARD DROP` blocks `lxdbr0`, and the two `DOCKER-USER` rules that fix it
+**don't survive a reboot of the VM** (Orbit Ops's `infra/README.md`). `test.sh` stops with "the
+container has no internet" when they're missing. Re-add them:
+
+```bash
+sudo iptables -I DOCKER-USER -i lxdbr0 -j ACCEPT
+sudo iptables -I DOCKER-USER -o lxdbr0 -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+```
+
 ## Running against production
 
 Check mode first, always:
