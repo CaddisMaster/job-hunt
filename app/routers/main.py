@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.config import get_settings
 from app.db import get_db
+from app.models import User
+from app.security import require_user
 from app.templating import templates
 
 router = APIRouter()
@@ -25,6 +27,6 @@ def healthz(db: Session = Depends(get_db)) -> JSONResponse:
 
 
 @router.get("/", response_class=HTMLResponse)
-def dashboard(request: Request):
-    # Behind login from #2. Empty until 0.4 brings the morning queue.
-    return templates.TemplateResponse(request, "dashboard.html", {})
+def dashboard(request: Request, user: User = Depends(require_user)):
+    # Empty until 0.4 brings the morning queue.
+    return templates.TemplateResponse(request, "dashboard.html", {"user": user})

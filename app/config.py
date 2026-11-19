@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     # "Today" for the morning queue and the nightly run (0.4).
     app_timezone: str = "America/New_York"
 
+    # Login attempts allowed per client address per minute.
+    login_rate_limit: int = Field(default=10, ge=1)
+
     @field_validator("app_timezone")
     @classmethod
     def _valid_timezone(cls, value: str) -> str:

@@ -11,3 +11,6 @@ and why it matters, not what the diff says.
   container, Alembic with a least-privilege `apply_app` role, a strict CSP, an error page that never
   shows a traceback, `/healthz` with the version and a database check, `./test.sh`, and CI (lint,
   tests with a migration round-trip, an image build with an ownership check and a vulnerability scan).
+- Logins (#2): email and password with argon2, sessions that end when the password is reset,
+  CSRF on every POST, and a login rate limit counted in Postgres, so it holds across restarts and
+  processes. `scripts/create_user.py` creates the first admin.

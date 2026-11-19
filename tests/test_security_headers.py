@@ -1,5 +1,9 @@
+import pytest
+
+
+@pytest.mark.criterion(2, "Pages carry a strict CSP")
 def test_every_page_carries_a_strict_csp_with_a_fresh_nonce(client):
-    first = client.get("/healthz").headers["content-security-policy"]
+    first = client.get("/login").headers["content-security-policy"]
     second = client.get("/healthz").headers["content-security-policy"]
     assert "'nonce-" in first and first != second
     assert "'unsafe-inline'" not in first and "'unsafe-eval'" not in first

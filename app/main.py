@@ -2,14 +2,14 @@
 
 import logging
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi import Depends, FastAPI, Request
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
-from app.routers import main
-from app.security import HeadAsGetMiddleware, SecurityHeadersMiddleware
+from app.routers import auth, main
+from app.security import CSRFError, HeadAsGetMiddleware, LoginRequired, SecurityHeadersMiddleware, csrf_protect
 from app.static_files import STATIC_DIR, CachedStaticFiles
 from app.templating import templates
 
@@ -28,6 +28,7 @@ def create_app() -> FastAPI:
         docs_url=None,
         redoc_url=None,
         openapi_url=None,
+        dependencies=[Depends(csrf_protect)],
     )
 
     # Middleware runs outermost-last-added: headers wrap everything, including
@@ -45,6 +46,19 @@ def create_app() -> FastAPI:
 
     app.mount("/static", CachedStaticFiles(directory=STATIC_DIR), name="static")
     app.include_router(main.router)
+    app.include_router(auth.router)
+
+    @app.exception_handler(LoginRequired)
+    async def _login_required(request: Request, exc: LoginRequired) -> Response:
+        if request.headers.get("hx-request"):
+            # A redirect inside an htmx swap would render the login page into a
+            # fragment; HX-Redirect makes the browser navigate instead.
+            return Response(status_code=401, headers={"HX-Redirect": "/login"})
+        return RedirectResponse("/login", status_code=303)
+
+    @app.exception_handler(CSRFError)
+    async def _csrf_failed(request: Request, exc: CSRFError) -> Response:
+        return _error_page(request, 403, "Your session expired. Reload the page and try again.")
 
     @app.exception_handler(StarletteHTTPException)
     async def _http_error(request: Request, exc: StarletteHTTPException) -> Response:

@@ -34,11 +34,13 @@ app/main.py          create_app(): middleware, routers, exception handlers
 app/config.py        Settings — every env var, typed. Add new ones here AND .env.example
 app/db.py            engine, SessionLocal, get_db dependency, Base
 app/models.py        ORM models
-app/security.py      CSP + security headers, HEAD → GET
+app/security.py      argon2 passwords, sessions (require_user, require_admin), CSRF, CSP + security headers
+app/rate_limit.py    the Postgres-backed fixed-window limiter (login)
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz)
-alembic/versions/    migrations (0001 the apply_app role)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout)
+alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits)
+scripts/             create_user.py (bootstrap the first admin)
 ```
 
 ## Non-negotiables
@@ -46,16 +48,18 @@ alembic/versions/    migrations (0001 the apply_app role)
 1. **Every query that reads a user's private data is scoped to the current user.** Resumes, the
    answer bank, matches and applications all carry `user_id`. Shared tables (employers, postings)
    are the only exception, plus the admin module, which names its target user explicitly.
-2. **Never show an exception to the user.** The catch-all handler logs and renders `error.html`.
-3. **Inline `<script>` needs `nonce="{{ request.state.csp_nonce }}"`**; never add
+2. **Rate limits live in Postgres** (`app/rate_limit.py`), never in process memory: they must hold
+   for many users, across restarts.
+3. **Never show an exception to the user.** The catch-all handler logs and renders `error.html`.
+4. **Inline `<script>` needs `nonce="{{ request.state.csp_nonce }}"`**; never add
    `'unsafe-inline'` or `'unsafe-eval'` to the CSP.
-4. **Migrations are expand-only within a release.** One Alembic revision per PR, nothing else in it.
-5. **Dependencies are pinned exactly, transitive included**; actions by SHA; base images by digest.
+5. **Migrations are expand-only within a release.** One Alembic revision per PR, nothing else in it.
+6. **Dependencies are pinned exactly, transitive included**; actions by SHA; base images by digest.
    `tests/test_repo_hardening.py` enforces all three.
-6. **The agent only says what the profile and answer bank support.** It never invents experience;
+7. **The agent only says what the profile and answer bank support.** It never invents experience;
    an unanswerable question goes to the user (plan §3).
-7. **A person always clicks the final Submit.** No auto-submit setting, now or later (plan §10).
-8. **Never scrape LinkedIn or Indeed, never automate Easy Apply, never bypass a CAPTCHA** (plan §4, §6).
+8. **A person always clicks the final Submit.** No auto-submit setting, now or later (plan §10).
+9. **Never scrape LinkedIn or Indeed, never automate Easy Apply, never bypass a CAPTCHA** (plan §4, §6).
 
 ## Testing
 
