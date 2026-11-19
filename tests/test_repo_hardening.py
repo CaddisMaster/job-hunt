@@ -139,3 +139,28 @@ def test_env_example_lists_every_setting():
 def test_the_image_ships_no_docs_or_secrets():
     ignored = set((ROOT / ".dockerignore").read_text().splitlines())
     assert {".env", ".env.*", "**/*.md", "docs/", "infra/", "backups/"} <= ignored
+
+
+def _scan_step(steps):
+    return next(step for step in steps if step.get("uses", "").startswith("anchore/scan-action@"))
+
+
+def test_ci_and_the_release_scan_the_image_the_same_way():
+    workflows = ROOT / ".github" / "workflows"
+    ci = _scan_step(_ci()["jobs"]["docker-build"]["steps"])["with"]
+    release_jobs = yaml.safe_load((workflows / "release.yml").read_text())["jobs"]
+    release = _scan_step(release_jobs["scan"]["steps"])["with"]
+    assert ci["image"] == "job-hunt:ci"
+    assert {k: v for k, v in ci.items() if k != "image"} == {k: v for k, v in release.items() if k != "image"}
+    # The scanner never shares a job with the token that can push images.
+    assert release_jobs["scan"]["permissions"] == {"contents": "read", "packages": "read"}
+
+
+def test_the_release_smoke_test_runs_the_image_locked_down():
+    workflows = ROOT / ".github" / "workflows"
+    smoke = yaml.safe_load((workflows / "release.yml").read_text())["jobs"]["smoke"]["steps"]
+    runs = {step.get("name"): step.get("run", "") for step in smoke}
+    lockdown = re.search(r'LOCKDOWN=([^"]+)"', runs["Write the smoke env"]).group(1).split()
+    assert ("--pids-limit", str(_services()["web"]["pids_limit"])) in set(zip(lockdown, lockdown[1:], strict=False))
+    for name in ("Migrations apply from the pushed image", "Run the pushed image"):
+        assert "$LOCKDOWN" in runs[name]

@@ -42,7 +42,7 @@ app/templating.py    the shared Jinja env (app_version, static_url, pop_flash gl
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
 app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin)
 alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at)
-scripts/             create_user.py (bootstrap the first admin)
+scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
 ```
 
 ## Non-negotiables
@@ -73,7 +73,11 @@ inside the dev container. Real Postgres, no SQL mocks. Details: `docs/testing.md
 - `0.MINOR.PATCH`; one MINOR release per milestone (`VERSIONING.md`, plan §9).
 - Issue (Given/When/Then criteria) → branch `<issue#>-slug` → PR with `Closes #N` → squash-merge.
   No direct pushes to `main`. Commit subjects imperative and capitalised; the body says why.
-- `CHANGELOG.md` `## [Unreleased]` must be updated by any PR touching `app/`.
+- `CHANGELOG.md` `## [Unreleased]` must be updated by any PR touching `app/` (CI-enforced).
+- Every `Scenario:` in a closed issue must be claimed by a `criterion` test or a `Verified by hand:`
+  line in the PR body (CI-enforced, `scripts/check_criteria.py`).
+- Release = publish a GitHub Release `vX.Y.Z`; `release.yml` builds, smoke-tests and scans the
+  image, then deploys after `production` approval. `rollback.yml` redeploys an older version.
 
 ## Current status
 

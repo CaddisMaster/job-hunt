@@ -33,6 +33,8 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
 # Local development only — selected by docker-compose.override.yml.
 FROM base AS dev
 USER root
+# git: tests/test_release.py runs changelog.yml's check in a scratch repository.
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
 COPY requirements-dev.txt .
 RUN pip install --no-cache-dir -r requirements-dev.txt
 USER appuser
