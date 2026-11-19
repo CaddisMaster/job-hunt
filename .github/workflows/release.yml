@@ -2,7 +2,7 @@
 # Publishing a GitHub Release builds the image, proves it boots, waits for
 # approval on the `production` environment, then deploys it to the droplet.
 # Ported from Budget Buddy's release.yml; the differences are Alembic instead
-# of migrate.py, no worker/redis services, and /opt/apply.
+# of migrate.py, no redis service, and /opt/apply.
 #
 # Required on the `production` environment (RUNBOOK §4):
 #   secrets: DROPLET_SSH_KEY, DROPLET_KNOWN_HOSTS, DROPLET_HOST
@@ -120,6 +120,8 @@ jobs:
           echo "LOCKDOWN=--read-only --tmpfs /tmp --cap-drop ALL --security-opt no-new-privileges:true --pids-limit 100" >> "$GITHUB_ENV"
       - name: Migrations apply from the pushed image
         run: docker run --rm $LOCKDOWN --network host --env-file "$RUNNER_TEMP/smoke.env" "${IMAGE}:${VERSION}" alembic upgrade head
+      - name: The pushed image's worker runs what is due and exits cleanly
+        run: docker run --rm $LOCKDOWN --network host --env-file "$RUNNER_TEMP/smoke.env" "${IMAGE}:${VERSION}" python -m app.worker --once
       - name: Run the pushed image
         run: docker run -d --name smoke $LOCKDOWN --network host --env-file "$RUNNER_TEMP/smoke.env" "${IMAGE}:${VERSION}"
       - name: /healthz returns 200 and the release version
@@ -242,14 +244,17 @@ jobs:
                docker compose pull web
                docker compose run --rm --no-deps -T web alembic upgrade head
                # 'pull web' and not a bare pull: never touch the db image on a release.
-               # --no-deps: web depends on db, so a plain up web can recreate it (#384).
-               docker compose up -d --no-deps --remove-orphans web
-               RUNNING=\"\$(docker compose exec -T web printenv APP_VERSION | tr -d '\r')\"
-               if [ \"\$RUNNING\" != '${VERSION}' ]; then
-                 echo \"::error::Deployed ${VERSION} but the running container reports '\$RUNNING'\"
-                 exit 1
-               fi
-               echo \"running version \$RUNNING\"
+               # worker is the same image, so the pull fetched it too.
+               # --no-deps: web and worker depend on db, so a plain up can recreate it (#384).
+               docker compose up -d --no-deps --remove-orphans web worker
+               for SERVICE in web worker; do
+                 RUNNING=\"\$(docker compose exec -T \$SERVICE printenv APP_VERSION | tr -d '\r')\"
+                 if [ \"\$RUNNING\" != '${VERSION}' ]; then
+                   echo \"::error::Deployed ${VERSION} but \$SERVICE reports '\$RUNNING'\"
+                   exit 1
+                 fi
+                 echo \"\$SERVICE running version \$RUNNING\"
+               done
                # Keep the last 14 pre-deploy dumps.
                ls -1t backups/pre-deploy-*.sql.gz | tail -n +15 | xargs -r rm --
                docker compose ps"

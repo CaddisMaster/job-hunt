@@ -132,6 +132,7 @@ def test_the_smoke_test_boots_the_pushed_image_against_production_postgres():
     assert jobs["smoke"]["services"]["db"]["image"] == compose["services"]["db"]["image"]
     runs = " ".join(step.get("run", "") for step in jobs["smoke"]["steps"])
     assert "alembic upgrade head" in runs and "/healthz" in runs
+    assert "python -m app.worker --once" in runs
 
 
 @pytest.mark.criterion(4, "A bad release can be rolled back")
@@ -143,6 +144,9 @@ def test_rollback_redeploys_a_named_version_and_checks_it_serves():
     runs = "\n".join(step.get("run", "") for step in job["steps"])
     assert 'git show "v${VERSION}:docker-compose.yml"' in runs
     assert "docker compose up -d --no-deps --remove-orphans web" in runs
+    # A version from before the worker has no worker service to name.
+    assert "docker compose up -d --no-deps --remove-orphans web worker" in runs
+    assert "grep -qx worker" in runs
     assert '"version\\":\\"${VERSION}\\""' in runs or "${APP_URL}/healthz" in runs
     # A rollback never runs migrations: they're expand-only, so the old image runs on the new schema.
     assert "alembic" not in runs

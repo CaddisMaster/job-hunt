@@ -11,6 +11,12 @@ and why it matters, not what the diff says.
   docs moved with it.
 
 ### Added
+- A `worker` service (#41) that runs scheduled jobs outside the web app: it's where the nightly
+  search for postings will run from 0.3. Each job runs once a day at its time in New York time; if
+  the server was down for a few nights, it runs once when it's back, not once per missed night,
+  and two workers can never run the same job at once. A job that fails is recorded and logged, and
+  the others still run. The admin page lists each job with its last run and how it went. The first
+  job is housekeeping, which keeps 90 days of that history.
 - The truthfulness rule in code (#26). Anything Job Hunt will ever write for you, starting with the
   drafted answers in 0.5, is first checked against the profile you confirmed and your answer bank:
   a claim is made only if they support it, dropped if they don't, and brought to you as a question
