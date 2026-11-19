@@ -20,7 +20,7 @@ the third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by
 
 ## Tech stack
 
-- **Backend:** Python 3.14, FastAPI (sync routes), SQLAlchemy 2.0 ORM, psycopg 3, Alembic,
+- **Backend:** Python 3.15, FastAPI (sync routes), SQLAlchemy 2.0 ORM, psycopg 3, Alembic,
   pydantic-settings, argon2-cffi, Starlette sessions. One uvicorn process.
 - **Frontend:** Jinja2 + htmx 2.0.4 (vendored, 0BSD, licence beside it in `app/static/`), plain
   CSS with light and dark tokens. No build step.
