@@ -1,0 +1,69 @@
+# RUNBOOK §2 and §6, described. Ported from Orbit Ops (Orbit Ops #322). What this role never does, because the box is
+# shared and release.yml owns the app (agreed with BB #530):
+#   - write .env or docker-compose.yml. .env is restored from Bitwarden (#320)
+#     and only checked here; compose and backup_db.sh arrive with each release.
+#   - request a certificate, or touch another app's Nginx site.
+
+# A variable, checked before anything changes on the host.
+- name: The deploy key is set
+  ansible.builtin.assert:
+    that: job_hunt_deploy_key is match('^ssh-ed25519 \\S+ github-actions job-hunt deploy$')
+    fail_msg: >-
+      job_hunt_deploy_key is not set to Job Hunt's own deploy key (RUNBOOK §4).
+    quiet: true
+
+- name: The host layer is there
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ job_hunt_user }}"
+
+- name: The deploy directory
+  ansible.builtin.file:
+    path: "{{ job_hunt_dir }}"
+    state: directory
+    owner: "{{ job_hunt_user }}"
+    group: "{{ job_hunt_user }}"
+    mode: "0750"
+
+# Every dump holds every user's resumes and answers (from 0.2).
+- name: The backups directory
+  ansible.builtin.file:
+    path: "{{ job_hunt_dir }}/backups"
+    state: directory
+    owner: "{{ job_hunt_user }}"
+    group: "{{ job_hunt_user }}"
+    mode: "0700"
+
+# stat reads the inode, never the contents, so no secret passes through here.
+- name: Look at .env
+  ansible.builtin.stat:
+    path: "{{ job_hunt_dir }}/.env"
+    get_checksum: false
+  register: job_hunt_env
+
+- name: .env exists, mode 600, owned by the deploy user
+  ansible.builtin.assert:
+    that:
+      - job_hunt_env.stat.exists
+      - job_hunt_env.stat.isreg
+      - job_hunt_env.stat.mode == '0600'
+      - job_hunt_env.stat.pw_name == job_hunt_user
+      - job_hunt_env.stat.gr_name == job_hunt_user
+    fail_msg: >-
+      {{ job_hunt_dir }}/.env must exist as a regular file, mode 600,
+      {{ job_hunt_user }}:{{ job_hunt_user }}. This role never writes it:
+      restore it from its recovery copy (RUNBOOK §3), then run again.
+    quiet: true
+
+- name: Job Hunt's deploy key
+  ansible.posix.authorized_key:
+    user: "{{ job_hunt_user }}"
+    key: "{{ job_hunt_deploy_key }}"
+    key_options: "{{ job_hunt_deploy_key_options }}"
+    exclusive: false
+
+- name: Nginx site
+  ansible.builtin.import_tasks: nginx.yml
+
+- name: Nightly backup
+  ansible.builtin.import_tasks: backup.yml

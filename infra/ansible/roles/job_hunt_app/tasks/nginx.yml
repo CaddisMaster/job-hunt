@@ -1,0 +1,46 @@
+# Copied from Orbit Ops: a bare #N in these comments is an Orbit Ops issue.
+# The site file is the whole site, in the shape Certbot leaves the other tenants'
+# (RUNBOOK §2): 443 with the apply certificate, port 80 redirecting. The
+# certificate is issued with `certbot certonly`, so Certbot never edits this file
+# and a check run never shows drift.
+#
+# The certificate is Certbot's, never this role's. On a rebuild it is restored
+# or re-issued first (RUNBOOK §2), so a missing file stops the run here, before
+# Nginx is handed a site it can't load.
+- name: Look at the certificate files the site names
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    get_checksum: false
+  loop:
+    - /etc/letsencrypt/live/{{ job_hunt_domain }}/fullchain.pem
+    - /etc/letsencrypt/live/{{ job_hunt_domain }}/privkey.pem
+    - /etc/letsencrypt/options-ssl-nginx.conf
+    - /etc/letsencrypt/ssl-dhparams.pem
+  register: job_hunt_tls_files
+
+- name: The certificate files exist
+  ansible.builtin.assert:
+    that: item.stat.exists
+    fail_msg: >-
+      {{ item.item }} is missing. This role never requests a certificate: get
+      one for {{ job_hunt_domain }} with Certbot (RUNBOOK §2), then run again.
+    quiet: true
+  loop: "{{ job_hunt_tls_files.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: The apply site
+  ansible.builtin.copy:
+    src: "{{ job_hunt_domain }}"
+    dest: /etc/nginx/sites-available/{{ job_hunt_domain }}
+    owner: root
+    group: root
+    mode: "0644"
+  notify: apply site changed
+
+- name: The apply site is enabled
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/{{ job_hunt_domain }}
+    dest: /etc/nginx/sites-enabled/{{ job_hunt_domain }}
+    state: link
+  notify: apply site changed

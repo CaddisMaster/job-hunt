@@ -1,0 +1,28 @@
+# Copied from Orbit Ops: a bare #N in these comments is an Orbit Ops issue.
+# The nightly dump (#324), from infra/systemd/, the one copy of the units.
+# The unit runs
+# /opt/apply/backup_db.sh, which each release installs, so on a rebuild the
+# timer's first nights fail until the first deploy: that shows in
+# `systemctl --failed`, and nothing is lost that existed.
+- name: The backup units
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../systemd/{{ item }}"
+    dest: /etc/systemd/system/{{ item }}
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - apply-backup.service
+    - apply-backup.timer
+  register: job_hunt_backup_units
+
+- name: Reload systemd after a unit changed
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: job_hunt_backup_units is changed
+
+- name: The backup timer runs and starts at boot
+  ansible.builtin.systemd_service:
+    name: apply-backup.timer
+    state: started
+    enabled: true

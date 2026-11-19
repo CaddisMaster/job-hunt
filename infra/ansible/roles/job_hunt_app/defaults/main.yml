@@ -1,0 +1,15 @@
+# Job Hunt's layer of the shared droplet, on top of droplet-infra's host role
+# (infra/host-role.pin). Ported from Orbit Ops's orbit_ops_app (Orbit Ops #322).
+# A test overrides only the deploy key.
+
+job_hunt_dir: /opt/apply
+job_hunt_user: deploy
+job_hunt_domain: apply.seandesmet.com
+
+# The restricted line release.yml deploys through (RUNBOOK §4). Only the public
+# half goes here, and it is Job Hunt's own key, not another tenant's: generate
+# it once (RUNBOOK §4) and paste the .pub line here. Until then the role stops
+# at "The deploy key is set". Managed non-exclusively: every other line in the
+# file (other tenants' keys, the backup-export key) is left as it is.
+job_hunt_deploy_key: ""
+job_hunt_deploy_key_options: no-agent-forwarding,no-port-forwarding,no-X11-forwarding

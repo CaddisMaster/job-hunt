@@ -1,0 +1,9 @@
+# Copied from Orbit Ops: a bare #N in these comments is an Orbit Ops issue.
+# Collections the roles use, pinned exactly (#322), the same versions as
+# droplet-infra's at its pin. infra/test.sh installs them into
+# infra/ansible/collections/, which is gitignored.
+collections:
+  - name: community.general   # the lxd connection
+    version: "13.5.0"
+  - name: ansible.posix       # authorized_key
+    version: "2.2.2"

@@ -1,0 +1,6 @@
+# Copied from Orbit Ops: a bare #N in these comments is an Orbit Ops issue.
+# droplet-infra's host role, which this repo's app role runs on top of (#383).
+# A commit SHA, never a branch: the role's path and droplet_host_* variables are
+# the interface. Bump it in its own PR, after reading droplet-infra's diff.
+repo=https://github.com/CaddisMaster/droplet-infra.git
+sha=d9805e7db77a9f482463841ca7bb0c8cffef37e5

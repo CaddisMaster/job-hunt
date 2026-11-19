@@ -1,0 +1,26 @@
+# Copied from Orbit Ops: a bare #N in these comments is an Orbit Ops issue.
+# #324 — the nightly database dump. Installed by the app role
+# (infra/ansible/roles/job_hunt_app/tasks/backup.yml); started only by apply-backup.timer.
+#
+# The script is the copy each release installs in /opt/apply, so it is the
+# same verified dump the deploy takes (scripts/backup_db.sh). It reads .env from
+# the working directory.
+#
+# Little sandboxing on purpose: the script needs the docker socket, and access to
+# that is root-equivalent, so ProtectSystem= and friends would add little but
+# ways to break.
+[Unit]
+Description=Job Hunt nightly database backup
+Documentation=https://github.com/CaddisMaster/job-hunt/blob/main/RUNBOOK.md
+After=docker.service
+
+[Service]
+Type=oneshot
+User=deploy
+Group=deploy
+WorkingDirectory=/opt/apply
+ExecStart=/bin/bash /opt/apply/backup_db.sh nightly 14
+# A dump holds every user's resumes and answers: readable by deploy alone.
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
