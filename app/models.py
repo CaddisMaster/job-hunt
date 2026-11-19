@@ -7,7 +7,19 @@ Shared tables (employers, postings) arrive in 0.3."""
 import secrets
 from datetime import datetime
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, LargeBinary, String, Text, false, func
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    LargeBinary,
+    String,
+    Text,
+    UniqueConstraint,
+    false,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -142,4 +154,24 @@ class Profile(Base):
     model: Mapped[str] = mapped_column(String(64))
     built_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class Answer(Base):
+    """One answer in a user's answer bank (#25): what applications ask that a resume
+    doesn't say (plan §3). Private to its owner.
+
+    `key` names the question. The starter questions are defined in app/answers.py; a
+    question added later (from 0.5's drafting, once its owner approves the answer)
+    carries its own wording in `question`. No row, or an empty answer, means
+    unanswered: it is never guessed (non-negotiable 7)."""
+
+    __tablename__ = "answers"
+    __table_args__ = (UniqueConstraint("user_id", "key", name="answers_user_key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    key: Mapped[str] = mapped_column(String(64))
+    question: Mapped[str | None] = mapped_column(Text)
+    answer: Mapped[str] = mapped_column(Text, default="", server_default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
