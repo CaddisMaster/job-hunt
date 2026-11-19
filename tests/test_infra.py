@@ -209,7 +209,8 @@ def test_the_role_touches_only_its_own_site_and_never_a_certificate():
 
 def test_the_deploy_key_is_job_hunts_own_and_required():
     defaults = yaml.safe_load((ROLE / "defaults/main.yml").read_text())
-    assert defaults["job_hunt_deploy_key"] == ""  # the role refuses to run until it's set
+    # The shape the role asserts before it changes anything (tasks/main.yml).
+    assert re.fullmatch(r"ssh-ed25519 \S+ github-actions job-hunt deploy", defaults["job_hunt_deploy_key"])
     orbit = (ROOT.parent / "orbit-ops/infra/ansible/roles/orbit_ops_app/defaults/main.yml")
     if orbit.exists():  # never another tenant's key
         key = re.search(r"ssh-ed25519 (\S+)", orbit.read_text()).group(1)

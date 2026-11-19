@@ -30,7 +30,8 @@ change in `droplet-infra/infra/terraform/main.tf`, made and checked before the a
 
 ## 2. First-time setup (once)
 
-Run as `deploy` unless noted. Steps 2, 5 and 7 are described as code in `infra/ansible/` and can
+`deploy` has no sudo, so anything below with `sudo` runs as root; the rest runs as `deploy`
+(`.env` must end up `deploy:deploy`). Steps 2, 5 and 7 are described as code in `infra/ansible/` and can
 be applied or checked with it (`infra/README.md`); the rest stays by hand, and the role refuses to
 run without them.
 
@@ -38,12 +39,12 @@ run without them.
 # 1. DNS: an A record for `apply` → the droplet's IP, by hand at Squarespace.
 dig +short apply.seandesmet.com          # must print the droplet IP before step 4
 
-# 2. Deploy directory
+# 2. Deploy directory (as root)
 sudo install -d -o deploy -g deploy -m 750 /opt/apply
-install -d -m 700 /opt/apply/backups
+sudo install -d -o deploy -g deploy -m 700 /opt/apply/backups
 
-# 3. .env — from .env.example, filled in (§3). Mode 600.
-cd /opt/apply && umask 077 && $EDITOR .env
+# 3. .env — from .env.example, filled in (§3). Made as root, it must end up deploy's, mode 600.
+cd /opt/apply && (umask 077 && $EDITOR .env) && sudo chown deploy:deploy .env && sudo chmod 600 .env
 
 # 4. The certificate (as root). certonly: Certbot never edits the site file, so the
 #    role's copy (infra/ansible/roles/job_hunt_app/files/) stays byte-identical.
@@ -102,7 +103,10 @@ Edit the droplet's `.env` first, then the item.
   (`job_hunt_deploy_key`); the private half goes in the `DROPLET_SSH_KEY` secret below. Then
   delete both local files.
 - **Environment `production`** with required reviewer = Sean.
-  - Secrets: `DROPLET_SSH_KEY`, `DROPLET_KNOWN_HOSTS` (`ssh-keyscan <host>`), `DROPLET_HOST`.
+  - Secrets: `DROPLET_SSH_KEY`, `DROPLET_HOST`, and `DROPLET_KNOWN_HOSTS` built from the
+    droplet's own `/etc/ssh/ssh_host_*_key.pub` (each line prefixed with the host), **not**
+    `ssh-keyscan`, which trusts whatever answers on the network. Check it against a
+    known_hosts you already trust.
   - Var: `DROPLET_USER` (`deploy`).
 - **Branch protection on `main`**: require checks `Lint`, `Tests`, `Image builds`,
   `App changes update the changelog`, `Issue criteria are claimed by tests`; squash-merge only.
