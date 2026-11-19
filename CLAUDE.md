@@ -44,10 +44,11 @@ app/profile.py       the profile from a resume: build (one Claude call), ground 
 app/answers.py       the answer bank: starter questions, their only defaults (EEO decline, remote off), validation
 app/grounding.py     non-negotiable 7 in code: a claim vs confirmed facts → supported / unsupported / needs the user
 app/admin.py         the admin panel's queries — accounts only, never anyone's private data
+app/employers.py     the shared employer registry: careers URL → (system, token), one live board check, to_fetch() for the crawl
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile)
-alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin, /admin/employers), profile.py (/profile)
+alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0009 employers)
 .claude/             /wrap (end of session), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)

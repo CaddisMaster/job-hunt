@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Employers · Admin · Job Hunt{% endblock %}
+{% block content %}
+<p><a href="/admin">← Accounts</a></p>
+<h1>Employer registry</h1>
+<p class="muted">Shared by everyone: the nightly search reads each enabled employer's own job board. Employers only, never whose search found them.</p>
+
+<section class="card">
+  <h2>Add an employer</h2>
+  <p class="muted">Paste its careers page on {{ supported }}. The board is checked with one request to that system before it's saved.</p>
+  {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/admin/employers" class="row">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <label>Careers page URL <input name="careers_url" type="text" inputmode="url" required maxlength="500" value="{{ form.careers_url if form else '' }}" placeholder="https://boards.greenhouse.io/…"></label>
+    <label>Name <span class="muted">(blank: Greenhouse's own)</span> <input name="name" maxlength="200" value="{{ form.name if form else '' }}"></label>
+    <button type="submit" class="primary">Check and add</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Employers</h2>
+  {% if employers %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Employer</th><th>Hiring system</th><th>Board</th><th>Status</th><th>Last fetched</th><th></th></tr></thead>
+    <tbody>
+    {% for employer in employers %}
+      <tr>
+        <td>{{ employer.name }}</td>
+        <td>{{ systems[employer.system] }}</td>
+        <td><code>{{ employer.token }}</code></td>
+        <td>{{ 'Enabled' if employer.enabled else 'Disabled' }}</td>
+        <td>{{ employer.last_fetched_at.strftime('%Y-%m-%d') if employer.last_fetched_at else '—' }}{% if employer.last_error %} <span class="alert">{{ employer.last_error }}</span>{% endif %}</td>
+        <td class="actions">
+          <form method="post" action="/admin/employers/{{ employer.id }}/{{ 'disable' if employer.enabled else 'enable' }}" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button type="submit"{% if employer.enabled %} class="danger"{% endif %}>{{ 'Disable' if employer.enabled else 'Enable' }}</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p>None yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

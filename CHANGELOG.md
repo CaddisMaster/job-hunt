@@ -11,6 +11,12 @@ and why it matters, not what the diff says.
   docs moved with it.
 
 ### Added
+- A shared registry of Pittsburgh-area employers (#43), at Admin → The employer registry. The admin
+  pastes an employer's careers page on Greenhouse, Lever or Ashby. Job Hunt reads which hiring
+  system it is and the board's name from the URL, asks that system once to make sure the board
+  exists, and only then saves it. Any other URL is refused with the list of what's supported. An
+  employer can be disabled, and the nightly search (coming in 0.3) skips it. The registry is
+  shared by everyone and shows employers only, never whose search led to one.
 - The truthfulness rule in code (#26). Anything Job Hunt will ever write for you, starting with the
   drafted answers in 0.5, is first checked against the profile you confirmed and your answer bank:
   a claim is made only if they support it, dropped if they don't, and brought to you as a question
