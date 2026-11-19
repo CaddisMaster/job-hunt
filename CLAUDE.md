@@ -39,10 +39,11 @@ app/rate_limit.py    the Postgres-backed fixed-window limiter (login)
 app/invites.py       one-time set-password links (invite, and reset a forgotten password)
 app/ai.py            every Claude call's seam: models, prices, AIUnavailable and its page messages
 app/spend.py         the AI spend ledger and the two monthly caps (per user, and the key's); spend.run() makes every call
+app/resumes.py       resume uploads: type by content, size and parse limits, text extraction, owner-scoped queries
 app/admin.py         the admin panel's queries — accounts only, never anyone's private data
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile)
 alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at)
 .claude/             /wrap (end of session), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)

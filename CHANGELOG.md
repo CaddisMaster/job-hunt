@@ -7,6 +7,12 @@ and why it matters, not what the diff says.
 ## [Unreleased]
 
 ### Added
+- Resume upload (#23), on a new Profile page. A PDF or Word (.docx) file up to 5 MB becomes your base
+  resume, and older ones are kept. The file's type is decided by what's inside it, not its name;
+  anything else is refused with a plain reason. The text is read out at upload for the profile
+  step that follows (#24), and a scanned PDF with no text in it is kept but flagged, since a profile
+  can't be built from it. Resumes are stored in the database, so the nightly backup covers them,
+  and only their owner can download one: anyone else gets "not found".
 - An AI spend ledger with a monthly cap per user (#22). Every Claude call runs on Sean's one key,
   so each call is recorded against the user it was for, and a call is refused *before* it is made
   once that user has spent this month's budget (200¢ by default) or everyone together has spent
