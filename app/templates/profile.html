@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Profile · Job Hunt{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Your resume</h1>
+  <p class="muted">Everything Job Hunt searches for comes from your resume: nothing about the roles
+  you want is assumed until you upload one.</p>
+  {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/profile/resumes" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <label>PDF or Word (.docx), up to {{ max_mb }} MB
+      <input type="file" name="resume" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required>
+    </label>
+    <button type="submit" class="primary">Upload</button>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Uploaded</h2>
+  {% if resumes %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>File</th><th>Size</th><th>Uploaded</th><th></th></tr></thead>
+    <tbody>
+    {% for resume in resumes %}
+      <tr>
+        <td><a href="/profile/resumes/{{ resume.id }}/file">{{ resume.filename }}</a>
+          {% if loop.first %} <span class="muted">(base resume)</span>{% endif %}
+          {% if not resume.text %}<br><span class="muted">No text found: a profile can't be built from this file.</span>{% endif %}</td>
+        <td>{{ (resume.size_bytes / 1024) | round(0) | int }} KB</td>
+        <td>{{ resume.created_at.strftime('%Y-%m-%d') }}</td>
+        <td></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p class="muted">No resume yet.</p>
+  {% endif %}
+</section>
+{% endblock %}
