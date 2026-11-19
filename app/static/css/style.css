@@ -77,3 +77,11 @@ table { width: 100%; border-collapse: collapse; }
 .table-wrap { overflow-x: auto; }
 th, td { text-align: left; padding: .5rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
 th { font-size: .85rem; color: var(--muted); font-weight: 600; }
+
+/* The profile (#24): a short summary, and the resume line behind each item. */
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: .75rem 0; }
+.facts dt { font-weight: 500; }
+.facts dd { margin: 0; }
+.sources { font-size: .9rem; color: var(--muted, inherit); margin: .25rem 0 1rem; padding-left: 1.1rem; }
+.sources li { margin: .15rem 0; overflow-wrap: anywhere; }
+textarea { width: 100%; box-sizing: border-box; }

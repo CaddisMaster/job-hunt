@@ -40,6 +40,7 @@ app/invites.py       one-time set-password links (invite, and reset a forgotten 
 app/ai.py            every Claude call's seam: models, prices, AIUnavailable and its page messages
 app/spend.py         the AI spend ledger and the two monthly caps (per user, and the key's); spend.run() makes every call
 app/resumes.py       resume uploads: type by content, size and parse limits, text extraction, owner-scoped queries
+app/profile.py       the profile from a resume: build (one Claude call), ground every claim in the resume, review
 app/admin.py         the admin panel's queries — accounts only, never anyone's private data
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static

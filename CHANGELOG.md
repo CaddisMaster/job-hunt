@@ -7,6 +7,13 @@ and why it matters, not what the diff says.
 ## [Unreleased]
 
 ### Added
+- A profile built from your resume (#24). One Claude call reads your base resume into roles,
+  skills, education, certifications, years, seniority and the job titles to search for. It is told
+  to extract, never infer, and to quote the resume line behind every title and skill; anything
+  whose quote isn't actually in your resume is dropped before you see it. You then check each item
+  beside its quote, fix or remove what's wrong, and confirm. Nothing later uses an unconfirmed
+  profile. Search targets stay blank until this is done: no role is assumed for anyone. Building
+  one counts toward your monthly AI budget, and rebuilding from a newer resume asks first.
 - Resume upload (#23), on a new Profile page. A PDF or Word (.docx) file up to 5 MB becomes your base
   resume, and older ones are kept. The file's type is decided by what's inside it, not its name;
   anything else is refused with a plain reason. The text is read out at upload for the profile

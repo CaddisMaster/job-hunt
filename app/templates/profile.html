@@ -16,6 +16,44 @@
 </section>
 
 <section class="card">
+  <h2>Your profile</h2>
+  {% if build_error %}<p class="alert" role="alert">{{ build_error }}</p>{% endif %}
+  {% if profile %}
+    {% if profile.reviewed_at %}
+      <p>Confirmed {{ profile.reviewed_at.strftime('%Y-%m-%d') }}. <a href="/profile/review">Review or edit it</a>.</p>
+    {% else %}
+      <p class="alert">Not confirmed yet: nothing uses it until you <a href="/profile/review">check and confirm it</a>.</p>
+    {% endif %}
+    <dl class="facts">
+      <dt>Searching for</dt><dd>{{ profile.data.target_titles | join(', ') or '—' }}</dd>
+      <dt>Seniority</dt><dd>{{ profile.data.seniority }}{% if profile.data.total_years is not none %}, {{ profile.data.total_years | round(1) }} years{% endif %}</dd>
+      <dt>Roles</dt><dd>{{ profile.data.roles | length }}</dd>
+      <dt>Skills</dt><dd>{{ profile.data.skills | length }}</dd>
+    </dl>
+  {% else %}
+    <p class="muted">Your search targets are blank until a profile is built from your resume.</p>
+  {% endif %}
+
+  {% if base and base.text and (not profile or stale) %}
+    {% if ai_message %}
+      <p class="muted">{{ ai_message }}</p>
+    {% else %}
+    <form method="post" action="/profile/build">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      {% if profile %}
+      <p>Your newest resume, {{ base.filename }}, isn't the one this profile was built from.</p>
+      <label class="check"><input type="checkbox" name="replace" value="yes" required> Replace my current profile, edits included</label>
+      {% endif %}
+      <button type="submit" class="primary">{{ 'Rebuild' if profile else 'Build' }} my profile from {{ base.filename }}</button>
+      <p class="muted">Claude reads your resume once. This takes up to a minute and counts toward your monthly AI budget.</p>
+    </form>
+    {% endif %}
+  {% elif base and not base.text and not profile %}
+    <p class="muted">Your base resume has no text in it, so a profile can't be built from it.</p>
+  {% endif %}
+</section>
+
+<section class="card">
   <h2>Uploaded</h2>
   {% if resumes %}
   <div class="table-wrap">

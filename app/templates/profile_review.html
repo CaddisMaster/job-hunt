@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Review your profile · Job Hunt{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Review your profile</h1>
+  <p>Built from your resume by Claude. Everything Job Hunt searches for and writes for you comes from
+  this page, so check each line against your resume. Fix anything wrong, remove anything that isn't
+  true, then confirm. Each line shows where in your resume it came from.</p>
+  {% if not profile.reviewed_at %}<p class="alert">Not confirmed yet: nothing uses this profile until you confirm it.</p>{% endif %}
+
+  <form method="post" action="/profile/review">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+
+    <h2>Target titles</h2>
+    <p class="muted">What to search for, one per line: the titles you've held and close relatives at the same level.</p>
+    <textarea name="target_titles" rows="5">{{ profile.data.target_titles | join('\n') }}</textarea>
+
+    <h2>Roles</h2>
+    <p class="muted">One per line, as <code>Title at Employer (start – end)</code>.</p>
+    <textarea name="roles" rows="6">{% for role in profile.data.roles %}{{ role_line(role) }}
+{% endfor %}</textarea>
+    <ul class="sources">
+    {% for role in profile.data.roles %}
+      <li><strong>{{ role.title }}</strong>: {% if role.source == edited %}<em>{{ edited }}</em>{% else %}“{{ role.source }}”{% endif %}</li>
+    {% endfor %}
+    </ul>
+
+    {% for field, label in [('skills', 'Skills'), ('education', 'Education'), ('certifications', 'Certifications')] %}
+    <h2>{{ label }}</h2>
+    <p class="muted">One per line.</p>
+    <textarea name="{{ field }}" rows="{{ [profile.data[field] | length + 1, 12] | min }}">{% for item in profile.data[field] %}{{ item.value }}
+{% endfor %}</textarea>
+    <ul class="sources">
+    {% for item in profile.data[field] %}
+      <li><strong>{{ item.value }}</strong>: {% if item.source == edited %}<em>{{ edited }}</em>{% else %}“{{ item.source }}”{% endif %}</li>
+    {% endfor %}
+    </ul>
+    {% endfor %}
+
+    <h2>Experience</h2>
+    <label>Total years <input name="total_years" inputmode="decimal" value="{{ profile.data.total_years if profile.data.total_years is not none else '' }}"></label>
+    <label>Seniority
+      <select name="seniority">
+      {% for level in seniority %}<option value="{{ level }}"{% if level == profile.data.seniority %} selected{% endif %}>{{ level }}</option>{% endfor %}
+      </select>
+    </label>
+
+    <button type="submit" class="primary">Confirm my profile</button>
+  </form>
+</section>
+{% endblock %}
