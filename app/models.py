@@ -7,7 +7,7 @@ Shared tables (employers, postings) arrive in 0.3."""
 import secrets
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, String, false, func
+from sqlalchemy import BigInteger, CheckConstraint, DateTime, ForeignKey, Index, String, false, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -56,3 +56,37 @@ class RateLimit(Base):
     key: Mapped[str] = mapped_column(String(200), primary_key=True)
     window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     hits: Mapped[int]
+
+
+class AiSpend(Base):
+    """The AI spend ledger (#22): one row per model call that came back with a bill.
+    Every call runs on Sean's key, so each user's month is summed from here for their
+    cap, and everyone's for the key's (app/spend.py). Totals are never stored.
+
+    user_id is SET NULL, not CASCADE: money spent stays spent, so deleting a user
+    must not shrink the month's total. Cost is integer microcents (a millionth of a
+    cent): a small call costs a fraction of a cent. purpose says what the call was
+    for ("profile"), never what was in it: prompts and replies hold private data."""
+
+    __tablename__ = "ai_spend"
+    __table_args__ = (
+        CheckConstraint(
+            "input_tokens >= 0 AND output_tokens >= 0 AND cache_read_tokens >= 0 AND cache_write_tokens >= 0",
+            name="ai_spend_tokens",
+        ),
+        CheckConstraint("cost_microcents >= 0", name="ai_spend_cost"),
+        # A user's month, and everyone's month: the two sums the cap needs.
+        Index("ai_spend_user_month", "user_id", "created_at"),
+        Index("ai_spend_month", "created_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    purpose: Mapped[str] = mapped_column(String(32))
+    model: Mapped[str] = mapped_column(String(64))
+    input_tokens: Mapped[int]
+    output_tokens: Mapped[int]
+    cache_read_tokens: Mapped[int] = mapped_column(default=0, server_default="0")
+    cache_write_tokens: Mapped[int] = mapped_column(default=0, server_default="0")
+    cost_microcents: Mapped[int] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
