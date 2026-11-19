@@ -6,6 +6,10 @@ and why it matters, not what the diff says.
 
 ## [Unreleased]
 
+### Changed
+- The app now runs on Python 3.15 (3.15.2), as Budget Buddy does. CI, the linter's target and the
+  docs moved with it.
+
 ### Added
 - The truthfulness rule in code (#26). Anything Job Hunt will ever write for you, starting with the
   drafted answers in 0.5, is first checked against the profile you confirmed and your answer bank:
