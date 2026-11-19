@@ -130,13 +130,30 @@ Edit the droplet's `.env` first, then the item.
 - **Pre-deploy:** every deploy takes `backups/pre-deploy-*.sql.gz` first (the last 14 kept).
 - **Nightly:** `apply-backup.timer` runs `/opt/apply/backup_db.sh nightly 14` at 03:45 New York
   time, a quarter hour after Orbit Ops's.
-- **Off the droplet:** `backup-export` (droplet-infra) is the one way dumps leave the box; the
-  `jupiter` VM pulls them with a key bound to it. It needs a `job-hunt` command, the same shape as
-  `orbit-ops` (a cross-repo change in droplet-infra).
+- **Off the droplet:** `backup-export`'s `job-hunt` command (droplet-infra #10) is the one way
+  dumps leave the box. The `jupiter` VM's nightly pull (around 08:00 New York time) fetches the
+  newest finished dump with a key bound to that command, and keeps the last 14.
+- **Encrypted at rest on the VM (#21).** The pull holds the dump in memory (`/dev/shm`), checks it
+  (gzip, at least 1 KB), then encrypts it with `age` to Job Hunt's backup key. Only
+  `job-hunt_<date>.sql.gz.age` reaches the VM's disk. The VM has only the public key (the
+  *recipient*, next to its backup script); the **identity that decrypts is only in Bitwarden**, as
+  the secure note `job-hunt-backup-age-identity` (made on the Mac, 2026-11-19). So the VM's disk
+  alone gives nobody the dumps. With no recipient, the pull fails and stores nothing, never a
+  plaintext copy.
 
-⚠️ **Before inviting anyone else** (from 0.2 the dumps hold other people's resumes): confirm where
-the VM keeps the pulled dumps, that they're encrypted at rest there, and how long they're kept.
-Record the answer in #5.
+**Restoring from a VM copy** (on the Mac, the identity from Bitwarden, never written to the VM):
+
+```bash
+umask 077 && tmp=$(mktemp -d)
+# paste the note's 3 lines into $tmp/id, then:
+age -d -i "$tmp/id" job-hunt_<date>.sql.gz.age | gunzip > "$tmp/dump.sql"
+rm -P "$tmp/id"                        # the identity's local copy goes first
+# then load $tmp/dump.sql as below (into a scratch database for a drill), and rm -P it after
+```
+
+To **rotate** the key: make a new one on the Mac (`age-keygen`), replace the Bitwarden note and the
+VM's recipient file. Old `.age` files need the old identity, so keep the old note until they've
+aged out (14 days).
 
 **Restore** (the database only; stop `web` first):
 
