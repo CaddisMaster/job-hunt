@@ -6,6 +6,15 @@ and why it matters, not what the diff says.
 
 ## [Unreleased]
 
+### Added
+- An AI spend ledger with a monthly cap per user (#22). Every Claude call runs on Sean's one key,
+  so each call is recorded against the user it was for, and a call is refused *before* it is made
+  once that user has spent this month's budget (200¢ by default) or everyone together has spent
+  the key's (1000¢). The page then says which, in plain words, and nothing is charged. With no key
+  set, AI features say they're off instead of failing. The admin panel shows each account's total
+  for the month, never what it was spent on. Nothing calls Claude yet; the profile builder (#24) is
+  the first.
+
 ## [0.1.0] - 2026-11-19
 
 The skeleton milestone: an empty app you can log in to, deployed at `apply.seandesmet.com`.

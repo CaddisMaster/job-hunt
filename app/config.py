@@ -39,6 +39,14 @@ class Settings(BaseSettings):
     # Login attempts allowed per client address per minute.
     login_rate_limit: int = Field(default=10, ge=1)
 
+    # Claude (#22). Every call runs on this one key (plan §10, decision 2). Blank =
+    # AI features are off and say so; nothing else changes.
+    anthropic_api_key: str = ""
+    # Monthly caps, in cents, over calendar months in APP_TIMEZONE (app/spend.py):
+    # one per user, and one for everyone together, so the key itself is bounded.
+    ai_monthly_budget_cents_per_user: int = Field(default=200, ge=0)
+    ai_monthly_budget_cents: int = Field(default=1000, ge=0)
+
     @field_validator("app_timezone")
     @classmethod
     def _valid_timezone(cls, value: str) -> str:
