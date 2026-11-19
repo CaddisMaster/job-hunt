@@ -22,3 +22,7 @@ and why it matters, not what the diff says.
   down against a scratch database, scans it, then waits for approval before deploying, with a
   verified database dump first. `rollback.yml` puts an older version back. PRs must update the
   changelog when they change `app/`, and must claim every acceptance-criteria scenario.
+- The droplet tenant as code (#5): `infra/` holds Job Hunt's layer of the shared droplet at
+  `apply.seandesmet.com` (its directory, Nginx site, own deploy key and a nightly backup timer),
+  on droplet-infra's host role pinned by SHA, with an LXD test. `RUNBOOK.md` covers first-time
+  setup, the database role, deploys, backups and restore.

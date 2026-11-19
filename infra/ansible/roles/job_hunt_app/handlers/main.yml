@@ -1,0 +1,15 @@
+# Copied from Orbit Ops: a bare #N in these comments is an Orbit Ops issue.
+# Both listen on one topic and run in this order: nginx -t first, so a broken
+# file fails the run by name before any reload, and the shared box's other
+# sites keep serving the config already loaded. Not named "Reload nginx":
+# droplet-infra's host role has a handler by that name.
+- name: Test the nginx config for apply
+  ansible.builtin.command: nginx -t
+  changed_when: false
+  listen: apply site changed
+
+- name: Reload nginx for apply
+  ansible.builtin.service:
+    name: nginx
+    state: reloaded
+  listen: apply site changed

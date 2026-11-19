@@ -15,7 +15,7 @@ the third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by
 > | plan the next milestone or a feature's shape | [`docs/plan.md`](docs/plan.md) |
 > | write or change anything under `tests/` | [`docs/testing.md`](docs/testing.md) |
 > | add an Alembic revision, add an env var, or cut a release | [`CONTRIBUTING.md`](CONTRIBUTING.md) §4, [`VERSIONING.md`](VERSIONING.md) |
-> | run anything on the droplet | `RUNBOOK.md` (arrives with #5) |
+> | run anything on the droplet, or change `infra/` | [`RUNBOOK.md`](RUNBOOK.md), [`infra/README.md`](infra/README.md) |
 > | copy something from Orbit Ops | that repo's `docs/gotchas.md` — its lessons apply here |
 
 ## Tech stack
@@ -42,6 +42,7 @@ app/templating.py    the shared Jinja env (app_version, static_url, pop_flash gl
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
 app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin)
 alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at)
+infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
 ```
 
