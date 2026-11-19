@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Answer bank · Job Hunt{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>Answer bank</h1>
+  <p>What applications ask that your resume doesn't say. Job Hunt only ever uses what you write here
+  and in your confirmed profile. Leave anything blank to be asked each time it's needed; a blank is
+  never filled with a guess.</p>
+  {% if errors %}<p class="alert" role="alert">Some answers need fixing; nothing was saved.</p>{% endif %}
+
+  <form method="post" action="/profile/answers">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    {% for group, title in groups %}
+    <fieldset>
+      <legend>{{ title }}</legend>
+      {% if group == 'eeo' %}<p class="muted">Voluntary. Each defaults to “Decline to answer”, and employers may not use it to decide on your application.</p>{% endif %}
+      {% for q in questions if q.group == group %}
+      <label for="q-{{ q.key }}">{{ q.label }}
+        {% if q.kind == 'choice' %}
+        <select id="q-{{ q.key }}" name="{{ q.key }}">
+          {% if not q.default %}<option value=""{% if not values[q.key] %} selected{% endif %}>(not answered)</option>{% endif %}
+          {% for choice in q.choices %}<option{% if values[q.key] == choice %} selected{% endif %}>{{ choice }}</option>{% endfor %}
+        </select>
+        {% else %}
+        <input id="q-{{ q.key }}" name="{{ q.key }}" type="{{ q.kind }}" maxlength="500"
+               value="{{ '' if (q.key == 'salary_expectation' and values[q.key] == prefer_not) else values[q.key] }}"
+               {% if q.placeholder %}placeholder="{{ q.placeholder }}"{% endif %}>
+        {% endif %}
+        {% if q.hint %}<span class="muted">{{ q.hint }}</span>{% endif %}
+        {% if errors[q.key] %}<span class="alert">{{ errors[q.key] }}</span>{% endif %}
+      </label>
+      {% if q.key == 'salary_expectation' %}
+      <label class="check"><input type="checkbox" name="salary_prefer_not" value="yes"{% if values[q.key] == prefer_not %} checked{% endif %}> {{ prefer_not }}</label>
+      {% endif %}
+      {% endfor %}
+    </fieldset>
+    {% endfor %}
+
+    {% if added %}
+    <fieldset>
+      <legend>Questions you've answered on applications</legend>
+      {% for a in added %}<p><strong>{{ a.question }}</strong><br>{{ a.answer or '(not answered)' }}</p>{% endfor %}
+    </fieldset>
+    {% endif %}
+
+    <button type="submit" class="primary">Save answers</button>
+  </form>
+</section>
+{% endblock %}

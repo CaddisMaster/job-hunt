@@ -7,6 +7,12 @@ and why it matters, not what the diff says.
 ## [Unreleased]
 
 ### Added
+- An answer bank (#25), linked from the Profile page: the questions applications ask that a resume
+  doesn't answer, such as work authorization, sponsorship, salary, start date, relocation, contact
+  details and links. Anything left blank stays blank and means "ask me": it's never guessed or
+  filled from your account. The voluntary EEO questions default to "Decline to answer", and remote
+  jobs are off (Pittsburgh area only) until you turn them on. A form with a mistake in it saves
+  nothing and says what to fix.
 - A profile built from your resume (#24). One Claude call reads your base resume into roles,
   skills, education, certifications, years, seniority and the job titles to search for. It is told
   to extract, never infer, and to quote the resume line behind every title and skill; anything

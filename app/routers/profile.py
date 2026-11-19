@@ -1,5 +1,5 @@
-"""The profile area (plan §3): resumes (#23) and the profile built from one (#24).
-The answer bank (#25) joins this page.
+"""The profile area (plan §3): resumes (#23), the profile built from one (#24), and
+the answer bank (#25).
 
 ⚠️ Every route here is the current user's own data: app.resumes scopes every query
 to them, and someone else's resume id is a 404."""
@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile  # what request.form() holds (FastAPI's is a subclass)
 
-from app import ai, resumes, spend
+from app import ai, answers, resumes, spend
 from app import profile as profiles
 from app.db import get_db
 from app.flash import flash
@@ -122,3 +122,28 @@ async def confirm(request: Request, user: User = Depends(require_user), db: Sess
     profiles.confirm(db, profile, {k: v for k in fields if isinstance(v := form.get(k, ""), str)})
     flash(request, "Your profile is confirmed.")
     return RedirectResponse("/profile", status_code=303)
+
+
+def _answers_page(request: Request, db: Session, user: User, values: dict, errors: dict, status: int = 200) -> HTMLResponse:
+    context = {
+        "user": user, "values": values, "errors": errors, "questions": answers.QUESTIONS, "groups": answers.GROUPS,
+        "added": answers.added_questions(db, user), "prefer_not": answers.PREFER_NOT,
+    }
+    return templates.TemplateResponse(request, "answers.html", context, status_code=status)
+
+
+@router.get("/answers", response_class=HTMLResponse)
+def answer_bank(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    return _answers_page(request, db, user, answers.for_user(db, user), {})
+
+
+@router.post("/answers", response_class=HTMLResponse)
+async def save_answers(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    form = {k: v for k, v in (await request.form()).items() if isinstance(v, str)}
+    try:
+        answers.save(db, user, form)
+    except answers.Invalid as exc:
+        typed = {q.key: (form.get(q.key) or "").strip() for q in answers.QUESTIONS}
+        return _answers_page(request, db, user, typed, exc.errors, status=400)
+    flash(request, "Your answers are saved.")
+    return RedirectResponse("/profile/answers", status_code=303)
