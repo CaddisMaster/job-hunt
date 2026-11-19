@@ -26,6 +26,8 @@ def _page(request: Request, db: Session, me: User, *, status: int = 200, **extra
         "accounts": admin.accounts(db),
         "pending": invites.pending(db),
         "spend": admin.month_spend(db),
+        "jobs": admin.last_runs(db),
+        "timezone": get_settings().app_timezone,
         "user_budget_cents": get_settings().ai_monthly_budget_cents_per_user,
         **extra,
     }

@@ -3,7 +3,7 @@
 {% block content %}
 <h1>Accounts</h1>
 <p><a href="/admin/employers">The employer registry →</a></p>
-<p class="muted">Invite only. The admin pages show accounts and nothing else: never anyone's resumes, answers or applications.</p>
+<p class="muted">Invite only. The admin pages show accounts, the employer registry and the scheduled jobs, never anyone's resumes, answers or applications.</p>
 
 {% if new_link %}
 <section class="card notice" aria-live="polite">
@@ -48,6 +48,31 @@
           </form>
           {% endif %}
         </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Scheduled jobs</h2>
+  <p class="muted">The worker runs each once a day, at its time in {{ timezone }}. A missed day runs once when the worker next starts.</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Job</th><th>Runs at</th><th>Last run</th><th>Outcome</th><th>Summary</th></tr></thead>
+    <tbody>
+    {% for job in jobs %}
+      <tr>
+        <td>{{ job.name }}</td>
+        <td>{{ job.at.strftime('%H:%M') }}</td>
+        {% if job.run %}
+        <td>{{ job.started.strftime('%Y-%m-%d %H:%M') }}{% if job.seconds is not none %} <span class="muted">· {{ '%.0f' % job.seconds }} s</span>{% endif %}</td>
+        <td>{{ job.run.outcome or 'running' }}</td>
+        <td>{{ job.run.summary }}</td>
+        {% else %}
+        <td>—</td><td>never run</td><td></td>
+        {% endif %}
       </tr>
     {% endfor %}
     </tbody>
