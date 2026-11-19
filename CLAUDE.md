@@ -42,6 +42,7 @@ app/templating.py    the shared Jinja env (app_version, static_url, pop_flash gl
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
 app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin)
 alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at)
+.claude/             /wrap (end of session), the changelog Stop hook, the allowlist — see its README
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
 ```
 
