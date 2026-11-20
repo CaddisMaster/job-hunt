@@ -36,6 +36,11 @@ and why it matters, not what the diff says.
   the admin page lists those locations with a count, so the places table grows from real misses.
   Locations in another country ("Tokyo, Japan") and "Washington, D.C." are now read as outside
   the area rather than unknown.
+- "Lancaster, PA" is no longer read as Pittsburgh-area. 25 townships in the seven counties share
+  their name with a town elsewhere in Pennsylvania: Lancaster Township in Butler County and the
+  city of Lancaster, Fairfield, Hanover, Hampton and others. A posting naming one of them alone is
+  now unknown, kept out and listed for the admin, while "Hampton Township, PA" is still in the
+  area. Found while seeding the registry: a Lancaster job was showing as local.
 
 ## [0.2.0] - 2026-11-19
 

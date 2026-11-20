@@ -17,6 +17,10 @@ Three kinds of rows:
   (https://creativecommons.org/licenses/by/4.0/): place names © GeoNames, attributed in
   app/data/README.md.
 
+A township in the seven counties that shares its name with a Pennsylvania town
+outside the radius (Lancaster, Fairfield, Hanover…) is marked `ambiguous`:
+app/area.py counts it only when the posting says "Township".
+
 Run:  python3 -I scripts/build_places.py <cousubs.txt> <places.txt> <geonames US.txt> > app/data/places.csv
 """
 
@@ -52,28 +56,39 @@ def rows(path: str):
 
 
 def main(cousubs: str, places: str, postal: str | None = None) -> None:
+    # Pennsylvania towns outside the radius, by name: a township here that shares one
+    # ("Lancaster" in Butler County, the city of Lancaster out east) is ambiguous.
+    far = set()
+    for r in rows(places):
+        if r["USPS"] == "PA" and miles(*DOWNTOWN, float(r["INTPTLAT"]), float(r["INTPTLONG"])) > RADIUS_MILES:
+            far.add(SUFFIX.sub("", r["NAME"]).casefold())
     out = {}
     for r in rows(cousubs):
         county = COUNTIES.get(r["GEOID"][2:5]) if r["USPS"] == "PA" else None
         if county and not r["NAME"].startswith("County subdivisions not defined"):
             name = SUFFIX.sub("", r["NAME"])
-            out[(name.casefold(), "PA")] = (name, "PA", county, r["INTPTLAT"], r["INTPTLONG"])
+            ambiguous = "1" if r["NAME"].endswith(" township") and name.casefold() in far else ""
+            out[(name.casefold(), "PA")] = (name, "PA", county, r["INTPTLAT"], r["INTPTLONG"], ambiguous)
     for r in rows(places):
         if r["USPS"] not in STATES:
             continue
         lat, lon = float(r["INTPTLAT"]), float(r["INTPTLONG"])
         if miles(*DOWNTOWN, lat, lon) <= RADIUS_MILES:
             name = SUFFIX.sub("", r["NAME"])
-            out.setdefault((name.casefold(), r["USPS"]), (name, r["USPS"], "", r["INTPTLAT"], r["INTPTLONG"]))
+            key = (name.casefold(), r["USPS"])
+            if key in out and out[key][5]:
+                # A town of that name inside the radius too: the name isn't ambiguous after all.
+                out[key] = (*out[key][:5], "")
+            out.setdefault(key, (name, r["USPS"], "", r["INTPTLAT"], r["INTPTLONG"], ""))
     if postal:
         wanted = set(COUNTIES.values())
         with open(postal, encoding="utf-8", newline="") as f:
             for r in csv.reader(f, delimiter="\t"):
                 # country, postal code, place, state name, state code, county, ..., lat, lon, accuracy
                 if r[4] == "PA" and r[5] in wanted:
-                    out.setdefault((r[2].casefold(), "PA"), (r[2], "PA", r[5], r[9], r[10]))
+                    out.setdefault((r[2].casefold(), "PA"), (r[2], "PA", r[5], r[9], r[10], ""))
     writer = csv.writer(sys.stdout, lineterminator="\n")
-    writer.writerow(["name", "state", "county", "lat", "lon"])
+    writer.writerow(["name", "state", "county", "lat", "lon", "ambiguous"])
     for key in sorted(out):
         writer.writerow(out[key])
 

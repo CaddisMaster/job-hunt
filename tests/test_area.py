@@ -58,6 +58,14 @@ CASES = [
     ("Columbus OH", UNKNOWN),  # a two-letter code without a comma only ever says yes
     ("Seattle WA", UNKNOWN),
     ("Erie Pennsylvania", OUT),  # spelled out, it's certainly a state
+    # a township here that shares its name with a town elsewhere in Pennsylvania
+    ("Lancaster, PA", UNKNOWN),
+    ("Fairfield, Pennsylvania", UNKNOWN),
+    ("Hampton, PA", UNKNOWN),
+    ("Hampton Township, PA", IN),
+    ("Hampton Twp., PA", IN),
+    ("Richland Township, Pennsylvania", IN),
+    ("Lancaster, PA; Pittsburgh, PA", IN),
     # another country, or a region of the world
     ("Tokyo, Japan", OUT),
     ("London, England", OUT),
