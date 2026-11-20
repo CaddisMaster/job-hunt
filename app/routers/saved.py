@@ -6,10 +6,10 @@ them, and someone else's job id is a 404."""
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
-from app import saved, tailor
+from app import applications, saved, tailor
 from app.db import get_db
 from app.flash import flash
 from app.models import SavedJob, User
@@ -26,7 +26,9 @@ def _list(request: Request, db: Session, user: User, *, status: int = 200, **ext
 
 def _job(request: Request, user: User, job: SavedJob, *, status: int = 200, db: Session | None = None, **extra) -> HTMLResponse:
     tailored = tailor.get(db, user, job) if db is not None else None
-    context = {"user": user, "job": job, "tailored": tailored, **extra}
+    application = applications.get(db, user, job) if db is not None else None
+    note = applications.site_note(db, user, applications.host_of(job.url)) if db is not None else None
+    context = {"user": user, "job": job, "tailored": tailored, "application": application, "site_note": note, **extra}
     return templates.TemplateResponse(request, "saved_job.html", context, status_code=status)
 
 
@@ -90,6 +92,15 @@ def tailored_pdf(job_id: int, user: User = Depends(require_user), db: Session = 
     if row is None:
         raise HTTPException(status_code=404)
     return tailor.pdf_response(row, job)
+
+
+@router.get("/{job_id}/application/screenshot.png")
+def screenshot(job_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    job = saved.get(db, user, job_id)
+    row = applications.get(db, user, job)
+    if row is None or row.screenshot is None:
+        raise HTTPException(status_code=404)
+    return Response(row.screenshot, media_type="image/png", headers={"Cache-Control": "private, no-store"})
 
 
 @router.post("/{job_id}/resume/approve")

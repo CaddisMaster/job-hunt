@@ -12,6 +12,13 @@ registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater P
 never shipped and has been removed.
 
 ### Added
+- Applying from Claude Code gets its record (#76). When a session finishes with a job, it records
+  what happened: submitted (Sean clicked Submit himself) or stopped and why, the answers it used,
+  and a screenshot of the confirmation page. The saved job's page shows all three. "Next job" picks
+  the oldest one with an approved resume and nothing recorded yet. What Claude learns about a
+  site's application flow is kept as a note and handed to the next application on that site, so
+  it gets faster. `tools/jobhunt_mcp.py` gives Claude Code all of this as tools: a small MCP
+  server with no dependencies, reading the access token from the Mac's Keychain.
 - Tailored resumes (#73). In a Claude Code session, Claude chooses which lines of Sean's resume
   lead for one saved job and sends them to Job Hunt, which checks every line before making a PDF.
   Roles, titles and dates always come from his confirmed profile. A bullet must be in his resume

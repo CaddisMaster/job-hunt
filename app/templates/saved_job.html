@@ -13,6 +13,18 @@
   {% if job.description %}<div class="posting">{{ job.description }}</div>{% endif %}
 </section>
 
+{% if application %}
+<section class="card" id="application">
+  <h2>{% if application.outcome == 'submitted' %}Applied {{ application.recorded_at.strftime('%Y-%m-%d') }}{% else %}Stopped {{ application.recorded_at.strftime('%Y-%m-%d') }}{% endif %}</h2>
+  {% if application.note %}<p>{{ application.note }}</p>{% endif %}
+  {% if application.answers_used %}
+  <h3>Answers used</h3>
+  <dl class="facts">{% for a in application.answers_used %}<dt>{{ a.question }}</dt><dd>{{ a.answer }}</dd>{% endfor %}</dl>
+  {% endif %}
+  {% if application.screenshot %}<p><a href="/saved/{{ job.id }}/application/screenshot.png">The confirmation screenshot</a></p>{% endif %}
+</section>
+{% endif %}
+
 {% if job.source != 'pending' %}
 <section class="card" id="resume">
   <h2>Tailored resume</h2>
@@ -61,6 +73,14 @@
     <label>The posting's text <textarea name="text" rows="14" required>{{ form.text if form else '' }}</textarea></label>
     <button type="submit" class="primary">Save the text</button>
   </form>
+</section>
+{% endif %}
+
+{% if site_note and site_note.note %}
+<section class="card">
+  <h2>What Claude knows about {{ site_note.host }}</h2>
+  <div class="posting">{{ site_note.note }}</div>
+  <p class="muted">Updated {{ site_note.updated_at.strftime('%Y-%m-%d') }}, by the /apply skill.</p>
 </section>
 {% endif %}
 
