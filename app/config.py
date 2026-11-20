@@ -47,6 +47,17 @@ class Settings(BaseSettings):
     ai_monthly_budget_cents_per_user: int = Field(default=200, ge=0)
     ai_monthly_budget_cents: int = Field(default=1000, ge=0)
 
+    # The aggregators (#45, app/aggregators.py). Blank = that source is skipped and
+    # the crawl says why; nothing errors. Each has a daily request budget, counted in
+    # Postgres, kept inside its free tier.
+    adzuna_app_id: str = ""
+    adzuna_app_key: str = ""
+    adzuna_daily_requests: int = Field(default=80, ge=0)
+    usajobs_api_key: str = ""
+    # USAJobs requires the email its key was issued to as the User-Agent.
+    usajobs_user_agent: str = ""
+    usajobs_daily_requests: int = Field(default=100, ge=0)
+
     @field_validator("app_timezone")
     @classmethod
     def _valid_timezone(cls, value: str) -> str:

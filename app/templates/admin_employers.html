@@ -26,6 +26,22 @@
   </form>
 </section>
 
+{% if suggested %}
+<section class="card">
+  <h2>Employers the aggregators keep finding</h2>
+  <p class="muted">Open jobs in the area from Adzuna or USAJobs at employers not in the registry. If one has its own board on {{ supported }}, adding it here gets its jobs straight from the source.</p>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Employer</th><th>Open jobs</th></tr></thead>
+    <tbody>
+    {% for name, count in suggested %}<tr><td>{{ name }}</td><td>{{ count }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+</section>
+{% endif %}
+
 <section class="card">
   <h2>Employers</h2>
   {% if employers %}

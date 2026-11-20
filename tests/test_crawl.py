@@ -14,6 +14,7 @@ import pytest
 from sqlalchemy import delete, select
 
 from app import postings, sources, worker
+from app.config import get_settings
 from app.db import SessionLocal
 from app.models import Employer, Posting
 from app.sources import FetchError, greenhouse, plain_text
@@ -36,7 +37,7 @@ class Boards:
         self.answers: dict[str, object] = {}
         self.asked: list[str] = []
 
-    def get(self, url: str) -> bytes:
+    def get(self, url: str, headers: dict | None = None) -> bytes:
         self.asked.append(url)
         for token, system in self.systems.items():
             if url == postings.SOURCES[system].url(token):
@@ -68,6 +69,8 @@ def boards(monkeypatch):
     monkeypatch.setattr(worker.employers, "to_fetch", lambda db: [e for e in real_to_fetch(db) if e.id in made])
     monkeypatch.setattr(sources, "_get", api.get)
     monkeypatch.setattr(worker, "PAUSE_SECONDS", 0)
+    for key in ("adzuna_app_id", "adzuna_app_key", "usajobs_api_key", "usajobs_user_agent"):
+        monkeypatch.setattr(get_settings(), key, "")  # the aggregators' tests are in test_aggregators.py
     api.make = make
     yield api
     with SessionLocal() as db:

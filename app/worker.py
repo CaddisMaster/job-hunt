@@ -30,7 +30,7 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import delete, select, text, update
 from sqlalchemy.orm import Session
 
-from app import employers, postings
+from app import aggregators, employers, postings
 from app.config import get_settings
 from app.db import SessionLocal, engine
 from app.models import Employer, JobRun
@@ -175,12 +175,17 @@ def _plural(n: int, word: str) -> str:
 
 
 def crawl(db: Session) -> str:
-    """Fetch every enabled employer's board (#44), one request each, and store what's
-    there (app/postings.py). One employer's failure is recorded on it, and the rest
-    are still fetched. The summary is counts only."""
+    """Fetch every enabled employer's board (#44), one request each, then search the
+    aggregators for everyone's confirmed target titles (#45, app/aggregators.py), and
+    store what's there (app/postings.py). One employer's or source's failure is
+    recorded, and the rest still run. The summary is counts and reasons only.
+
+    Skipped when there's nothing to ask: no enabled employer and no aggregator with
+    its keys set. Failed when everything that ran failed."""
     ids = [employer.id for employer in employers.to_fetch(db)]
-    if not ids:
-        raise Skip("No enabled employers in the registry to fetch.")
+    settings = get_settings()
+    if not ids and all(source.missing(settings) for source in aggregators.SOURCES.values()):
+        raise Skip("No enabled employers in the registry to fetch, and no aggregator keys are set.")
     totals, fetched, failed = postings.Counts(), 0, 0
     for i, employer_id in enumerate(ids):
         if i:
@@ -206,14 +211,40 @@ def crawl(db: Session) -> str:
         failed += 1
         employer = db.get(Employer, employer_id)
         if employer is not None:
-            employer.last_error = f"{now.astimezone(get_settings().tz):%Y-%m-%d %H:%M}: {reason}"[:ERROR_MAX]
+            employer.last_error = f"{now.astimezone(settings.tz):%Y-%m-%d %H:%M}: {reason}"[:ERROR_MAX]
             db.commit()
-    summary = (
-        f"{_plural(fetched, 'employer')} fetched, {failed} failed; {_plural(totals.seen, 'job')} seen, "
-        f"{totals.new} new, {totals.closed} closed; {postings.open_unknown_count(db)} open with an unknown location"
-    )
-    if fetched == 0:
-        raise Failed(f"{summary}. Each employer's reason is on the employer registry page.")
+    parts = []
+    if ids:
+        parts.append(
+            f"{_plural(fetched, 'employer')} fetched, {failed} failed; {_plural(totals.seen, 'job')} seen, "
+            f"{totals.new} new, {totals.closed} closed"
+        )
+    else:
+        parts.append("No enabled employers")
+
+    titles = aggregators.target_titles(db)
+    searched, searches_ok = 0, 0
+    for source in aggregators.SOURCES:
+        try:
+            outcome = aggregators.run(db, source, titles, datetime.now(UTC))
+        except Exception as error:
+            db.rollback()
+            log.exception("crawl: aggregator %s failed", source)
+            parts.append(f"{aggregators.SOURCES[source].LABEL} failed: {type(error).__name__}")
+            searched += 1
+            continue
+        parts.append(outcome.summary())
+        if outcome.ran:
+            searched += 1
+            searches_ok += not outcome.failed
+
+    parts.append(f"{postings.open_unknown_count(db)} open with an unknown location")
+    summary = "; ".join(parts)
+    if not ids and not searched:
+        raise Skip(summary)
+    if fetched == 0 and searches_ok == 0:
+        hint = " Each employer's reason is on the employer registry page." if ids else ""
+        raise Failed(f"{summary}.{hint}")
     return summary
 
 

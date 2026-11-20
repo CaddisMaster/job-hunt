@@ -6,21 +6,30 @@ raises `FetchError` with a short reason for the admin. No login, no page scrapin
 only the three API hosts below are ever requested, with a board token the registry
 already checked (app/employers.py).
 
+The aggregators (#45: adzuna, usajobs) are searches rather than boards: see
+app/aggregators.py. Their keys never appear in a log: httpx2 logs every request's
+URL at INFO, and Adzuna's key is in the URL, so its logger is held at WARNING here.
+
 Polite by construction: one GET per employer, a 20 s timeout per network step and a
 total deadline, a User-Agent that says who we are, no retries (a failed board is
 tried again the next night), and a size cap so one huge board can't sink the worker.
 """
 
 import json
+import logging
 import re
 import time
 from dataclasses import dataclass
 from html import unescape
 from html.parser import HTMLParser
+from urllib.parse import urlsplit
 
 import httpx2
 
 from app.config import get_settings
+
+# Request URLs carry API keys (Adzuna's app_key): never log them.
+logging.getLogger("httpx2").setLevel(logging.WARNING)
 
 TIMEOUT_SECONDS = 20
 DEADLINE_SECONDS = 90  # the whole response, however slowly it trickles in
@@ -45,16 +54,28 @@ class Found:
     remote: bool = False
     latitude: float | None = None
     longitude: float | None = None
+    company: str = ""  # the aggregators' (#45); a board's jobs are its employer's
+
+
+# Never LinkedIn or Indeed, not even as a link (non-negotiable 9).
+BANNED_HOSTS = ("linkedin.com", "lnkd.in", "indeed.com")
+
+
+def banned_link(url: str) -> bool:
+    """Is this link on LinkedIn or Indeed (any subdomain)?"""
+    host = urlsplit(url).hostname or ""
+    return any(host == banned or host.endswith("." + banned) for banned in BANNED_HOSTS)
 
 
 def user_agent() -> str:
     return f"JobHunt/{get_settings().app_version} (+{APP_URL})"
 
 
-def _get(url: str) -> bytes:
-    """The live request (tests replace this). FetchError on anything but a 200."""
+def _get(url: str, headers: dict[str, str] | None = None) -> bytes:
+    """The live request (tests replace this). FetchError on anything but a 200.
+    `headers` add to (or replace) the defaults: USAJobs wants its own User-Agent."""
     started = time.monotonic()
-    headers = {"Accept": "application/json", "User-Agent": user_agent()}
+    headers = {"Accept": "application/json", "User-Agent": user_agent(), **(headers or {})}
     try:
         with httpx2.stream("GET", url, headers=headers, timeout=TIMEOUT_SECONDS, follow_redirects=False) as response:
             if response.status_code != 200:
@@ -73,9 +94,9 @@ def _get(url: str) -> bytes:
         raise FetchError(f"couldn't be reached ({type(error).__name__})") from None
 
 
-def get_json(url: str) -> object:
+def get_json(url: str, headers: dict[str, str] | None = None) -> object:
     try:
-        return json.loads(_get(url))
+        return json.loads(_get(url, headers) if headers else _get(url))
     except (ValueError, UnicodeDecodeError):
         raise FetchError("didn't answer with JSON") from None
 

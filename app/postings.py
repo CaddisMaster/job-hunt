@@ -9,6 +9,12 @@ nights doesn't close its jobs. A closed job that comes back is reopened.
 Every fetch re-reads each posting's location with app/area.py, so a place added to
 the table later fixes the postings it had left `unknown`.
 
+`record_search()` stores an aggregator's night (#45, app/aggregators.py). Its jobs
+belong to no registry employer (`employer_id` is empty, `company` is what the ad
+says). A search returns matches rather than a whole board, so it closes by age: a
+job no complete search has returned for STALE (about three nights) is closed. A
+search cut short (an error, the daily budget, the page cap) closes nothing.
+
 `shown()` is what users may see: open, in the area (remote only when asked), and
 not from a disabled employer. An `unknown` location is never shown; the admin sees
 those location texts counted (`unknown_locations`), so the table grows from real
@@ -17,7 +23,7 @@ misses rather than guesses.
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
@@ -29,6 +35,7 @@ from app.sources import Found, ashby, greenhouse, lever
 
 SOURCES = {"greenhouse": greenhouse, "lever": lever, "ashby": ashby}
 CLOSE_AFTER = 3  # successful fetches in a row that didn't return the job
+STALE = timedelta(hours=60)  # an aggregator job unseen this long has missed ~3 nightly searches
 
 
 @dataclass
@@ -108,6 +115,72 @@ def record(db: Session, employer: Employer, found: Iterable[Found], now: datetim
             counts.closed += 1
     db.flush()
     return counts
+
+
+def record_search(db: Session, source: str, found: Iterable[Found], now: datetime, *, complete: bool) -> Counts:
+    """Store one night of an aggregator's searches (uncommitted): see the module
+    docstring. `complete` is whether every search ran to its last page."""
+    jobs = {job.external_id: job for job in found}
+    counts = Counts(seen=len(jobs))
+    existing = {}
+    if jobs:
+        rows = db.scalars(select(Posting).where(Posting.source == source, Posting.external_id.in_(list(jobs))))
+        existing = {posting.external_id: posting for posting in rows}
+    for external_id, job in jobs.items():
+        where, remote = _where(job)
+        posting = existing.get(external_id)
+        if posting is None:
+            posting = Posting(source=source, external_id=external_id, first_seen_at=now)
+            db.add(posting)
+            counts.new += 1
+        posting.employer_id = None
+        posting.company = job.company or "Unknown employer"
+        posting.title = job.title
+        posting.url = job.url
+        posting.location = job.location
+        posting.area = where.value
+        posting.latitude, posting.longitude = job.latitude, job.longitude
+        posting.remote = remote
+        posting.description = job.description
+        posting.last_seen_at = now
+        posting.missed_fetches = 0
+        posting.closed_at = None
+    if complete:
+        stale = select(Posting).where(
+            Posting.source == source,
+            Posting.employer_id.is_(None),
+            Posting.closed_at.is_(None),
+            Posting.last_seen_at < now - STALE,
+        )
+        for posting in db.scalars(stale):
+            posting.closed_at = now
+            counts.closed += 1
+    db.flush()
+    return counts
+
+
+SUGGEST_AT = 3  # open aggregator postings before an employer is suggested for the registry
+
+
+def suggested_employers(db: Session, limit: int = 30) -> list[tuple[str, int]]:
+    """Employers the aggregators keep finding in the area that aren't in the registry:
+    (name, open postings), most first. Names only; the admin finds the board."""
+    known = select(func.lower(Employer.name))
+    rows = db.execute(
+        select(Posting.company, func.count())
+        .where(
+            Posting.employer_id.is_(None),
+            Posting.closed_at.is_(None),
+            Posting.area == Where.IN_AREA.value,
+            func.lower(Posting.company).not_in(known),
+            Posting.company != "Unknown employer",
+        )
+        .group_by(Posting.company)
+        .having(func.count() >= SUGGEST_AT)
+        .order_by(func.count().desc(), Posting.company)
+        .limit(limit)
+    )
+    return [(company, int(count)) for company, count in rows]
 
 
 def shown(db: Session, *, include_remote: bool = False) -> list[Posting]:

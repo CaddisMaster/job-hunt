@@ -1,0 +1,47 @@
+{
+  "__CLASS__": "Adzuna::API::Response::JobSearchResults",
+  "count": 3,
+  "mean": 98000,
+  "results": [
+    {
+      "__CLASS__": "Adzuna::API::Response::Job",
+      "id": "TOKEN-1",
+      "title": "Data Analyst",
+      "description": "Analyze <strong>claims</strong> data for a Pittsburgh insurer&hellip;",
+      "redirect_url": "https://www.adzuna.com/land/ad/TOKEN-1?se=x&v=y",
+      "created": "2026-11-18T14:02:11Z",
+      "company": {"__CLASS__": "Adzuna::API::Response::Company", "display_name": "Allegheny Mutual"},
+      "location": {"__CLASS__": "Adzuna::API::Response::Location", "display_name": "Pittsburgh, Allegheny County", "area": ["US", "Pennsylvania", "Allegheny County", "Pittsburgh"]},
+      "latitude": 40.4406,
+      "longitude": -79.9959,
+      "category": {"__CLASS__": "Adzuna::API::Response::Category", "label": "IT Jobs", "tag": "it-jobs"},
+      "contract_time": "full_time",
+      "salary_min": 85000,
+      "salary_max": 105000,
+      "salary_is_predicted": "0"
+    },
+    {
+      "__CLASS__": "Adzuna::API::Response::Job",
+      "id": "TOKEN-2",
+      "title": "Senior Data Analyst",
+      "description": "Hybrid role in Cranberry Township.",
+      "redirect_url": "https://www.adzuna.com/land/ad/TOKEN-2?se=x&v=y",
+      "created": "2026-11-17T09:30:00Z",
+      "company": {"__CLASS__": "Adzuna::API::Response::Company", "display_name": "Allegheny Mutual"},
+      "location": {"__CLASS__": "Adzuna::API::Response::Location", "display_name": "Cranberry Township, Butler County", "area": ["US", "Pennsylvania", "Butler County", "Cranberry Township"]},
+      "category": {"__CLASS__": "Adzuna::API::Response::Category", "label": "IT Jobs", "tag": "it-jobs"}
+    },
+    {
+      "__CLASS__": "Adzuna::API::Response::Job",
+      "id": "TOKEN-3",
+      "title": "Data Analyst II",
+      "description": "Columbus office.",
+      "redirect_url": "https://www.adzuna.com/land/ad/TOKEN-3?se=x&v=y",
+      "created": "2026-11-16T09:30:00Z",
+      "company": {"__CLASS__": "Adzuna::API::Response::Company", "display_name": "Buckeye Data"},
+      "location": {"__CLASS__": "Adzuna::API::Response::Location", "display_name": "Columbus, Franklin County", "area": ["US", "Ohio", "Franklin County", "Columbus"]},
+      "latitude": 39.9612,
+      "longitude": -82.9988
+    }
+  ]
+}

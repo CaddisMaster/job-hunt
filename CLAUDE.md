@@ -47,7 +47,8 @@ app/admin.py         the admin panel's queries — accounts and job runs, never 
 app/area.py          is a location in Greater Pittsburgh? offline, from app/data/places.csv (built by scripts/build_places.py)
 app/employers.py     the shared employer registry: careers URL → (system, token), one live board check, to_fetch(), the starter list (app/data/employers.csv)
 app/worker.py        the `worker` service: scheduled jobs (JOBS: crawl, housekeeping), due once a day, advisory-locked, runs in job_runs
-app/sources/         one module per hiring system's public API (greenhouse, lever, ashby): fetch → Found; plain_text() for descriptions
+app/sources/         one module per hiring system's public API (greenhouse, lever, ashby) and aggregator (adzuna, usajobs): → Found; plain_text()
+app/aggregators.py   the aggregators' night: everyone's confirmed titles pooled, a daily budget each, blank keys = skipped
 app/postings.py      the shared postings: record() a fetch (update, add, close after 3 misses), shown(), unknown_locations()
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static

@@ -36,6 +36,15 @@ and why it matters, not what the diff says.
   the admin page lists those locations with a count, so the places table grows from real misses.
   Locations in another country ("Tokyo, Japan") and "Washington, D.C." are now read as outside
   the area rather than unknown.
+- Two job search aggregators in the nightly search (#45), for employers the registry doesn't
+  have, the region's biggest among them: Adzuna, and USAJobs for federal jobs. Each is searched
+  for the target titles of every confirmed profile, pooled across users and deduplicated, so no
+  search says whose title it was, within 50 km (Adzuna) or 50 miles (USAJobs) of Pittsburgh.
+  Both ship **off**: with no keys, the crawl's summary says each was skipped and why, and nothing
+  errors. Each has a daily request budget counted in the database, so a restart can't reset it.
+  A link to LinkedIn or Indeed is dropped before it's stored. Employers the aggregators keep
+  finding in the area, but that aren't in the registry, are suggested on the registry page by
+  name. Adzuna gives only a snippet of each description, and its link is Adzuna's own page.
 - "Lancaster, PA" is no longer read as Pittsburgh-area. 25 townships in the seven counties share
   their name with a town elsewhere in Pennsylvania: Lancaster Township in Butler County and the
   city of Lancaster, Fairfield, Hanover, Hampton and others. A posting naming one of them alone is

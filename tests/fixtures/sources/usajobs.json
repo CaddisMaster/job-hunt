@@ -1,0 +1,48 @@
+{
+  "LanguageCode": "EN",
+  "SearchParameters": {},
+  "SearchResult": {
+    "SearchResultCount": 2,
+    "SearchResultCountAll": 2,
+    "SearchResultItems": [
+      {
+        "MatchedObjectId": "TOKEN-1",
+        "MatchedObjectDescriptor": {
+          "PositionID": "VA-27-TOKEN",
+          "PositionTitle": "Data Analyst",
+          "PositionURI": "https://www.usajobs.gov/job/TOKEN-1",
+          "ApplyURI": ["https://www.usajobs.gov:443/job/TOKEN-1?PostingChannelID=RESTAPI"],
+          "PositionLocationDisplay": "Multiple Locations",
+          "PositionLocation": [
+            {"LocationName": "Washington, District of Columbia", "CountryCode": "United States", "CountrySubDivisionCode": "District of Columbia", "CityName": "Washington, District of Columbia", "Longitude": -77.032, "Latitude": 38.8904},
+            {"LocationName": "Pittsburgh, Pennsylvania", "CountryCode": "United States", "CountrySubDivisionCode": "Pennsylvania", "CityName": "Pittsburgh, Pennsylvania", "Longitude": -79.9959, "Latitude": 40.4406}
+          ],
+          "OrganizationName": "Veterans Health Administration",
+          "DepartmentName": "Department of Veterans Affairs",
+          "QualificationSummary": "<p>One year of specialized experience…</p>",
+          "PublicationStartDate": "2026-11-15T00:00:00.0000",
+          "ApplicationCloseDate": "2026-12-01T23:59:59.9970",
+          "UserArea": {"Details": {"JobSummary": "Analyze patient outcome data.", "MajorDuties": ["Builds reports"]}, "IsRadialSearch": true}
+        },
+        "RelevanceRank": 0
+      },
+      {
+        "MatchedObjectId": 99000000,
+        "MatchedObjectDescriptor": {
+          "PositionID": "OPM-27-TOKEN",
+          "PositionTitle": "Data Analyst (Remote)",
+          "PositionURI": "https://www.usajobs.gov/job/TOKEN-2",
+          "PositionLocationDisplay": "Anywhere in the U.S. (remote job)",
+          "PositionLocation": [
+            {"LocationName": "Anywhere in the U.S. (remote job)", "CountryCode": "United States", "Longitude": -98.5795, "Latitude": 39.8283}
+          ],
+          "OrganizationName": "Office of Personnel Management",
+          "DepartmentName": "Office of Personnel Management",
+          "UserArea": {"Details": {"JobSummary": "Remote analytics."}}
+        },
+        "RelevanceRank": 0
+      }
+    ],
+    "UserArea": {"NumberOfPages": "1", "IsRadialSearch": true}
+  }
+}

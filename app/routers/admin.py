@@ -110,6 +110,7 @@ def _employers_page(request: Request, db: Session, me: User, *, status: int = 20
         "systems": employers.SYSTEMS,
         "supported": employers.SUPPORTED,
         "starter_count": len(employers.starters()),
+        "suggested": postings.suggested_employers(db),
         **extra,
     }
     return templates.TemplateResponse(request, "admin_employers.html", context, status_code=status)

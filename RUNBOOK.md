@@ -82,6 +82,13 @@ Security headers (CSP, HSTS, X-Frame-Options…) are set by the app, not Nginx, 
 | `DB_APP_USER` / `DB_APP_PASSWORD` | `apply_app` / a generated password (below) |
 | `SECRET_KEY` | `python3 -c "import secrets; print(secrets.token_urlsafe(48))"` |
 
+**Turning on an aggregator (#45).** Adzuna and USAJobs ship off: their keys are blank and the
+crawl's summary says "skipped". To turn one on, add its keys to `.env` (`ADZUNA_APP_ID` and
+`ADZUNA_APP_KEY` from developer.adzuna.com; `USAJOBS_API_KEY`, and as `USAJOBS_USER_AGENT` the
+email the key was issued to), then to `job-hunt-env-prod`, then `docker compose up -d --no-deps
+worker`; only the worker searches. Keep `ADZUNA_DAILY_REQUESTS` inside the free tier your Adzuna
+account shows. The next night's summary on `/admin` reads "Adzuna: N requests, …".
+
 **The least-privilege role.** Migration `0001` creates `apply_app` with DML on every table but no
 DDL and **no password**. After the first deploy has run the migrations:
 
