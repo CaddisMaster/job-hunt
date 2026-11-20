@@ -2,7 +2,7 @@
 
 ⚠️ Every table holding a user's private data carries `user_id`, and every
 query against it is scoped to the current user (CLAUDE.md non-negotiable #1).
-Shared tables carry no `user_id`: job_runs and employers now, postings later in 0.3."""
+Shared tables carry no `user_id`: job_runs, employers and postings."""
 
 import secrets
 from datetime import datetime
@@ -11,9 +11,11 @@ from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     DateTime,
+    Float,
     ForeignKey,
     Index,
     LargeBinary,
+    SmallInteger,
     String,
     Text,
     UniqueConstraint,
@@ -227,3 +229,44 @@ class Employer(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     last_error: Mapped[str | None] = mapped_column(Text)
+
+
+class Posting(Base):
+    """A job the nightly crawl found (#44, app/postings.py): one row per job per
+    source, so a job seen again is updated, not duplicated. Shared by every user: no
+    `user_id`.
+
+    `area` is app/area.py's answer for `location` (and the coordinates, if the source
+    gave them); an `unknown` posting is kept but shown to no one. `missed_fetches`
+    counts its employer's successful fetches in a row that didn't return it; at 3 it
+    is closed, kept for history, and reopened if it comes back. `description` is
+    plain text, never markup: it is shown on pages and later read by a model."""
+
+    __tablename__ = "postings"
+    __table_args__ = (
+        CheckConstraint("source IN ('greenhouse', 'lever', 'ashby', 'adzuna', 'usajobs')", name="postings_source"),
+        CheckConstraint("area IN ('in_area', 'remote', 'out_of_area', 'unknown')", name="postings_area"),
+        CheckConstraint("char_length(description) <= 50000", name="postings_description_length"),
+        UniqueConstraint("source", "external_id", name="postings_source_job"),
+        Index("postings_employer", "employer_id"),
+        # What's shown (open, in the area) and the admin's unknown-location count.
+        Index("postings_area_open", "area", "closed_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    source: Mapped[str] = mapped_column(String(16))
+    external_id: Mapped[str] = mapped_column(String(200))
+    employer_id: Mapped[int | None] = mapped_column(ForeignKey("employers.id", ondelete="SET NULL"))
+    company: Mapped[str] = mapped_column(String(200))
+    title: Mapped[str] = mapped_column(String(300))
+    url: Mapped[str] = mapped_column(String(1000))
+    location: Mapped[str] = mapped_column(String(500), default="", server_default="")
+    area: Mapped[str] = mapped_column(String(16))
+    latitude: Mapped[float | None] = mapped_column(Float)
+    longitude: Mapped[float | None] = mapped_column(Float)
+    remote: Mapped[bool] = mapped_column(default=False, server_default=false())
+    description: Mapped[str] = mapped_column(Text, default="", server_default="")
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    missed_fetches: Mapped[int] = mapped_column(SmallInteger, default=0, server_default="0")
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
