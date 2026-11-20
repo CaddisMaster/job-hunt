@@ -47,6 +47,7 @@ app/admin.py         the admin panel's queries — accounts and job runs, never 
 app/worker.py        the `worker` service: scheduled jobs (JOBS: housekeeping), due once a day, advisory-locked, runs in job_runs
 app/saved.py         saved jobs (#63): a pasted link → the page's JobPosting (JSON-LD or microdata), or pasted text; SSRF-guarded
 app/text.py          markup in, plain text out: plain_text(), tidy(), clip()
+app/tailor.py        tailored resumes (#73): check what Claude Code sent against the resume + confirmed profile, render the PDF, store, approve
 app/tokens.py        personal access tokens for the bridge (#74): made once, stored hashed, revocable; authenticate()
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static

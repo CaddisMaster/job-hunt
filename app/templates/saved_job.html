@@ -13,6 +13,41 @@
   {% if job.description %}<div class="posting">{{ job.description }}</div>{% endif %}
 </section>
 
+{% if job.source != 'pending' %}
+<section class="card" id="resume">
+  <h2>Tailored resume</h2>
+  {% if tailored %}
+    <p>{% if tailored.approved_at %}<strong>Approved</strong> {{ tailored.approved_at.strftime('%Y-%m-%d') }}: this is the resume used to apply.{% else %}<span class="alert">A draft, not approved yet.</span> It isn't used to apply until you approve it.{% endif %}
+    Made {{ tailored.created_at.strftime('%Y-%m-%d %H:%M') }} in Claude Code.</p>
+    <p><a href="/saved/{{ job.id }}/resume.pdf">Download the PDF</a></p>
+    {% if not tailored.approved_at %}
+    <form method="post" action="/saved/{{ job.id }}/resume/approve" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <button type="submit" class="primary">Approve this resume</button>
+    </form>
+    {% endif %}
+    {% if tailored.left_out %}
+    <h3>Left out</h3>
+    <p class="muted">Lines that were sent but aren't on the PDF, because your resume or confirmed profile doesn't support them.</p>
+    <ul class="left-out">
+      {% for item in tailored.left_out %}<li><span class="muted">{{ item.section }}:</span> {{ item.text }} <span class="muted">({{ item.why }})</span></li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    <h3>What's on it</h3>
+    {% set c = tailored.content %}
+    {% if c.summary %}<p>{{ c.summary | join(' ') }}</p>{% endif %}
+    {% for role in c.roles %}
+      <p><strong>{{ role.title }}</strong>{% if role.employer %}, {{ role.employer }}{% endif %} <span class="muted">{{ [role.start, role.end] | select | join(' – ') }}</span></p>
+      {% if role.bullets %}<ul>{% for b in role.bullets %}<li>{{ b }}</li>{% endfor %}</ul>{% endif %}
+    {% endfor %}
+    {% if c.skills %}<p><strong>Skills:</strong> {{ c.skills | join(', ') }}</p>{% endif %}
+  {% else %}
+    <p class="muted">None yet. In Claude Code on your Mac, <code>/apply {{ job.id }}</code> tailors your resume to this job and sends it here to be checked.</p>
+  {% endif %}
+</section>
+{% endif %}
+
 {% if job.source == 'pending' %}
 <section class="card">
   <h2>Paste the posting</h2>
