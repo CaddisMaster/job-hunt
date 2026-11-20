@@ -100,3 +100,9 @@ def test_a_post_with_the_wrong_csrf_token_is_rejected(client, user):
 
 def test_htmx_sends_the_csrf_token_as_a_header(logged_in):
     assert "hx-headers='{\"X-CSRF-Token\": \"" in logged_in.get("/").text
+
+
+@pytest.mark.criterion(67, "The sign-in page doesn't offer invites")
+def test_the_sign_in_page_doesnt_offer_invites(client):
+    page = client.get("/login").text
+    assert "Ask Sean" not in page and "invite only" not in page.lower()

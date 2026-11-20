@@ -56,6 +56,8 @@ never shipped and has been removed.
   job is housekeeping, which keeps 90 days of that history.
 
 ### Changed
+- The sign-in page no longer says "Job Hunt is invite only. Ask Sean for an invite." (#67). Job
+  Hunt is Sean's alone, and the page shouldn't invite strangers to ask, or name him.
 - Building the profile from a resume moved to Claude Code (plan §10 decision 11). On Sean's Mac,
   `/profile` reads his resume and sends what it found to Job Hunt, which keeps only items whose
   quoted line really is in the resume, lists what it dropped, and waits for him to confirm the
