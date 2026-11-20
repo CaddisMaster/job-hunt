@@ -11,8 +11,10 @@ Shared by every user: no `user_id`. The admin page shows employers only, never w
 profile or search led to one (plan §2).
 """
 
+import csv
 import re
 from dataclasses import dataclass
+from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 import httpx2
@@ -132,3 +134,49 @@ def all_employers(db: Session) -> list[Employer]:
 def to_fetch(db: Session) -> list[Employer]:
     """What the nightly crawl (#44) fetches: enabled employers only."""
     return list(db.scalars(select(Employer).where(Employer.enabled).order_by(Employer.id)))
+
+
+# ---- The starter list -------------------------------------------------------------
+
+STARTERS = Path(__file__).parent / "data" / "employers.csv"
+_CAREERS_URLS = {
+    "greenhouse": "https://boards.greenhouse.io/{token}",
+    "lever": "https://jobs.lever.co/{token}",
+    "ashby": "https://jobs.ashbyhq.com/{token}",
+}
+
+
+def starters() -> list[tuple[str, Board]]:
+    """The Pittsburgh starter list (app/data/employers.csv): employers whose board had
+    jobs in the area when the list was built. Each row is checked the way a pasted URL
+    is, so a bad row can't name another host."""
+    rows = []
+    with STARTERS.open(encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            if row["system"] in SYSTEMS and TOKEN_RE.match(row["token"]) and row["name"].strip():
+                rows.append((row["name"].strip()[:200], Board(row["system"], row["token"])))
+    return rows
+
+
+def add_starters(db: Session, admin: User) -> tuple[int, int]:
+    """Add every starter-list employer the registry doesn't have (uncommitted):
+    (added, already there). No live check per board: the list was checked when it was
+    built, and the crawl records any board that has since gone on its employer.
+    An employer the admin disabled stays disabled."""
+    have = {(system, token) for system, token in db.execute(select(Employer.system, Employer.token))}
+    added = 0
+    for name, board in starters():
+        if (board.system, board.token) in have:
+            continue
+        have.add((board.system, board.token))
+        db.add(
+            Employer(
+                name=name,
+                system=board.system,
+                token=board.token,
+                careers_url=_CAREERS_URLS[board.system].format(token=board.token),
+                added_by=admin.id,
+            )
+        )
+        added += 1
+    return added, len(starters()) - added

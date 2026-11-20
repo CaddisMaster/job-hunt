@@ -41,6 +41,12 @@ and why it matters, not what the diff says.
   city of Lancaster, Fairfield, Hanover, Hampton and others. A posting naming one of them alone is
   now unknown, kept out and listed for the admin, while "Hampton Township, PA" is still in the
   area. Found while seeding the registry: a Lancaster job was showing as local.
+- A Pittsburgh starter list for the employer registry. Admin → The employer registry → "Add the
+  starter list" adds every employer on it that isn't already there, in one click, so the nightly
+  search has boards to read from the first night instead of waiting for each one to be pasted in.
+  The list holds employers whose own Greenhouse, Lever or Ashby board had jobs in the area when it
+  was built. Any of them can be disabled, and a disabled one stays disabled if the list is added
+  again.
 
 ## [0.2.0] - 2026-11-19
 
