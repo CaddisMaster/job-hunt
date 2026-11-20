@@ -42,6 +42,18 @@ never shipped and has been removed.
   the others still run. The admin page lists each job with its last run and how it went. The first
   job is housekeeping, which keeps 90 days of that history.
 
+### Changed
+- Building the profile from a resume moved to Claude Code (plan §10 decision 11). On Sean's Mac,
+  `/profile` reads his resume and sends what it found to Job Hunt, which keeps only items whose
+  quoted line really is in the resume, lists what it dropped, and waits for him to confirm the
+  profile on the review page as before. The Profile page's Build button is gone; it says to run
+  `/profile` instead.
+
+### Removed
+- The app's own Claude calls, and with them the Anthropic API key, the monthly AI budgets and the
+  admin's "AI this month" column. Everything that needs a model now runs in Claude Code on Sean's
+  own plan. The spend ledger's table stays until a later release drops it, since 0.2.0 shipped it.
+
 ## [0.2.0] - 2026-11-19
 
 The profile milestone: upload your resume, get a profile built from it that you check and

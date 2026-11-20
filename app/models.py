@@ -72,7 +72,12 @@ class RateLimit(Base):
 
 
 class AiSpend(Base):
-    """The AI spend ledger (#22): one row per model call that came back with a bill.
+    """**Unused since 2026-11-20** (plan §10 decision 11: the AI work runs in Claude
+    Code, so the app makes no Claude calls). The table shipped in v0.2.0, so it's
+    dropped by a later release's migration, never in the one that stops using it
+    (non-negotiable 5).
+
+    The AI spend ledger (#22): one row per model call that came back with a bill.
     Every call runs on Sean's key, so each user's month is summed from here for their
     cap, and everyone's for the key's (app/spend.py). Totals are never stored.
 

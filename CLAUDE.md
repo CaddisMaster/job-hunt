@@ -21,7 +21,9 @@ third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by cop
 ## Tech stack
 
 - **Backend:** Python 3.15, FastAPI (sync routes), SQLAlchemy 2.0 ORM, psycopg 3, Alembic,
-  pydantic-settings, argon2-cffi, Starlette sessions. One uvicorn process.
+  pydantic-settings, argon2-cffi, Starlette sessions, ReportLab (PDFs). One uvicorn process.
+- **The AI work** (reading the resume, tailoring, applying) runs in **Claude Code on Sean's Mac**,
+  through the bridge (`/api/`, a token). The app itself makes no Claude calls.
 - **Frontend:** Jinja2 + htmx 2.0.4 (vendored, 0BSD, licence beside it in `app/static/`), plain
   CSS with light and dark tokens. No build step.
 - **Database:** PostgreSQL 16, its own container, never published to the host.
@@ -37,10 +39,8 @@ app/models.py        ORM models
 app/security.py      argon2 passwords, sessions (require_user, require_admin), CSRF, CSP + security headers
 app/rate_limit.py    the Postgres-backed fixed-window limiter (login)
 app/invites.py       one-time set-password links (invite, and reset a forgotten password)
-app/ai.py            every Claude call's seam: models, prices, AIUnavailable and its page messages
-app/spend.py         the AI spend ledger and the two monthly caps (per user, and the key's); spend.run() makes every call
 app/resumes.py       resume uploads: type by content, size and parse limits, text extraction, owner-scoped queries
-app/profile.py       the profile from a resume: build (one Claude call), ground every claim in the resume, review
+app/profile.py       the profile from a resume: sent by Claude Code (/profile), every claim grounded in the resume, reviewed
 app/answers.py       the answer bank: starter questions, their only defaults (EEO decline, remote off), validation
 app/grounding.py     non-negotiable 7 in code: a claim vs confirmed facts → supported / unsupported / needs the user
 app/admin.py         the admin panel's queries — accounts and job runs, never anyone's private data

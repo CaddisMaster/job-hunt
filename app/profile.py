@@ -1,11 +1,12 @@
-"""The profile (#24): built from the base resume by one Claude call, then checked
-and confirmed by its owner (plan §3).
+"""The profile (#24): read from the base resume in a Claude Code session, then
+checked and confirmed by its owner (plan §3, §10 decision 11).
 
-Non-negotiable 7 starts here. The model is told to extract, never infer, and to
-copy the resume line behind every role, skill, degree and certification. Then
-`ground()` keeps only items whose line really is in the resume and whose value
-really is in that line (app/grounding.py's `in_source`). The model's word is never taken for it. What survives is
-shown to the owner beside its line; only a profile they confirm is used later.
+Non-negotiable 7 starts here. Claude Code is told to extract, never infer, and to
+copy the resume line behind every role, skill, degree and certification; it sends
+that through the bridge (`POST /api/profile`). Then `ground()` keeps only items
+whose line really is in the resume and whose value really is in that line
+(app/grounding.py's `in_source`). The session's word is never taken for it. What
+survives is shown to the owner beside its line; only a profile they confirm is used.
 
 ⚠️ Every function takes the current user and touches only their rows
 (non-negotiable 1).
@@ -14,47 +15,84 @@ shown to the owner beside its line; only a profile they confirm is used later.
 import re
 from datetime import UTC, datetime
 
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import ai, grounding, resumes, spend
+from app import grounding, resumes
 from app.models import Profile, Resume, User
 
 EDITED = "added or changed by you"  # the source of anything the owner typed in themselves
 normalize = grounding.normalize
 
 
+# What a session sends: the shape of the extraction (#24's, unchanged).
+class SourcedItem(BaseModel):
+    value: str = Field(max_length=300, description="The skill, degree or certification, as the resume words it.")
+    source: str = Field(max_length=1000, description="The exact line or phrase from the resume it comes from.")
+
+
+class Role(BaseModel):
+    title: str = Field(max_length=300)
+    employer: str = Field(default="", max_length=300)
+    start: str = Field(default="", max_length=50)
+    end: str = Field(default="", max_length=50)
+    source: str = Field(max_length=1000, description="The exact resume line holding this title.")
+
+
+class ProfileData(BaseModel):
+    roles: list[Role] = Field(default_factory=list, max_length=100)
+    skills: list[SourcedItem] = Field(default_factory=list, max_length=300)
+    education: list[SourcedItem] = Field(default_factory=list, max_length=50)
+    certifications: list[SourcedItem] = Field(default_factory=list, max_length=100)
+    total_years: float | None = Field(default=None, ge=0, le=70)
+    seniority: str = "unknown"
+    target_titles: list[str] = Field(default_factory=list, max_length=50)
+
+
 def _grounded(value: str, source: str, resume: str) -> bool:
     return grounding.in_source(value, source, resume)
 
 
-def ground(data: ai.ProfileData, resume_text: str) -> dict:
-    """The extraction as stored: only items the resume itself supports.
+def ground(data: ProfileData, resume_text: str) -> tuple[dict, list[dict]]:
+    """The extraction as stored, and what was dropped: only items the resume itself
+    supports.
 
     A role needs its title in its source line and that line in the resume. A skill,
     degree or certification needs its value in its line, and the line in the resume.
     Target titles are search terms, not claims, so they're kept as given."""
     resume = normalize(resume_text)
-    roles = [r.model_dump() for r in data.roles if _grounded(r.title, r.source, resume)]
+    left_out: list[dict] = []
+    roles = []
+    for r in data.roles:
+        if _grounded(r.title, r.source, resume):
+            roles.append(r.model_dump())
+        else:
+            left_out.append({"section": "roles", "text": r.title[:300], "why": "its line isn't in your resume, or doesn't name that title"})
 
-    def items(xs: list[ai.SourcedItem]) -> list[dict]:
+    def items(section: str, xs: list[SourcedItem]) -> list[dict]:
         seen, out = set(), []
         for x in xs:
             key = normalize(x.value)
-            if key not in seen and _grounded(x.value, x.source, resume):
+            if key in seen:
+                continue
+            if _grounded(x.value, x.source, resume):
                 seen.add(key)
                 out.append({"value": x.value.strip(), "source": x.source.strip()})
+            else:
+                left_out.append({"section": section, "text": x.value[:300], "why": "its line isn't in your resume, or doesn't say it"})
         return out
 
-    return {
+    data_out = {
         "roles": roles,
-        "skills": items(data.skills),
-        "education": items(data.education),
-        "certifications": items(data.certifications),
+        "skills": items("skills", data.skills),
+        "education": items("education", data.education),
+        "certifications": items("certifications", data.certifications),
         "total_years": data.total_years,
-        "seniority": data.seniority,
+        "seniority": data.seniority if data.seniority in SENIORITY else "unknown",
         "target_titles": _dedupe(data.target_titles),
     }
+    return data_out, left_out
 
 
 def _dedupe(values: list[str]) -> list[str]:
@@ -75,28 +113,27 @@ def get(db: Session, user: User) -> Profile | None:
     return db.scalar(select(Profile).where(Profile.user_id == user.id))
 
 
-def build(db: Session, user: User) -> Profile:
-    """Build (or rebuild) the user's profile from their base resume. One Claude call,
-    charged to them and refused over budget (AIUnavailable). The new profile is
-    unreviewed until they confirm it."""
+class NoResume(Exception):
+    """There's no base resume with text to check an extraction against."""
+
+
+def store(db: Session, user: User, data: ProfileData, *, model: str = "claude-code") -> tuple[Profile, list[dict]]:
+    """Ground what a session read from the base resume and store it as the user's
+    profile, unconfirmed until they review it (committed): (the profile, what was
+    left out). NoResume if there's nothing to check it against."""
     resume = base_resume(db, user)
     if resume is None or not resume.text:
-        raise ValueError("no resume with text")  # the page only offers the button when there is one
-    response = spend.run(
-        user.id, "profile", lambda client, model: ai._call_profile_model(client, model, resume_text=resume.text)
-    )
-    if getattr(response, "stop_reason", None) == "refusal" or response.parsed_output is None:
-        raise ai.AIUnavailable("error")  # charged (spend.run recorded it), but nothing usable came back
-    data = ground(response.parsed_output, resume.text)
+        raise NoResume
+    grounded, left_out = ground(data, resume.text)
     profile = get(db, user) or Profile(user_id=user.id)
     profile.resume_id = resume.id
-    profile.data = data
-    profile.model = getattr(response, "model", None) or ai.MODELS["profile"]
+    profile.data = grounded
+    profile.model = model[:64]
     profile.built_at = datetime.now(UTC)
     profile.reviewed_at = None
     db.add(profile)
     db.commit()
-    return profile
+    return profile, left_out
 
 
 # --- the owner's review -------------------------------------------------------------
