@@ -19,6 +19,13 @@ and why it matters, not what the diff says.
   exists, and only then saves it. Any other URL is refused with the list of what's supported. An
   employer can be disabled, and the nightly search (coming in 0.3) skips it. The registry is
   shared by everyone and shows employers only, never whose search led to one.
+- A fixed definition of "Greater Pittsburgh" (#42), ready for job discovery in 0.3: the seven-county
+  metro (Allegheny, Armstrong, Beaver, Butler, Fayette, Washington, Westmoreland) plus anywhere
+  within 50 miles of downtown. Every job's location text is read against a table of the area's
+  towns, townships and boroughs from the Census Gazetteer, plus post-office names like Wexford
+  and Warrendale from GeoNames (CC BY 4.0). The result is in the area, remote, somewhere else,
+  or unknown, and unknown jobs are kept out rather than guessed. Pittsburg, Kansas is not
+  Pittsburgh, and a hybrid job in Cranberry is in the area.
 
 ## [0.2.0] - 2026-11-19
 
