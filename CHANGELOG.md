@@ -12,11 +12,19 @@ registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater P
 never shipped and has been removed.
 
 ### Added
+- Apply from the web app (#88). An Apply button on a saved job's page (and Build my profile on the
+  Profile page) queues a run. The runner on the VM picks it up and does it with Claude Code. A Run
+  panel on the page shows what it's doing and asks Sean anything it needs, right there. That
+  includes approving the tailored resume, and signing in or answering a CAPTCHA in the browser,
+  with a Done button. When the form is filled, the panel shows a screenshot. Nothing is sent until
+  he presses Submit application. He can Stop a run at any time, and one left waiting 30 minutes
+  stops itself. A button can only start those two kinds of run, and Claude Code gets only Job
+  Hunt's and the browser's tools.
 - `/apply` and `/profile` for Claude Code (#66), run on the VM, with the setup in `docs/apply.md`.
   `/profile` reads Sean's resume into his profile for him to confirm. `/apply next` tailors his
   resume to the next saved job, then fills in the application with Playwright, in a browser on a
   virtual screen that Sean watches and uses from his Mac through Screen Sharing.
-  `tools/apply-screen.sh` starts that screen, with VNC reachable only through an SSH tunnel. It
+  `tools/apply-services.sh` starts that screen, with VNC reachable only through an SSH tunnel. It
   asks him anything his answer bank doesn't cover, stops for him to click Submit, and records what
   happened. It never invents an answer, never solves a CAPTCHA, never types a password and never
   uses Easy Apply. The API gained `GET /api/profile`, so `/profile` can read the resume.

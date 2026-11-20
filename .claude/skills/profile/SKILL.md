@@ -34,3 +34,13 @@ uses it before he does. Setup is in `docs/apply.md`.
      quote and send again if it really is in the resume).
 4. Tell him to review and confirm it on Job Hunt's `/profile/review` page. Tailored resumes and
    applications use only a confirmed profile.
+
+## Web mode
+
+When the instruction starts **"Web-driven run N"**, Sean pressed Build my profile in the web app, and
+no one reads this session.
+- Post progress with `run_progress`.
+- Ask anything with `ask_sean`, and don't ask before rebuilding: he pressed the button.
+- After `send_profile`, call `finish_run` with `done` and a summary like "Profile built: 4 roles,
+  30 skills, 1 degree; 2 items left out (…). Review and confirm it on the review page." Or use
+  `failed` with why.

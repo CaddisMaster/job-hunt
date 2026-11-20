@@ -1,0 +1,17 @@
+# The runner (#88): takes the runs queued in the web app and does them with Claude
+# Code, headless. Generated from this template by `tools/apply-services.sh install`,
+# which fills in the repository's path and Job Hunt's address.
+[Unit]
+Description=Job Hunt: the runner for web-driven Claude Code runs
+After=network-online.target jobhunt-vnc.service
+
+[Service]
+WorkingDirectory=@REPO@
+Environment=JOBHUNT_URL=@URL@
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 @REPO@/tools/jobhunt_runner.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

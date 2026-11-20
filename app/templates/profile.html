@@ -34,12 +34,19 @@
 
   {% if base and base.text and (not profile or stale) %}
     <p>{% if profile %}Your newest resume, {{ base.filename }}, isn't the one this profile was built from. {% endif %}
-    To {{ 'rebuild' if profile else 'build' }} your profile from {{ base.filename }}, run <code>/profile</code> in Claude Code.
-    It reads your resume, sends what it found here to be checked against the resume, and you confirm it on the review page.</p>
+    Claude Code on the VM reads {{ base.filename }}, sends what it found here to be checked against the resume, and you confirm it on the review page.</p>
+    {% if not run or run.status not in ('queued', 'running') %}
+    <form method="post" action="/profile/build" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <button type="submit" class="primary">{{ 'Rebuild' if profile else 'Build' }} my profile</button>
+    </form>
+    {% endif %}
   {% elif base and not base.text and not profile %}
     <p class="muted">Your base resume has no text in it, so a profile can't be built from it.</p>
   {% endif %}
 </section>
+
+{% if run %}{% with events = run_events, waiting = run_waiting %}{% include "_run_panel.html" %}{% endwith %}{% endif %}
 
 <section class="card">
   <h2>Answer bank</h2>

@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 
-from app import applications, saved, tailor
+from app import applications, runs, saved, tailor
 from app.db import get_db
 from app.flash import flash
 from app.models import SavedJob, User
@@ -28,7 +28,12 @@ def _job(request: Request, user: User, job: SavedJob, *, status: int = 200, db: 
     tailored = tailor.get(db, user, job) if db is not None else None
     application = applications.get(db, user, job) if db is not None else None
     note = applications.site_note(db, user, applications.host_of(job.url)) if db is not None else None
-    context = {"user": user, "job": job, "tailored": tailored, "application": application, "site_note": note, **extra}
+    run = runs.latest_for_job(db, user, job) if db is not None else None
+    context = {
+        "user": user, "job": job, "tailored": tailored, "application": application, "site_note": note,
+        "run": run, "run_events": runs.events(db, run) if run else [], "run_waiting": runs.waiting(db, run) if run else None,
+        **extra,
+    }  # fmt: skip
     return templates.TemplateResponse(request, "saved_job.html", context, status_code=status)
 
 
@@ -113,6 +118,19 @@ def approve_tailored(request: Request, job_id: int, user: User = Depends(require
     db.commit()
     flash(request, "Approved: this is the resume used to apply.")
     return RedirectResponse(f"/saved/{job.id}", status_code=303)
+
+
+@router.post("/{job_id}/apply")
+def apply(request: Request, job_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    """Queue an Apply run (#88): the runner on the VM picks it up, and the Run panel
+    below shows what it's doing and what it needs."""
+    job = saved.get(db, user, job_id)
+    if job.source == "pending":
+        flash(request, "Paste the posting's text first: tailoring needs it.")
+        return RedirectResponse(f"/saved/{job.id}", status_code=303)
+    runs.queue(db, user, "apply", job)
+    db.commit()
+    return RedirectResponse(f"/saved/{job.id}#run", status_code=303)
 
 
 @router.post("/{job_id}/delete")

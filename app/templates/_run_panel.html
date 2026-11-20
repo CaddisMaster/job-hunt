@@ -1,0 +1,56 @@
+{# The Run panel (#88). Polls itself while the run is active; htmx swaps it in place. #}
+{% set active = run.status in ('queued', 'running') %}
+<section class="card run" id="run" {% if active %}hx-get="/runs/{{ run.id }}/panel" hx-trigger="every 3s" hx-swap="outerHTML"{% endif %}>
+  <h2>{% if run.kind == 'apply' %}Applying{% else %}Building your profile{% endif %}
+    <span class="muted">· {% if run.status == 'queued' %}waiting for the runner on the VM{% elif run.status == 'running' %}{% if run.stop_requested %}stopping…{% else %}running{% endif %}{% else %}{{ run.status }}{% endif %}</span></h2>
+  {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+
+  {% if events %}
+  <ol class="run-log">
+    {% for e in events %}{% if e.kind == 'progress' %}<li>{{ e.text }}</li>
+    {% elif e.answered_at %}<li><strong>{{ e.text }}</strong> <span class="muted">→ {{ e.answer }}</span></li>
+    {% elif e.cancelled %}<li class="muted">{{ e.text }} (no longer needed)</li>{% endif %}{% endfor %}
+  </ol>
+  {% endif %}
+
+  {% if waiting %}
+  <div class="needs-you" role="alert">
+    {% if waiting.kind == 'question' %}
+      <p><strong>Needs you:</strong> {{ waiting.text }}</p>
+      <form method="post" action="/runs/{{ run.id }}/prompts/{{ waiting.id }}" hx-post="/runs/{{ run.id }}/prompts/{{ waiting.id }}" hx-target="#run" hx-swap="outerHTML">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        {% for option in waiting.options %}
+        <button type="submit" name="answer" value="{{ option }}">{{ option }}</button>
+        {% endfor %}
+        <label>{% if waiting.options %}Or type an answer{% else %}Your answer{% endif %} <input name="answer" maxlength="2000" {% if not waiting.options %}required{% endif %}></label>
+        <button type="submit" class="primary">Send</button>
+      </form>
+    {% elif waiting.kind == 'browser' %}
+      <p><strong>Needs you in the browser:</strong> {{ waiting.text }}</p>
+      <p class="muted">Open Screen Sharing on your Mac (vnc://localhost:5901), do it there, then press Done.</p>
+      <form method="post" action="/runs/{{ run.id }}/prompts/{{ waiting.id }}" hx-post="/runs/{{ run.id }}/prompts/{{ waiting.id }}" hx-target="#run" hx-swap="outerHTML">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button type="submit" name="answer" value="done" class="primary">Done</button>
+      </form>
+    {% elif waiting.kind == 'submit' %}
+      <p><strong>Ready to submit.</strong> {{ waiting.text }}</p>
+      <p><a href="/runs/{{ run.id }}/prompts/{{ waiting.id }}/screenshot.png" target="_blank" rel="noopener">Open the filled form full size</a></p>
+      <img class="filled-form" src="/runs/{{ run.id }}/prompts/{{ waiting.id }}/screenshot.png" alt="The filled application, before it's submitted">
+      <p class="muted">Check it here, or in Screen Sharing. Nothing is sent until you press Submit application.</p>
+      <form method="post" action="/runs/{{ run.id }}/prompts/{{ waiting.id }}" hx-post="/runs/{{ run.id }}/prompts/{{ waiting.id }}" hx-target="#run" hx-swap="outerHTML" class="row">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+        <button type="submit" name="answer" value="submit" class="primary">Submit application</button>
+        <button type="submit" name="answer" value="stop" class="danger">Don't submit</button>
+      </form>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% if run.summary %}<p>{{ run.summary }}</p>{% endif %}
+  {% if active and not run.stop_requested %}
+  <form method="post" action="/runs/{{ run.id }}/stop" hx-post="/runs/{{ run.id }}/stop" hx-target="#run" hx-swap="outerHTML" class="inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <button type="submit" class="danger">Stop</button>
+  </form>
+  {% endif %}
+</section>

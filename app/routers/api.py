@@ -13,10 +13,10 @@ from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app import answers, applications, saved, tailor
+from app import answers, applications, runs, saved, tailor
 from app import profile as profiles
 from app.db import get_db
-from app.models import SavedJob, User
+from app.models import RunEvent, SavedJob, User
 from app.security import require_token
 
 router = APIRouter(prefix="/api")
@@ -273,3 +273,101 @@ def put_site_note(host: str, body: SiteNoteBody, user: User = Depends(require_to
         return JSONResponse({"error": str(error)}, status_code=422)
     db.commit()
     return {"host": row.host, "note": row.note}
+
+
+# ---- Web-driven runs (#88): what the runner and a run's tools call ----------------------------
+
+
+def _run(run) -> dict:
+    return {
+        "id": run.id, "kind": run.kind, "job_id": run.saved_job_id, "status": run.status,
+        "stop_requested": run.stop_requested, "summary": run.summary,
+    }  # fmt: skip
+
+
+def _invalid(error: runs.Invalid) -> JSONResponse:
+    return JSONResponse({"error": str(error)}, status_code=409)
+
+
+@router.post("/runs/claim")
+def claim_run(user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """The runner's next run: the oldest queued, now running. 204 when there's none, or
+    while one is already running."""
+    run = runs.claim(db, user)
+    db.commit()
+    return _run(run) if run else Response(status_code=204)
+
+
+@router.post("/runs/abandon")
+def abandon_runs(user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """The runner restarted: anything still running is failed."""
+    failed = runs.abandon(db, user)
+    db.commit()
+    return {"failed": failed}
+
+
+@router.get("/runs/{run_id}")
+def get_run(run_id: int, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    return _run(runs.get(db, user, run_id))
+
+
+class ProgressBody(BaseModel):
+    text: str = Field(max_length=runs.TEXT_MAX + 100)
+
+
+@router.post("/runs/{run_id}/progress", status_code=201)
+def run_progress(run_id: int, body: ProgressBody, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    try:
+        runs.progress(db, runs.get(db, user, run_id), body.text)
+    except runs.Invalid as error:
+        db.rollback()
+        return _invalid(error)
+    db.commit()
+    return {"ok": True}
+
+
+class PromptBody(BaseModel):
+    kind: str = Field(max_length=16)
+    text: str = Field(max_length=runs.TEXT_MAX + 100)
+    options: list[str] = Field(default_factory=list, max_length=40)
+    screenshot_png_base64: str | None = Field(default=None, max_length=7_200_000)
+
+
+@router.post("/runs/{run_id}/prompts", status_code=201)
+def run_prompt(run_id: int, body: PromptBody, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """Ask Sean something on the job's page; then poll the prompt for his answer."""
+    try:
+        event = runs.ask(db, runs.get(db, user, run_id), body.kind, body.text, body.options, body.screenshot_png_base64)
+    except runs.Invalid as error:
+        db.rollback()
+        return _invalid(error)
+    db.commit()
+    return {"prompt_id": event.id}
+
+
+@router.get("/runs/{run_id}/prompts/{prompt_id}")
+def prompt_state(run_id: int, prompt_id: int, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """waiting, answered (with the answer), stopped, or timeout."""
+    run = runs.get(db, user, run_id)
+    event = db.get(RunEvent, prompt_id)
+    if event is None or event.run_id != run.id:
+        raise HTTPException(status_code=404)
+    result = runs.state(db, run, event)
+    db.commit()
+    return result
+
+
+class FinishBody(BaseModel):
+    status: str = Field(max_length=16)
+    summary: str = Field(default="", max_length=runs.SUMMARY_MAX + 100)
+
+
+@router.post("/runs/{run_id}/finish")
+def finish_run(run_id: int, body: FinishBody, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    try:
+        run = runs.finish(db, runs.get(db, user, run_id), body.status, body.summary)
+    except runs.Invalid as error:
+        db.rollback()
+        return _invalid(error)
+    db.commit()
+    return _run(run)

@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile  # what request.form() holds (FastAPI's is a subclass)
 
-from app import answers, resumes, tokens
+from app import answers, resumes, runs, tokens
 from app import profile as profiles
 from app.db import get_db
 from app.flash import flash
@@ -45,6 +45,9 @@ def _page(
         "stale": bool(profile and base and profile.resume_id != base.id),
         "role_line": profiles.role_line,
         "tokens": tokens.for_user(db, user),
+        "run": (run := runs.latest_profile_run(db, user)),
+        "run_events": runs.events(db, run) if run else [],
+        "run_waiting": runs.waiting(db, run) if run else None,
         "new_token": new_token,
     }
     return templates.TemplateResponse(request, "profile.html", context, status_code=status)
@@ -89,6 +92,19 @@ def download(resume_id: int, user: User = Depends(require_user), db: Session = D
         media_type=resumes.MEDIA_TYPES[resume.kind],
         headers={"Content-Disposition": disposition, "Cache-Control": "private, no-store"},
     )
+
+
+@router.post("/build")
+def build(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    """Queue a Profile run (#88): Claude Code on the VM reads the resume and sends the
+    profile here to be checked; Sean then confirms it on the review page."""
+    base = profiles.base_resume(db, user)
+    if base is None or not base.text:
+        flash(request, "Upload a resume with text in it first.")
+        return RedirectResponse("/profile", status_code=303)
+    runs.queue(db, user, "profile")
+    db.commit()
+    return RedirectResponse("/profile#run", status_code=303)
 
 
 @router.get("/review", response_class=HTMLResponse)
