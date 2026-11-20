@@ -2,40 +2,93 @@
 
 *Reconcile this against `git log` and `gh issue list` at the start of a session.*
 
-**v0.2.0 is live** at apply.seandesmet.com (deployed 2026-11-19). On `main` for v0.3.0, not yet
-released: the worker (#41, housekeeping only) and **Saved jobs** (#63).
+**v0.2.0 is live** at apply.seandesmet.com (deployed 2026-11-19). **Everything below is on `main`,
+not released**: production is still at migration 0008, and v0.3.0 goes straight to 0013.
 
-**The shape since 2026-11-20** (plan §10 decisions 7–10, and the box at the top of the plan):
-Sean's alone; jobs get in only by pasting a link; per job, a tailored resume (PDF), then
-Playwright applies (server first, Mac #66 as the fallback); Sean clicks Submit. No crawling, no
-ranking, no location filter. The registry, crawl, area check and aggregators were removed before
-release (#45, #46, #47, #59 closed).
+**How it works now** (plan §10 decisions 7–11, and the box at the top of the plan): Job Hunt is
+Sean's alone. He pastes job links into **Saved jobs**. Pressing **Apply** on a job (or **Build my
+profile**) queues a run. The runner on the VM (`jobhunt-runner.service`) starts Claude Code
+headless with only the `jobhunt` and `playwright` tools. It tailors his resume, which the web app
+checks against the resume and confirmed profile before making the PDF, then fills the application
+in a browser on the VM's virtual screen. Sean watches that browser through Screen Sharing (VNC over
+SSH). Questions, the browser hand-off and the final **Submit application** happen on the job's page.
+The web app makes no Claude calls. No crawling, no ranking. Setup and use: `docs/apply.md`.
 
 ## Pick up here
 
-**How it works now** (plan §10 decisions 9–11): Sean pastes job links into the web app. In a Claude
-Code session on the VM, `/apply next` tailors his resume (sent to the web app, which checks it
-and makes the PDF) and fills the application through Playwright MCP; he clicks Submit.
+1. **The first real web-driven run, on dev.** The runner is installed and running on the VM,
+   pointed at `http://localhost:5004`. Sean:
+   - confirms his profile at `/profile/review` (built today by `/profile`: 4 roles, 30 skills,
+     1 degree; unconfirmed);
+   - fills in his answer bank;
+   - pastes a Lever or Ashby job;
+   - opens Screen Sharing and presses **Apply**.
 
-1. **Look at a real tailored PDF.** The layout was only checked as extracted text (no
-   `pdftoppm` on the VM); the first one Sean opens is the real check.
-2. **#76: applications, site notes, `/apply next`, and the local MCP server.**
-3. **#66: the `/apply` skill** and Playwright MCP on the Mac (`docs/apply.md`).
-4. **#67** (one line off the sign-in page), and **release v0.3.0** whenever it's wanted: Saved
-   jobs plus the bridge. Production is at migration 0008; the release goes straight to 0011.
-5. **Dev databases from before 2026-11-20 midday:** migrations 0009–0011 were deleted and
-   renumbered (#72). A database at 0010–0012 from then must go back to 0008 with the old files
-   (`git checkout f7c0ea6`) before upgrading. Production was at 0008, so it's unaffected.
-6. **Greenhouse job pages carry no job data** (checked 2026-11-20), so pasted Greenhouse links
-   ask for the text. Lever, Ashby and SmartRecruiters pages read in full.
-7. **The local branch `59-workday`** (unpushed, `6e14af9`) is dead: delete it when Sean OKs.
-8. **The app makes no Claude calls any more:** `ANTHROPIC_API_KEY` and the AI budget keys in the
-   droplet's `.env` are ignored and can be removed (Mac session, and from `job-hunt-env-prod`).
-   The `ai_spend` table is dropped in a later release than the one that stops using it.
-9. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
+   Watch `tools/apply-services.sh logs`. Untested so far: `claude -p` itself under the service,
+   meaning first-run prompts, MCP startup and whether `--allowedTools mcp__jobhunt` covers the
+   server's tools. Also the first real look at a tailored PDF (its layout was only checked as
+   extracted text).
+2. **Release v0.3.0** once that run holds up (`VERSIONING.md`). It needs Sean's `production`
+   approval. Then:
+   - Sean makes a token on **production's** Profile page and replaces `~/.config/jobhunt/token`;
+   - `tools/apply-services.sh install` (no URL means production) points the runner at it;
+   - `claude mcp` for `jobhunt` is re-added without `JOBHUNT_URL`.
+3. **After the release, the Mac session:** take `ANTHROPIC_API_KEY` and the two
+   `AI_MONTHLY_BUDGET_*` keys out of the droplet's `.env` and `job-hunt-env-prod`. They're unused
+   since #80, and harmless until then (`extra="ignore"`).
+4. **Small things:**
+   - the Profile page shows **Build my profile** only when there's no profile or it's stale, so
+     add a rebuild button;
+   - pasted Greenhouse links ask for the text, because their pages carry no job data;
+   - drop the `ai_spend` table in a later release than v0.3.0 (non-negotiable 5).
+5. **Dev databases from before 2026-11-20 midday:** 0009–0011 were deleted and renumbered (#72).
+   One at 0010–0012 from then must go back to 0008 with the old files (`git checkout f7c0ea6`)
+   before upgrading.
+6. **The local branch `59-workday`** (unpushed, `6e14af9`) is dead: delete it when Sean OKs.
+7. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
    the VM's Python 3.12. Close them and exclude `infra/` the way Job Hunt's #38 did.
 
 ## Sessions
+
+**2026-11-20.**
+- **The aggregators were built, then closed unmerged** (#65, #45): Adzuna's free tier is 25 calls
+  a day and 500 a month, and its links go through its own page.
+- **Saved jobs** (#69, #70, closing #63): paste a link, and the posting is read from the page's
+  JSON-LD or microdata, else Sean pastes the text. The server's GET is guarded against SSRF.
+- **Discovery removed before release** (#71, #72): the crawl, registry, area check and board APIs
+  went, and their unreleased migrations were deleted.
+- **The pivot**, recorded in plan §10 decisions 7–11 (#68): Sean alone; jobs only by pasting;
+  Claude Code does the AI work; the web app checks, renders and records.
+- **Built, in order:**
+  - the bridge: tokens and a JSON API (#77, #78, closing #74);
+  - tailored resumes, checked and rendered as a PDF with ReportLab (#75, #79, closing #73);
+  - the profile build moved into Claude Code, and the app's own Claude calls, budgets and
+    `anthropic` removed (#80);
+  - applications, site notes and the MCP server `tools/jobhunt_mcp.py` (#81, #82, closing #76);
+  - the `/apply` and `/profile` skills (#83, closing #66);
+  - applying on the VM, with the browser shown on the Mac (#84), Chromium's AppArmor profile
+    (#86) and the screen as services (#87);
+  - web-driven runs: a button, a live Run panel, answers on the page, and the runner (#89, #90,
+    closing #88).
+- **Also:** the sign-in page's "Ask Sean" line went (#85, closing #67), and a minute-boundary
+  flake in the login-limit test was fixed in #78.
+- **Verified for real:**
+  - Saved jobs against live Greenhouse, Lever, Ashby, Workday and SmartRecruiters links;
+  - Chromium, Xvfb and VNC on the VM, viewed from the Mac;
+  - `/profile` from an interactive Claude Code session against dev.
+- **Learned:**
+  - Greenhouse job pages carry no structured job data, and SmartRecruiters uses microdata, not
+    JSON-LD.
+  - `@playwright/mcp` 0.0.84 has no `chromium` choice, and without `--user-data-dir` sign-ins
+    don't persist.
+  - Ubuntu 24.04 needs an AppArmor `userns` profile for Chromium's sandbox.
+  - `gh pr merge --delete-branch` removes the local branch, so rebase stacks from the old SHA.
+  - Fixed rate-limit windows are clock-aligned, so burst tests must start early in a minute
+    (`fresh_rate_window`).
+  - Denying Claude Code reads of `~/.config/jobhunt/` also blocks harmless checks there, which is
+    intended.
+- **Sean's calls:** Playwright as an honest browser only (no stealth, CAPTCHAs are his); PDFs for
+  tailored resumes; Submit as a button in Job Hunt after he's seen the filled form.
 
 **2026-11-19 (evening).**
 - **Merged:** #48 (closes #42: Greater Pittsburgh, with GeoNames' post-office names), #57 + #58
@@ -79,25 +132,3 @@ and makes the PDF) and fills the application through Playwright MCP; he clicks S
     (RUNBOOK §6).
   - `gh release create --target` takes a branch or a full SHA, not a short one.
   - GeoNames is blocked from the Mac too, not just the VM.
-
-**2026-11-19 (morning).**
-- **v0.1.0:** landed #10 after its LXD test caught a real ordering bug (the role checked `.env`
-  before the deploy key and had already changed the host). Made the repo public, because a private
-  repo on GitHub Free can't have a required reviewer on `production`. A Claude session on Sean's
-  Mac, briefed over Remote Control, did every droplet and secret step with Sean's approval. This
-  VM session never handled a secret. Deployed v0.1.0.
-- **0.2, all merged:** the spend ledger with per-user and key caps (#22), resume upload stored in
-  Postgres (#23), the profile built by one Opus 5.5 call, grounded in the resume and confirmed by
-  its owner (#24), the answer bank (#25), and the truthfulness rule as a deterministic check with
-  an eval set (#26). Each migration shipped alone, labelled `skip-changelog`.
-- **Infra:** droplet-infra gained `backup-export job-hunt` (#11) and an Nginx version floor that
-  applied USN-9159-1 to the droplet (#13). The VM now encrypts Job Hunt's pulled dumps with `age`
-  in memory (#21). Moved to Python 3.15 (#40).
-- **Learned:**
-  - GitHub reads "Closes: #N" anywhere in a PR body, even after "not".
-  - Dependabot's pip scan of `/` includes subdirectories.
-  - `request.form()` holds Starlette's `UploadFile`, not FastAPI's subclass.
-  - The VM can reach census.gov but not geonames.org from Sean's work network.
-  - unattended-upgrades does cover `noble-security` on the droplet.
-
-Decisions are in `docs/plan.md` §10 (answered 2026-11-18).
