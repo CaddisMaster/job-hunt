@@ -15,7 +15,8 @@ third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by cop
 > | plan the next milestone or a feature's shape | [`docs/plan.md`](docs/plan.md) |
 > | write or change anything under `tests/` | [`docs/testing.md`](docs/testing.md) |
 > | add an Alembic revision, add an env var, or cut a release | [`CONTRIBUTING.md`](CONTRIBUTING.md) §4, [`VERSIONING.md`](VERSIONING.md) |
-> | run anything on the droplet, or change `infra/` | [`RUNBOOK.md`](RUNBOOK.md), [`infra/README.md`](infra/README.md) |
+> | change `/apply`, `/profile`, the bridge or `tools/` | [`docs/apply.md`](docs/apply.md) |
+| run anything on the droplet, or change `infra/` | [`RUNBOOK.md`](RUNBOOK.md), [`infra/README.md`](infra/README.md) |
 > | copy something from Orbit Ops | that repo's `docs/gotchas.md` — its lessons apply here |
 
 ## Tech stack
@@ -54,7 +55,7 @@ app/templating.py    the shared Jinja env (app_version, static_url, pop_flash gl
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
 app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile, its tokens), saved.py (/saved), api.py (/api/, bearer token only, JSON)
 alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 saved_jobs, 0010 tailored_resumes, 0011 api_tokens, 0012 applications + site_notes)
-.claude/             /wrap (end of session), the changelog Stop hook, the allowlist — see its README
+.claude/             /wrap (end of session), the /apply and /profile skills (docs/apply.md), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
 tools/jobhunt_mcp.py the bridge as MCP tools for Claude Code on Sean's Mac (stdio, stdlib only; token from the Keychain)
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)

@@ -181,6 +181,20 @@ def tailored_pdf(job_id: int, user: User = Depends(require_token), db: Session =
 # ---- The profile (#24, built in Claude Code) -------------------------------------------------
 
 
+@router.get("/profile")
+def get_profile(user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """What `/profile` reads from: the base resume's text, and the current profile
+    (confirmed or not), so a session can build or rebuild it."""
+    resume = profiles.base_resume(db, user)
+    profile = profiles.get(db, user)
+    return {
+        "resume": {"filename": resume.filename, "text": resume.text} if resume else None,
+        "profile": profile.data if profile else None,
+        "confirmed": bool(profile and profile.reviewed_at),
+        "built_from_newest_resume": bool(profile and resume and profile.resume_id == resume.id),
+    }
+
+
 @router.post("/profile", status_code=201)
 def send_profile(body: profiles.ProfileData, user: User = Depends(require_token), db: Session = Depends(get_db)):
     """What a Claude Code session read from the base resume. Only items whose quoted

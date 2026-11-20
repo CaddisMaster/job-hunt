@@ -12,6 +12,12 @@ registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater P
 never shipped and has been removed.
 
 ### Added
+- `/apply` and `/profile` for Claude Code (#66), with the setup in `docs/apply.md`. `/profile` reads
+  Sean's resume into his profile for him to confirm. `/apply next` tailors his resume to the next
+  saved job, then fills in the application in a visible browser through Playwright. It asks him
+  anything his answer bank doesn't cover, stops for him to click Submit, and records what happened.
+  It never invents an answer, never solves a CAPTCHA, never types a password and never uses Easy
+  Apply. The API gained `GET /api/profile`, so `/profile` can read the resume.
 - Applying from Claude Code gets its record (#76). When a session finishes with a job, it records
   what happened: submitted (Sean clicked Submit himself) or stopped and why, the answers it used,
   and a screenshot of the confirmation page. The saved job's page shows all three. "Next job" picks

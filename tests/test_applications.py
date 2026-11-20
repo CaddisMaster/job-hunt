@@ -196,7 +196,7 @@ def test_the_mcp_server_offers_the_bridge_as_tools(mcp, me):
     assert mcp.handle({"jsonrpc": "2.0", "method": "notifications/initialized"}) is None
     tools = {t["name"] for t in mcp.handle({"jsonrpc": "2.0", "id": 2, "method": "tools/list"})["result"]["tools"]}
     assert tools == {
-        "list_jobs", "next_job", "get_job_package", "send_profile", "send_tailored_resume", "approve_tailored_resume",
+        "list_jobs", "next_job", "get_job_package", "get_resume_and_profile", "send_profile", "send_tailored_resume", "approve_tailored_resume",
         "download_resume_pdf", "add_answer", "record_application", "get_site_note", "save_site_note",
     }  # fmt: skip
     is_error, text = call(mcp, "next_job")
