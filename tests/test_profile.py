@@ -85,15 +85,15 @@ def test_a_profile_is_built_from_my_resume(with_resume, user):
 def test_without_a_resume_the_page_says_where_to_start(logged_in, user):
     assert stored(user) is None
     page = logged_in.get("/profile").text
-    assert "No profile yet." in page and "run <code>/profile</code>" not in page  # nothing to build from yet
+    assert "No profile yet." in page and "Build my profile" not in page  # nothing to build from yet
     logged_in.token = make_token(logged_in)
     response = build(logged_in)
     assert response.status_code == 409 and "Upload a resume" in response.json()["error"]
 
 
-def test_with_a_resume_the_page_says_to_run_profile_in_claude_code(with_resume, user):
+def test_with_a_resume_the_page_offers_to_build_it_in_claude_code(with_resume, user):
     page = with_resume.get("/profile").text
-    assert "run <code>/profile</code> in Claude Code" in page and "Build my profile" not in page
+    assert "Claude Code on the VM reads resume.docx" in page and "Build my profile" in page
 
 
 @pytest.mark.criterion(24, "Every extracted claim points at the resume")

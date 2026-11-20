@@ -82,6 +82,12 @@ th { font-size: .85rem; color: var(--muted); font-weight: 600; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: .75rem 0; }
 .facts dt { font-weight: 500; }
 .facts dd { margin: 0; }
+/* The Run panel (#88). */
+.run-log { margin: .5rem 0; padding-left: 1.2rem; }
+.run-log li { margin: .2rem 0; }
+.needs-you { border-left: 4px solid var(--accent, #0969da); padding: .5rem 1rem; margin: .75rem 0; }
+.needs-you button { margin: .25rem .25rem .25rem 0; }
+img.filled-form { max-width: 100%; max-height: 70vh; border: 1px solid var(--border); display: block; margin: .5rem 0; }
 code.token { overflow-wrap: anywhere; user-select: all; }
 .posting { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 70ch; }
 .sources { font-size: .9rem; color: var(--muted, inherit); margin: .25rem 0 1rem; padding-left: 1.1rem; }

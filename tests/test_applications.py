@@ -198,6 +198,7 @@ def test_the_mcp_server_offers_the_bridge_as_tools(mcp, me):
     assert tools == {
         "list_jobs", "next_job", "get_job_package", "get_resume_and_profile", "send_profile", "send_tailored_resume", "approve_tailored_resume",
         "download_resume_pdf", "add_answer", "record_application", "get_site_note", "save_site_note",
+        "run_progress", "ask_sean", "needs_browser", "ready_to_submit", "wait_for_sean", "finish_run",
     }  # fmt: skip
     is_error, text = call(mcp, "next_job")
     assert not is_error and json.loads(text)["id"] == me.jobs[0]

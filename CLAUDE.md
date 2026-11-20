@@ -50,16 +50,18 @@ app/saved.py         saved jobs (#63): a pasted link → the page's JobPosting (
 app/text.py          markup in, plain text out: plain_text(), tidy(), clip()
 app/tailor.py        tailored resumes (#73): check what Claude Code sent against the resume + confirmed profile, render the PDF, store, approve
 app/applications.py  applications (submitted/stopped, answers used, screenshot), site notes, next_job() (#76)
+app/runs.py          web-driven runs (#88): queue (apply|profile only), claim one at a time, prompts Sean answers on the page, stop
 app/tokens.py        personal access tokens for the bridge (#74): made once, stored hashed, revocable; authenticate()
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile, its tokens), saved.py (/saved), api.py (/api/, bearer token only, JSON)
-alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 saved_jobs, 0010 tailored_resumes, 0011 api_tokens, 0012 applications + site_notes)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile, its tokens), saved.py (/saved), api.py (/api/, bearer token only, JSON), runs.py (/runs/: the Run panel)
+alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 saved_jobs, 0010 tailored_resumes, 0011 api_tokens, 0012 applications + site_notes, 0013 runs + run_events)
 .claude/             /wrap (end of session), the /apply and /profile skills (docs/apply.md), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
 tools/jobhunt_mcp.py the bridge as MCP tools for Claude Code (stdio, stdlib only; token from ~/.config/jobhunt/token)
 tools/apparmor/      the AppArmor profile that lets Playwright's Chromium keep its sandbox on Ubuntu 24.04
-tools/apply-screen.sh  install/status of the user services (tools/systemd/) for the virtual screen + VNC /apply's browser draws on, viewed from Sean's Mac
+tools/apply-services.sh  the user services (tools/systemd/): the virtual screen + VNC /apply's browser draws on, and the runner
+tools/jobhunt_runner.py  claims runs queued in the web app (#88) and runs Claude Code headless (jobhunt + playwright tools only)
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
 ```
 

@@ -40,12 +40,17 @@ The Mac is only the window.
    Screen Sharing asks for the password, so tick "Remember this password in my keychain" there):
    ```bash
    mkdir -p ~/.config/jobhunt && x11vnc -storepasswd ~/.config/jobhunt/vncpasswd && chmod 600 ~/.config/jobhunt/vncpasswd
-   tools/apply-screen.sh install
+   tools/apply-services.sh install                          # production
+   tools/apply-services.sh install http://localhost:5004    # or the dev server
    ```
-   That links `tools/systemd/jobhunt-xvfb.service` (the virtual screen, `:99`) and
-   `jobhunt-vnc.service` (VNC on the VM's localhost:5901 only) as user services, enables them and
-   starts them. Lingering is on, so they run from boot without a login. `tools/apply-screen.sh
-   status|restart|uninstall` does the rest.
+   That sets up three user services, enables them and starts them:
+   - `tools/systemd/jobhunt-xvfb.service`: the virtual screen, `:99`.
+   - `jobhunt-vnc.service`: VNC on the VM's localhost:5901 only.
+   - `jobhunt-runner.service`: generated from `jobhunt-runner.service.in` with this folder and the
+     URL. It takes the runs you queue in the web app (#88).
+
+   Lingering is on, so they run from boot without a login. `tools/apply-services.sh
+   status|restart|logs|uninstall` does the rest.
 3. **A Job Hunt token** (Sean, in his own terminal, since Claude Code never reads it):
    - In Job Hunt: Profile → *Access tokens for Claude Code* → **Make a token**, then copy it.
    - Save it to the file the MCP server reads (paste the token at the silent prompt):
@@ -71,7 +76,28 @@ The Mac is only the window.
 5. **Check.** Start `claude` in the folder and run `/mcp`. Both servers should be connected. Then
    ask "list my saved jobs in Job Hunt": an empty list or your jobs means the token works.
 
-## Each time you apply
+## From the web app (the usual way)
+
+1. **Keep the window handy:** Screen Sharing on the Mac (`vnc://localhost:5901`, through the
+   tunnel). You only need it when a run asks for the browser.
+2. **On a saved job's page, press Apply** (or **Build my profile** on the Profile page). The **Run**
+   panel appears and updates by itself:
+   - **Progress:** what it's doing.
+   - **Needs you:** a question, with buttons for its options or a box to type in. Approving the
+     tailored resume works the same way.
+   - **Needs you in the browser:** sign in or answer a CAPTCHA in Screen Sharing, then press
+     **Done**.
+   - **Ready to submit:** the filled form's screenshot. **Nothing is sent until you press Submit
+     application.** Don't submit stops it there.
+   - **Stop**, at any time.
+3. The run records the application and what it learned about the site, and the panel says how it
+   ended.
+
+Behind it, the runner on the VM claims the run and starts Claude Code headless, with only the
+`jobhunt` and `playwright` tools, and the skill's web mode as its instructions. A question left
+unanswered for 30 minutes stops the run. `tools/apply-services.sh logs` shows what the runner did.
+
+## From a Claude Code session (still works)
 
 1. **On the Mac, the window:** open the tunnel (`ssh -N -L 5901:localhost:5901 sean@jupiter`,
    left running), then `open vnc://localhost:5901`. To never type the tunnel again, add
@@ -95,7 +121,8 @@ every question it answers is one `/apply` won't ask.
 | | |
 |---|---|
 | The skills | `.claude/skills/apply/SKILL.md`, `.claude/skills/profile/SKILL.md` |
-| The screen | `tools/systemd/jobhunt-{xvfb,vnc}.service`, managed by `tools/apply-screen.sh`; logs: `journalctl --user -u jobhunt-vnc` |
+| The services | `tools/systemd/` (screen, VNC, runner), managed by `tools/apply-services.sh` |
+| The runner | `tools/jobhunt_runner.py`; runs and their prompts: `app/runs.py`, the panel `app/templates/_run_panel.html` |
 | The MCP server | `tools/jobhunt_mcp.py`: stdlib only; the token from `~/.config/jobhunt/token` (mode 600) |
 | The browser's profile and screenshots | `~/.local/share/jobhunt/` |
 | The API | `app/routers/api.py`, bearer token only; tokens in `app/tokens.py` |

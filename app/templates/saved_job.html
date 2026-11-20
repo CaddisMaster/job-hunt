@@ -13,6 +13,19 @@
   {% if job.description %}<div class="posting">{{ job.description }}</div>{% endif %}
 </section>
 
+{% if job.source != 'pending' %}
+  {% if run %}{% with events = run_events, waiting = run_waiting %}{% include "_run_panel.html" %}{% endwith %}{% endif %}
+  {% if not run or run.status not in ('queued', 'running') %}
+  <section class="card">
+    <form method="post" action="/saved/{{ job.id }}/apply" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <button type="submit" class="primary">{% if application %}Apply again{% else %}Apply{% endif %}</button>
+    </form>
+    <span class="muted">Claude Code on the VM tailors your resume to this job, then fills the application. It asks you here when it needs you, and nothing is sent until you press Submit application.</span>
+  </section>
+  {% endif %}
+{% endif %}
+
 {% if application %}
 <section class="card" id="application">
   <h2>{% if application.outcome == 'submitted' %}Applied {{ application.recorded_at.strftime('%Y-%m-%d') }}{% else %}Stopped {{ application.recorded_at.strftime('%Y-%m-%d') }}{% endif %}</h2>
@@ -55,7 +68,7 @@
     {% endfor %}
     {% if c.skills %}<p><strong>Skills:</strong> {{ c.skills | join(', ') }}</p>{% endif %}
   {% else %}
-    <p class="muted">None yet. In Claude Code, <code>/apply {{ job.id }}</code> tailors your resume to this job and sends it here to be checked.</p>
+    <p class="muted">None yet. Press Apply above: the first thing the run does is tailor your resume to this job and send it here to be checked and approved.</p>
   {% endif %}
 </section>
 {% endif %}

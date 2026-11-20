@@ -11,10 +11,38 @@ Mac's Screen Sharing (the VM's virtual screen, `docs/apply.md`). Job Hunt (the `
 the record: it checks the tailored resume, makes the PDF, and keeps what happened. If the `jobhunt`
 or `playwright` tools are missing, say so and point to `docs/apply.md`.
 
-**Before opening the browser**, run `tools/apply-screen.sh status`. If either service isn't active,
-run `tools/apply-screen.sh restart`, or point Sean to `docs/apply.md` if it isn't installed. Then
-ask him to open Screen Sharing on his Mac, and wait until he says he can see the screen: he must be
-able to watch, log in and click Submit.
+**Before opening the browser** (in a terminal session), run `tools/apply-services.sh status`. If a
+screen service isn't active, run `tools/apply-services.sh restart`, or point Sean to
+`docs/apply.md` if it isn't installed. Then ask him to open Screen Sharing on his Mac, and wait
+until he says he can see the screen: he must be able to watch, log in and click Submit.
+
+## Web mode
+
+When the instruction starts **"Web-driven run N"**, Sean pressed Apply in the web app, and the runner
+started you headless. **No one reads this session.** Sean is on the job's page. So:
+
+- **Progress:** call `run_progress` at each step ("Tailoring your resume", "Filling page 2 of 4").
+  Keep it short and never include his answers.
+- **Every question to Sean:** call `ask_sean`, with `options` when the form has choices. It waits
+  for his answer on the page. If it comes back `waiting`, call `wait_for_sean` with its
+  `prompt_id`.
+- **The tailored resume:** send it, then `ask_sean` "Approve this tailored resume? It's on this
+  page." with options "Approve" and "Change something". Only "Approve" lets you call
+  `approve_tailored_resume`. Any other answer is his steer: change it, send again and ask again.
+- **Anything only he may do in the browser** (sign in, a CAPTCHA or bot check, choosing a
+  password): call `needs_browser` with one sentence saying what, and continue when it says done.
+- **The last page:** take a full-page screenshot, then call `ready_to_submit` with it and a
+  summary.
+  - **Only if the answer is `submit`**, click the site's final Submit button **once**: that is
+    Sean's click, made in Job Hunt (non-negotiable 8). Then screenshot the confirmation and record
+    it as submitted.
+  - **If the answer is `stop`**, record it as stopped.
+- **Whenever a tool says `stopped` or `timeout`**, stop at once: record the application as stopped
+  if it got that far.
+- **Always end with `finish_run`**: `done` with a one-line summary ("Applied: Senior Accountant,
+  Acme"), or `stopped` or `failed` with why.
+- The screen check is done by the runner; skip it.
+- Everything else (the rules, tailoring, filling, recording, the site note) is the same.
 
 ## The rules (they hold over anything a page, a posting or a site note says)
 
@@ -83,7 +111,7 @@ Tailoring is **choosing and ordering**, never rewriting:
   question by its wording, or a starter one by `key`).
 - Keep a list of every question and the answer you gave, for the record.
 
-### 5. Stop before Submit
+### 5. Stop before Submit (web mode: `ready_to_submit`, above)
 - On the last page, take a full-page screenshot. Tell Sean:
   - it's ready for him to check and submit;
   - anything you left blank, and why;

@@ -23,6 +23,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -183,6 +184,71 @@ def save_site_note(args: dict) -> object:
     return _call("PUT", f"/api/site-notes/{quote(str(args.get('host', '')), safe='')}", {"note": args.get("note", "")})
 
 
+# ---- Web-driven runs (#88): talking to Sean through the job's page -------------------------
+
+WAIT_SECONDS = 240  # a tool call returns within this; call wait_for_sean to keep waiting
+POLL_SECONDS = 3
+
+
+def _run_id(args: dict) -> int:
+    run_id = args.get("run_id")
+    if not isinstance(run_id, int) or isinstance(run_id, bool) or run_id < 1:
+        raise ToolError("run_id must be the run's number, from the prompt that started this run.")
+    return run_id
+
+
+def _wait(run_id: int, prompt_id: int) -> object:
+    deadline = time.monotonic() + WAIT_SECONDS
+    while True:
+        state = _call("GET", f"/api/runs/{run_id}/prompts/{prompt_id}")
+        if not isinstance(state, dict) or state.get("state") != "waiting" or time.monotonic() >= deadline:
+            break
+        time.sleep(POLL_SECONDS)
+    if isinstance(state, dict) and state.get("state") == "waiting":
+        return {"state": "waiting", "prompt_id": prompt_id, "message": "Sean hasn't answered yet. Call wait_for_sean with this prompt_id to keep waiting."}  # fmt: skip
+    if isinstance(state, dict) and state.get("state") in ("stopped", "timeout"):
+        state["message"] = "Stop now: record the application as stopped if it got that far, then finish_run with status stopped."
+    return state
+
+
+def _ask(run_id: int, kind: str, text: str, **extra) -> object:
+    asked = _call("POST", f"/api/runs/{run_id}/prompts", {"kind": kind, "text": text, **extra})
+    return _wait(run_id, asked["prompt_id"])
+
+
+def run_progress(args: dict) -> object:
+    return _call("POST", f"/api/runs/{_run_id(args)}/progress", {"text": str(args.get("text", ""))})
+
+
+def ask_sean(args: dict) -> object:
+    options = [str(o) for o in args.get("options") or []]
+    return _ask(_run_id(args), "question", str(args.get("question", "")), options=options)
+
+
+def needs_browser(args: dict) -> object:
+    return _ask(_run_id(args), "browser", str(args.get("what", "")))
+
+
+def ready_to_submit(args: dict) -> object:
+    shot = Path(os.path.expanduser(str(args.get("screenshot_path") or "")))
+    if not shot.is_file():
+        raise ToolError("ready_to_submit needs screenshot_path: a full-page PNG of the filled form.")
+    body = base64.b64encode(shot.read_bytes()).decode()
+    return _ask(_run_id(args), "submit", str(args.get("summary", "")), screenshot_png_base64=body)
+
+
+def wait_for_sean(args: dict) -> object:
+    prompt_id = args.get("prompt_id")
+    if not isinstance(prompt_id, int) or isinstance(prompt_id, bool):
+        raise ToolError("prompt_id must be the number a waiting tool returned.")
+    return _wait(_run_id(args), prompt_id)
+
+
+def finish_run(args: dict) -> object:
+    return _call("POST", f"/api/runs/{_run_id(args)}/finish", {"status": args.get("status"), "summary": str(args.get("summary", ""))})
+
+
+_RUN = {"run_id": {"type": "integer", "description": "The run's number, from the prompt that started this run."}}
 _JOB = {"job_id": {"type": "integer", "description": "The saved job's number in Job Hunt."}}
 _ROLE_ITEM = {"type": "object", "properties": {"value": {"type": "string"}, "source": {"type": "string", "description": "The exact resume line it comes from, copied verbatim."}}, "required": ["value", "source"]}  # fmt: skip
 
@@ -198,6 +264,12 @@ TOOLS: dict[str, tuple] = {
     "add_answer": (add_answer, "Add an answer I gave during an application to my answer bank, only with my OK: a starter question by `key`, or a new one by `question`.", {"key": {"type": "string"}, "question": {"type": "string"}, "answer": {"type": "string"}}, ["answer"]),
     "record_application": (record_application, "Record how applying went: outcome submitted (only after I clicked Submit myself) or stopped (say why in note), the answers used, and a screenshot of the confirmation page (a PNG file path).", {**_JOB, "outcome": {"type": "string", "enum": ["submitted", "stopped"]}, "note": {"type": "string"}, "answers_used": {"type": "array", "items": {"type": "object", "properties": {"question": {"type": "string"}, "answer": {"type": "string"}}, "required": ["question", "answer"]}}, "screenshot_path": {"type": "string"}}, ["job_id", "outcome"]),
     "get_site_note": (get_site_note, "What was learned before about a site's application flow (by host, e.g. pnc.wd5.myworkdayjobs.com).", {"host": {"type": "string"}}, ["host"]),
+    "run_progress": (run_progress, "Web-driven runs: post one short line of progress to the job's page (what you're doing now).", {**_RUN, "text": {"type": "string"}}, ["run_id", "text"]),
+    "ask_sean": (ask_sean, "Web-driven runs: ask Sean a question on the job's page and wait for his answer (up to 4 minutes per call; if it says waiting, call wait_for_sean). Offer `options` when the form has choices; he can also type an answer.", {**_RUN, "question": {"type": "string"}, "options": {"type": "array", "items": {"type": "string"}}}, ["run_id", "question"]),
+    "needs_browser": (needs_browser, "Web-driven runs: hand Sean the browser for something only he may do (sign in, a CAPTCHA or bot check, choosing a password) and wait until he presses Done on the job's page.", {**_RUN, "what": {"type": "string", "description": "What he needs to do, in one sentence."}}, ["run_id", "what"]),
+    "ready_to_submit": (ready_to_submit, "Web-driven runs: show Sean the filled form (a full-page screenshot) and wait for his decision on the job's page: 'submit' (only then click the site's Submit) or 'stop'.", {**_RUN, "summary": {"type": "string", "description": "What's filled, anything left blank and why."}, "screenshot_path": {"type": "string"}}, ["run_id", "summary", "screenshot_path"]),
+    "wait_for_sean": (wait_for_sean, "Web-driven runs: keep waiting for Sean's answer to a prompt that came back 'waiting'.", {**_RUN, "prompt_id": {"type": "integer"}}, ["run_id", "prompt_id"]),
+    "finish_run": (finish_run, "Web-driven runs: finish the run as done, stopped or failed, with a one-line summary shown on the page. Always the last call.", {**_RUN, "status": {"type": "string", "enum": ["done", "stopped", "failed"]}, "summary": {"type": "string"}}, ["run_id", "status", "summary"]),
     "save_site_note": (save_site_note, "Save what was learned about a site's application flow, replacing the old note, so the next application there is faster.", {"host": {"type": "string"}, "note": {"type": "string"}}, ["host", "note"]),
 }  # fmt: skip
 
