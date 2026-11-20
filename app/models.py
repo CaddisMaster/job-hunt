@@ -286,3 +286,48 @@ class ApiToken(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     last_used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Application(Base):
+    """What the /apply skill recorded for one saved job (#76). **Private**
+    (non-negotiable 1); one per saved job, replaced if recorded again.
+
+    `outcome` is `submitted` (Sean clicked Submit himself, non-negotiable 8) or
+    `stopped` (`note` says why). `answers_used` is what was filled in, to check
+    against the answer bank. `screenshot` is the confirmation page (PNG, ≤ 5 MB).
+    A record written after the fact: the server never touches the employer's site."""
+
+    __tablename__ = "applications"
+    __table_args__ = (
+        CheckConstraint("outcome IN ('submitted', 'stopped')", name="applications_outcome"),
+        CheckConstraint("char_length(note) <= 4000", name="applications_note_length"),
+        CheckConstraint("octet_length(screenshot) <= 5242880", name="applications_screenshot_size"),
+        UniqueConstraint("saved_job_id", name="applications_saved_job"),
+        Index("applications_user", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    saved_job_id: Mapped[int] = mapped_column(ForeignKey("saved_jobs.id", ondelete="CASCADE"))
+    outcome: Mapped[str] = mapped_column(String(16))
+    note: Mapped[str] = mapped_column(Text, default="", server_default="")
+    answers_used: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]")
+    screenshot: Mapped[bytes | None] = mapped_column(LargeBinary)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class SiteNote(Base):
+    """What Claude learned about one site's application flow (#76), read at the start
+    of the next application there. **Private**; one per host per user."""
+
+    __tablename__ = "site_notes"
+    __table_args__ = (
+        CheckConstraint("char_length(note) <= 20000", name="site_notes_note_length"),
+        UniqueConstraint("user_id", "host", name="site_notes_user_host"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    host: Mapped[str] = mapped_column(String(255))
+    note: Mapped[str] = mapped_column(Text, default="", server_default="")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
