@@ -55,7 +55,7 @@
     {% endfor %}
     {% if c.skills %}<p><strong>Skills:</strong> {{ c.skills | join(', ') }}</p>{% endif %}
   {% else %}
-    <p class="muted">None yet. In Claude Code on your Mac, <code>/apply {{ job.id }}</code> tailors your resume to this job and sends it here to be checked.</p>
+    <p class="muted">None yet. In Claude Code, <code>/apply {{ job.id }}</code> tailors your resume to this job and sends it here to be checked.</p>
   {% endif %}
 </section>
 {% endif %}

@@ -1,8 +1,8 @@
 # Job Hunt
 
 Sean's job application helper at **apply.seandesmet.com**, for him alone (since 2026-11-20).
-He pastes links to jobs he found; Job Hunt saves each posting, tailors his resume to it (a PDF),
-and Playwright fills in the application. A person always clicks the final Submit. No crawling and
+He pastes links to jobs he found; Job Hunt saves each posting, and Claude Code on the VM tailors
+his resume to it (a PDF) and fills in the application with Playwright, on a screen he watches. A person always clicks the final Submit. No crawling and
 no ranking. The multi-user plumbing built in 0.1–0.2 stays. FastAPI + Postgres in Docker, the
 third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by copying Orbit Ops.
 
@@ -23,7 +23,7 @@ third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by cop
 
 - **Backend:** Python 3.15, FastAPI (sync routes), SQLAlchemy 2.0 ORM, psycopg 3, Alembic,
   pydantic-settings, argon2-cffi, Starlette sessions, ReportLab (PDFs). One uvicorn process.
-- **The AI work** (reading the resume, tailoring, applying) runs in **Claude Code on Sean's Mac**,
+- **The AI work** (reading the resume, tailoring, applying) runs in **Claude Code on the VM**,
   through the bridge (`/api/`, a token). The app itself makes no Claude calls.
 - **Frontend:** Jinja2 + htmx 2.0.4 (vendored, 0BSD, licence beside it in `app/static/`), plain
   CSS with light and dark tokens. No build step.
@@ -57,7 +57,8 @@ app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invi
 alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 saved_jobs, 0010 tailored_resumes, 0011 api_tokens, 0012 applications + site_notes)
 .claude/             /wrap (end of session), the /apply and /profile skills (docs/apply.md), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
-tools/jobhunt_mcp.py the bridge as MCP tools for Claude Code on Sean's Mac (stdio, stdlib only; token from the Keychain)
+tools/jobhunt_mcp.py the bridge as MCP tools for Claude Code (stdio, stdlib only; token from ~/.config/jobhunt/token)
+tools/apply-screen.sh  the virtual screen + VNC /apply's browser draws on, viewed from Sean's Mac (docs/apply.md)
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
 ```
 

@@ -6,8 +6,8 @@
 > they disagree:** Job Hunt is **Sean's alone**. Jobs get in **only by Sean pasting a link** (Saved
 > jobs, #63): no crawling, no aggregators, no ranking or scoring, no location filter. For each saved
 > job, Job Hunt **tailors his resume** (a PDF, grounded in his real resume: non-negotiable 7), and
-> **Playwright fills in the application**, both from a Claude Code session on his Mac (decision
-> 11): Claude is the brain, Playwright the hands, and the web app checks, stores and records. A person always clicks the final Submit. §3's profile and answer bank, §6's applier and
+> **Playwright fills in the application**, both from a Claude Code session on the VM, with the
+> browser on a screen he watches from his Mac (decision 11): Claude is the brain, Playwright the hands, and the web app checks, stores and records. A person always clicks the final Submit. §3's profile and answer bank, §6's applier and
 > its safety rules, and §1's infrastructure still hold. §4 (discovery) and §5 (the nightly loop
 > and morning queue) are history.
 
@@ -228,7 +228,7 @@ people's personal data, so check where `backup-export` sends them.
 | **0.2** | Resume upload → structured profile → answer bank |
 | **0.3** | Saved jobs: paste a link, the posting is read (#63). *(Re-planned 2026-11-20: the registry, crawl and location filter built earlier were removed before release.)* |
 | **0.4** | A tailored resume for each saved job, as a PDF, grounded in the real resume, with what changed shown before it's used |
-| **0.5** | The applier: Playwright fills the application from the tailored resume and the answer bank, stops with a screenshot, and Sean clicks Submit. On the server first (droplet resized to 4 GB before it ships); Sean's Mac (#66) if the server can't |
+| **0.5** | The applier: `/apply` in Claude Code on the VM fills the application from the tailored resume and the answer bank, in a browser Sean watches from his Mac, and stops for him to click Submit (#66, #76, `docs/apply.md`) |
 | **0.6** | Tracking after applying: status, reminders |
 
 0.4 comes first because it is useful within weeks, and the riskiest piece (browser automation on
@@ -251,6 +251,6 @@ a 2 GB droplet) comes after the matching has proven worth it.
 |---|---|---|
 | 7 | Who it's for | **Sean alone.** No family or friends. The multi-user plumbing already built stays; nothing new is built for others. |
 | 8 | Discovery beyond the registry | **Paste a link (#63)**, not aggregators: Adzuna and USAJobs dropped (#45 closed). *(Then decision 10 removed the registry too.)* |
-| 9 | Where the browser runs, and logins | **On the server first; Sean's Mac (#66) if that runs into problems** (revised the same day). Logins: Sean logs in himself when a site asks, and no password is ever stored. An honest browser: no stealth, and a challenge stops it (non-negotiable 9). The droplet resize (decision 3) comes back with a server browser. |
-| 11 | Where the AI work runs | **In Claude Code on Sean's Mac**, not the web app (same day): reading the resume into the profile (`/profile`), tailoring the resume and filling the application (`/apply`) happen in Claude Code, on his Claude Code plan, through a token-authenticated JSON API (the bridge, #74). The web app keeps the strict parts: it checks a tailored resume against the resume and the confirmed profile (non-negotiable 7), makes the PDF, stores it and records applications (#73, #76). |
+| 9 | Where the browser runs, and logins | **On the VM, on a virtual screen Sean watches and uses from his Mac** (Screen Sharing over an SSH tunnel; revised twice the same day, from the server and then the Mac). No droplet resize needed. Logins: Sean logs in himself when a site asks, and no password is ever stored. An honest browser: no stealth, and a challenge stops it (non-negotiable 9). |
+| 11 | Where the AI work runs | **In Claude Code on the VM**, not the web app (same day; first planned for the Mac, then moved so all of Sean's dev stays on the VM, with the browser shown on his Mac through VNC over SSH, `docs/apply.md`): reading the resume into the profile (`/profile`), tailoring the resume and filling the application (`/apply`) happen in Claude Code, on his Claude Code plan, through a token-authenticated JSON API (the bridge, #74). The web app keeps the strict parts: it checks a tailored resume against the resume and the confirmed profile (non-negotiable 7), makes the PDF, stores it and records applications (#73, #76). |
 | 10 | What Job Hunt does | **Only jobs Sean pastes**, then a **tailored resume (PDF)** per job and **Playwright applying**. No crawling, no ranking or scoring, no location filter: the registry, the Greenhouse/Lever/Ashby crawl and the Greater Pittsburgh check were removed before they shipped (#46, #47, #59 closed). A pasted page is read from its embedded job data (JSON-LD or microdata), else Sean pastes the text. |

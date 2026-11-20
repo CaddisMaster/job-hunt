@@ -32,6 +32,8 @@
     ],
     "deny": [
       "Read(./.env)",
+      "Read(~/.config/jobhunt/**)",
+      "Bash(cat ~/.config/jobhunt/*)",
       "Bash(git push --force*)",
       "Bash(git push -f*)"
     ]

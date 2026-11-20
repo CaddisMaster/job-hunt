@@ -34,7 +34,7 @@
 
   {% if base and base.text and (not profile or stale) %}
     <p>{% if profile %}Your newest resume, {{ base.filename }}, isn't the one this profile was built from. {% endif %}
-    To {{ 'rebuild' if profile else 'build' }} your profile from {{ base.filename }}, run <code>/profile</code> in Claude Code on your Mac.
+    To {{ 'rebuild' if profile else 'build' }} your profile from {{ base.filename }}, run <code>/profile</code> in Claude Code.
     It reads your resume, sends what it found here to be checked against the resume, and you confirm it on the review page.</p>
   {% elif base and not base.text and not profile %}
     <p class="muted">Your base resume has no text in it, so a profile can't be built from it.</p>
@@ -49,7 +49,7 @@
 
 <section class="card" id="tokens">
   <h2>Access tokens for Claude Code</h2>
-  <p class="muted">How Claude Code on your Mac reads your saved jobs, resume and answer bank to tailor a resume and fill an application. Keep a token in your Mac's Keychain, never in a file. Revoke one you no longer use.</p>
+  <p class="muted">How Claude Code reads your saved jobs, resume and answer bank to tailor a resume and fill an application. Keep it where only you can read it (docs/apply.md), and revoke one you no longer use.</p>
   {% if new_token %}
   <div class="notice" aria-live="polite">
     <p><strong>Your new token, shown only this once.</strong> Copy it now:</p>
