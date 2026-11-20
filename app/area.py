@@ -12,6 +12,9 @@ by scripts/build_places.py), and checks coordinates when a source gives them.
                  Tokyo, Japan)
     unknown      can't tell: kept out, and counted for the admin (decided 2026-11-19)
 
+A township that shares its name with a town elsewhere in Pennsylvania ("Lancaster,
+PA") is only in the area when the text says "Township"; alone it's unknown.
+
 A posting listing several locations is in the area if any one is. A hybrid or
 on-site job in Pittsburgh is in the area, not remote. A bare town name with no
 state ("Washington") is only trusted for Pittsburgh itself: too many towns share
@@ -96,9 +99,19 @@ def _norm(text: str) -> str:
 
 
 @cache
-def _table() -> frozenset[tuple[str, str]]:
+def _rows() -> dict[tuple[str, str], bool]:
+    """(name, state) → whether the name is ambiguous (a township here, a town elsewhere
+    in Pennsylvania: scripts/build_places.py)."""
     with PLACES.open(encoding="utf-8", newline="") as f:
-        return frozenset((_norm(row["name"]), row["state"]) for row in csv.DictReader(f))
+        return {(_norm(row["name"]), row["state"]): row["ambiguous"] == "1" for row in csv.DictReader(f)}
+
+
+@cache
+def _table() -> frozenset[tuple[str, str]]:
+    return frozenset(_rows())
+
+
+_TOWNSHIP = re.compile(r"\b(township|twp)\b")
 
 
 def miles_from_downtown(lat: float, lon: float) -> float:
@@ -136,15 +149,21 @@ def _segment(segment: str) -> Where:
             return Where.IN_AREA
         return Where.OUT_OF_AREA if last in ABROAD else Where.UNKNOWN
     # "Strip District, Pittsburgh, PA": a neighbourhood first, then the town. Any name in the
-    # area will do.
+    # area will do. "Lancaster, PA" is the city out east as often as the Butler County
+    # township, so an ambiguous name counts only with "Township"; alone, it's unknown.
+    unsure = False
     for name in names:
         place = _norm(name)
         county = re.fullmatch(r"(.+?) county", place)
         if county and state == "PA" and county[1] in COUNTIES:
             return Where.IN_AREA
-        if (place, state) in _table():
+        ambiguous = _rows().get((place, state))
+        if ambiguous is None:
+            continue
+        if not ambiguous or _TOWNSHIP.search(name):
             return Where.IN_AREA
-    return Where.OUT_OF_AREA
+        unsure = True
+    return Where.UNKNOWN if unsure else Where.OUT_OF_AREA
 
 
 def classify(location: str | None, lat: float | None = None, lon: float | None = None) -> Where:
