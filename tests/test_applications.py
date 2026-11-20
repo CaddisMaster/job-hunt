@@ -227,12 +227,30 @@ def test_the_mcp_servers_errors_are_tool_errors_without_the_token(mcp, me):
     assert unknown["error"]["code"] == -32601
 
 
-def test_without_a_token_the_mcp_server_says_how_to_add_one(monkeypatch):
+def test_without_a_token_the_mcp_server_says_how_to_add_one(monkeypatch, tmp_path):
     module = load_mcp()
     monkeypatch.delenv("JOBHUNT_TOKEN", raising=False)
+    monkeypatch.setattr(module, "TOKEN_FILE", tmp_path / "token")
+    monkeypatch.setattr(module.sys, "platform", "linux")
+    with pytest.raises(module.ToolError, match="save it to .*token"):
+        module._token()
+    monkeypatch.setattr(module.sys, "platform", "darwin")
     monkeypatch.setattr(module.subprocess, "run", lambda *a, **k: type("R", (), {"returncode": 44, "stdout": ""})())
     with pytest.raises(module.ToolError, match="security add-generic-password -s jobhunt-token"):
         module._token()
+
+
+def test_the_token_file_is_read_only_when_its_yours_alone(monkeypatch, tmp_path):
+    module = load_mcp()
+    monkeypatch.delenv("JOBHUNT_TOKEN", raising=False)
+    token = tmp_path / "token"
+    token.write_text("jh_from-the-file\n")
+    monkeypatch.setattr(module, "TOKEN_FILE", token)
+    token.chmod(0o644)
+    with pytest.raises(module.ToolError, match="chmod 600"):
+        module._token()
+    token.chmod(0o600)
+    assert module._token() == "jh_from-the-file"
 
 
 def test_the_mcp_server_speaks_line_delimited_json_on_stdio(monkeypatch, capsys):

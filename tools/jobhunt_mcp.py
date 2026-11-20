@@ -6,8 +6,9 @@ request to Job Hunt's JSON API (#74) with Sean's personal access token. Standard
 library only, so there's nothing to install or pin on the Mac.
 
     JOBHUNT_URL    where Job Hunt is (default https://apply.seandesmet.com)
-    JOBHUNT_TOKEN  the token, for testing only. Normally it's read from the macOS
-                   Keychain: security add-generic-password -s jobhunt-token -a "$USER" -w
+    JOBHUNT_TOKEN  the token, for testing only. Normally it's read from
+                   ~/.config/jobhunt/token (mode 600, written by Sean: docs/apply.md),
+                   or on a Mac from the Keychain (service jobhunt-token).
 
 The token never appears in a tool's result or in an error. The tailored PDF is
 saved to a private temporary folder so the browser can upload it.
@@ -30,6 +31,7 @@ from urllib.parse import quote
 VERSION = "0.1.0"
 DEFAULT_URL = "https://apply.seandesmet.com"
 KEYCHAIN_SERVICE = "jobhunt-token"
+TOKEN_FILE = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "jobhunt" / "token"
 TIMEOUT = 60
 
 
@@ -44,6 +46,14 @@ def _token() -> str:
     token = os.environ.get("JOBHUNT_TOKEN", "").strip()
     if token:
         return token
+    if TOKEN_FILE.exists():
+        if TOKEN_FILE.stat().st_mode & 0o077:
+            raise ToolError(f"{TOKEN_FILE} must be readable by you alone: chmod 600 {TOKEN_FILE}")
+        token = TOKEN_FILE.read_text().strip()
+        if token:
+            return token
+    if sys.platform != "darwin":
+        raise ToolError(f"No Job Hunt token. Make one on Job Hunt's Profile page and save it to {TOKEN_FILE} (docs/apply.md).")
     try:
         found = subprocess.run(
             ["security", "find-generic-password", "-s", KEYCHAIN_SERVICE, "-w"],

@@ -14,7 +14,7 @@ release (#45, #46, #47, #59 closed).
 ## Pick up here
 
 **How it works now** (plan §10 decisions 9–11): Sean pastes job links into the web app. In a Claude
-Code session on his Mac, `/apply next` tailors his resume (sent to the web app, which checks it
+Code session on the VM, `/apply next` tailors his resume (sent to the web app, which checks it
 and makes the PDF) and fills the application through Playwright MCP; he clicks Submit.
 
 1. **Look at a real tailored PDF.** The layout was only checked as extracted text (no
