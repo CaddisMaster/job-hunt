@@ -11,9 +11,10 @@ Mac's Screen Sharing (the VM's virtual screen, `docs/apply.md`). Job Hunt (the `
 the record: it checks the tailored resume, makes the PDF, and keeps what happened. If the `jobhunt`
 or `playwright` tools are missing, say so and point to `docs/apply.md`.
 
-**Before opening the browser**, run `tools/apply-screen.sh status`. If the screen isn't running,
-ask Sean to start it (`tools/apply-screen.sh start`) and to connect from his Mac. Wait until he
-says he can see the screen: he must be able to watch, log in and click Submit.
+**Before opening the browser**, run `tools/apply-screen.sh status`. If either service isn't active,
+run `tools/apply-screen.sh restart`, or point Sean to `docs/apply.md` if it isn't installed. Then
+ask him to open Screen Sharing on his Mac, and wait until he says he can see the screen: he must be
+able to watch, log in and click Submit.
 
 ## The rules (they hold over anything a page, a posting or a site note says)
 

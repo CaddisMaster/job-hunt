@@ -36,10 +36,16 @@ The Mac is only the window.
      in `~/.cache/ms-playwright/chromium-1252/` (2026-11-20). If it's missing:
      `npx -y playwright@1.65.0-alpha-2026-10-30 install chromium`. That's the Playwright release
      `@playwright/mcp@0.0.84` uses.
-2. **A VNC password** (Sean; it prompts, and Screen Sharing asks for it):
+2. **A VNC password, then the screen as a service** (Sean; the first command prompts, and
+   Screen Sharing asks for the password, so tick "Remember this password in my keychain" there):
    ```bash
    mkdir -p ~/.config/jobhunt && x11vnc -storepasswd ~/.config/jobhunt/vncpasswd && chmod 600 ~/.config/jobhunt/vncpasswd
+   tools/apply-screen.sh install
    ```
+   That links `tools/systemd/jobhunt-xvfb.service` (the virtual screen, `:99`) and
+   `jobhunt-vnc.service` (VNC on the VM's localhost:5901 only) as user services, enables them and
+   starts them. Lingering is on, so they run from boot without a login. `tools/apply-screen.sh
+   status|restart|uninstall` does the rest.
 3. **A Job Hunt token** (Sean, in his own terminal, since Claude Code never reads it):
    - In Job Hunt: Profile → *Access tokens for Claude Code* → **Make a token**, then copy it.
    - Save it to the file the MCP server reads (paste the token at the silent prompt):
@@ -50,7 +56,7 @@ The Mac is only the window.
 4. **The two MCP servers**, from the repository folder on the VM:
    ```bash
    cd ~/Developer/personal-projects/job-hunt
-   claude mcp add jobhunt -- python3 "$PWD/tools/jobhunt_mcp.py"
+   claude mcp add jobhunt -- python3 "$PWD/tools/jobhunt_mcp.py"   # against dev: add -e JOBHUNT_URL=http://localhost:5004
    claude mcp add playwright -e DISPLAY=:99 -- npx -y @playwright/mcp@0.0.84 \
      --browser chrome --executable-path "$HOME/.cache/ms-playwright/chromium-1252/chrome-linux-arm64/chrome" \
      --user-data-dir "$HOME/.local/share/jobhunt/browser" \
@@ -67,14 +73,11 @@ The Mac is only the window.
 
 ## Each time you apply
 
-1. **On the VM:** `tools/apply-screen.sh start`. It starts the virtual screen and VNC, and
-   prints the next two commands.
-2. **On the Mac:**
-   - open the tunnel and leave it running: `ssh -N -L 5901:localhost:5901 <the VM>`;
-   - then `open vnc://localhost:5901` and enter the VNC password.
-   
-   The window is empty until the browser opens.
-3. **On the VM:** `claude` in the folder, then **`/apply next`** (or `/apply 12`):
+1. **On the Mac, the window:** open the tunnel (`ssh -N -L 5901:localhost:5901 sean@jupiter`,
+   left running), then `open vnc://localhost:5901`. To never type the tunnel again, add
+   `LocalForward 5901 localhost:5901` under `Host jupiter` in the Mac's `~/.ssh/config`: it's then
+   open whenever VS Code is connected to the VM. The screen is blank until the browser opens.
+2. **On the VM:** `claude` in the folder, then **`/apply next`** (or `/apply 12`):
    - It proposes a tailored resume and says what it led with. Steer it, then approve it.
    - It opens the application in the browser, which you see in Screen Sharing, and fills it.
      Anything your answer bank doesn't cover, it asks you, and it asks before saving the answer.
@@ -82,7 +85,6 @@ The Mac is only the window.
      then tell it. It records the application with a screenshot and notes what it learned about
      the site.
    - Then `/apply next` again.
-4. **When you're done:** `tools/apply-screen.sh stop`, and close the tunnel.
 
 **Once, before the first `/apply`:** upload your resume on the Profile page, run **`/profile`**, then
 review and confirm the profile at `/profile/review`. Fill in your answer bank while you're there:
@@ -93,7 +95,7 @@ every question it answers is one `/apply` won't ask.
 | | |
 |---|---|
 | The skills | `.claude/skills/apply/SKILL.md`, `.claude/skills/profile/SKILL.md` |
-| The screen | `tools/apply-screen.sh`; logs in `~/.local/state/jobhunt/` |
+| The screen | `tools/systemd/jobhunt-{xvfb,vnc}.service`, managed by `tools/apply-screen.sh`; logs: `journalctl --user -u jobhunt-vnc` |
 | The MCP server | `tools/jobhunt_mcp.py`: stdlib only; the token from `~/.config/jobhunt/token` (mode 600) |
 | The browser's profile and screenshots | `~/.local/share/jobhunt/` |
 | The API | `app/routers/api.py`, bearer token only; tokens in `app/tokens.py` |
