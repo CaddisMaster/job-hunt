@@ -13,10 +13,9 @@ release (#45, #46, #47, #59 closed).
 
 ## Pick up here
 
-1. **The migration that drops the never-released tables** (if not merged yet): delete 0009–0011
-   (employers, postings, workday) and their models; `saved_jobs` becomes 0009 with no `area` and
-   `source` in pending/page/text. Production is at 0008, so it never sees the dropped tables. The
-   dev database must be downgraded to 0008 **before** the files go.
+1. **Dev databases from before 2026-11-20 midday:** migrations 0009–0011 were deleted and
+   `saved_jobs` renumbered to 0009 (#72). A database at 0010–0012 must go back to 0008 with the old
+   files (`git checkout f7c0ea6`) before upgrading. Production was at 0008, so it's unaffected.
 2. **#67** (one line off the sign-in page), then **release v0.3.0**.
 3. **0.4: the tailored resume (PDF) per saved job.** Needs an issue with criteria. Grounded in
    the real resume (non-negotiable 7, `app/grounding.py`); show what changed before it's used.
