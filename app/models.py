@@ -2,7 +2,7 @@
 
 ⚠️ Every table holding a user's private data carries `user_id`, and every
 query against it is scoped to the current user (CLAUDE.md non-negotiable #1).
-Shared tables (employers, postings) arrive in 0.3."""
+Shared tables carry no `user_id`: job_runs and employers now, postings later in 0.3."""
 
 import secrets
 from datetime import datetime
@@ -19,6 +19,7 @@ from sqlalchemy import (
     UniqueConstraint,
     false,
     func,
+    true,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -175,3 +176,54 @@ class Answer(Base):
     question: Mapped[str | None] = mapped_column(Text)
     answer: Mapped[str] = mapped_column(Text, default="", server_default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class JobRun(Base):
+    """One run of a scheduled job in the worker (#41, app/worker.py). Shared: no
+    user's data. `summary` holds counts ("12 postings, 3 new"), never personal data.
+
+    A row with no `finished_at` (and so no `outcome`) is a run in progress, or one the
+    worker was stopped in the middle of; the next run of that job closes it as failed.
+    Whether a job is due is read from here: it is due when its latest scheduled time
+    has passed and no run of it has started since."""
+
+    __tablename__ = "job_runs"
+    __table_args__ = (
+        CheckConstraint("outcome IN ('ok', 'failed', 'skipped')", name="job_runs_outcome"),
+        CheckConstraint("(finished_at IS NULL) = (outcome IS NULL)", name="job_runs_finished"),
+        # A job's newest run: the due check and the admin page.
+        Index("job_runs_job_newest", "job", "started_at"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job: Mapped[str] = mapped_column(String(64))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    outcome: Mapped[str | None] = mapped_column(String(16))
+    summary: Mapped[str] = mapped_column(Text, default="", server_default="")
+
+
+class Employer(Base):
+    """An employer in the shared registry (#43, app/employers.py). Shared by every
+    user: no `user_id`, and nothing here says whose search it came from.
+
+    `system` and `token` name the employer's public job board: the board at
+    boards.greenhouse.io/<token>, jobs.lever.co/<token> or jobs.ashbyhq.com/<token>.
+    The nightly crawl (#44) fetches the enabled ones and records how it went."""
+
+    __tablename__ = "employers"
+    __table_args__ = (
+        CheckConstraint("system IN ('greenhouse', 'lever', 'ashby')", name="employers_system"),
+        UniqueConstraint("system", "token", name="employers_board"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(200))
+    system: Mapped[str] = mapped_column(String(16))
+    token: Mapped[str] = mapped_column(String(100))
+    careers_url: Mapped[str] = mapped_column(String(500))
+    enabled: Mapped[bool] = mapped_column(default=True, server_default=true())
+    added_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[str | None] = mapped_column(Text)

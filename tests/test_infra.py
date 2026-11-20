@@ -178,13 +178,14 @@ def test_no_compose_up_in_a_deploy_can_reach_db(path):
         if "--wait db" in command:
             assert '[ -n \\"\\$DB_ID\\" ] ||' in command, command
         else:
-            assert re.search(r"docker compose up -d --no-deps( --remove-orphans)? web\b", command), command
+            assert re.search(r"docker compose up -d --no-deps( --remove-orphans)? web( worker)?$", command), command
 
 
 def test_the_swap_names_every_service_but_db():
     """A new service has to join the swap's `up`, or a release would never start it."""
     services = yaml.safe_load((ROOT / "docker-compose.yml").read_text())["services"]
-    assert set(services) == {"db", "web"}
+    assert set(services) == {"db", "web", "worker"}
+    assert "docker compose up -d --no-deps --remove-orphans web worker" in _release_deploy_text()
 
 
 def test_the_guard_says_what_the_hash_cannot_promise():
