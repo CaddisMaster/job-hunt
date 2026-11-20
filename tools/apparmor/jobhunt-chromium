@@ -1,0 +1,20 @@
+# AppArmor profile for Playwright's Chromium on the VM (docs/apply.md), the same
+# shape as the `chrome` profile Ubuntu ships for Google Chrome. It allows everything,
+# as that one does, and exists only to grant `userns`: Ubuntu 24.04 blocks
+# unprivileged user namespaces unless a profile allows them, and Chromium's sandbox
+# needs them. The alternative, --no-sandbox, would turn the sandbox off for a browser
+# that opens employers' web pages.
+#
+# Install (sudo):  sudo install -m 644 tools/apparmor/jobhunt-chromium /etc/apparmor.d/ \
+#                  && sudo apparmor_parser -r /etc/apparmor.d/jobhunt-chromium
+# The glob covers Playwright's later Chromium builds (chromium-<build>/), so a bump
+# of @playwright/mcp doesn't need a new profile.
+
+abi <abi/4.0>,
+include <tunables/global>
+
+profile jobhunt-chromium @{HOME}/.cache/ms-playwright/chromium-[0-9]*/chrome-linux*/chrome flags=(unconfined) {
+  userns,
+
+  include if exists <local/jobhunt-chromium>
+}

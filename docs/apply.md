@@ -24,11 +24,18 @@ The Mac is only the window.
 1. **Install the pieces Chromium and VNC need** (Sean, sudo):
    ```bash
    sudo apt-get install -y x11vnc libgbm1 libgl1-mesa-dri libglx-mesa0 mesa-libgallium
+   sudo install -m 644 tools/apparmor/jobhunt-chromium /etc/apparmor.d/ \
+     && sudo apparmor_parser -r /etc/apparmor.d/jobhunt-chromium
    ```
-   Chromium itself is Playwright's ARM build (Chrome doesn't exist for ARM Linux), already in
-   `~/.cache/ms-playwright/chromium-1252/` (2026-11-20). If it's missing:
-   `npx -y playwright@1.65.0-alpha-2026-10-30 install chromium`. That's the Playwright release
-   `@playwright/mcp@0.0.84` uses.
+   - **The AppArmor profile:** Ubuntu 24.04 blocks the user namespaces Chromium's sandbox needs
+     (`kernel.apparmor_restrict_unprivileged_userns = 1`). Without it, Chromium stops with "No
+     usable sandbox!". The profile allows them for Playwright's Chromium only, the way Ubuntu's
+     own `chrome` profile does for Google Chrome. Never use `--no-sandbox` instead: this browser
+     opens employers' pages.
+   - **Chromium itself** is Playwright's ARM build (Chrome doesn't exist for ARM Linux), already
+     in `~/.cache/ms-playwright/chromium-1252/` (2026-11-20). If it's missing:
+     `npx -y playwright@1.65.0-alpha-2026-10-30 install chromium`. That's the Playwright release
+     `@playwright/mcp@0.0.84` uses.
 2. **A VNC password** (Sean; it prompts, and Screen Sharing asks for it):
    ```bash
    mkdir -p ~/.config/jobhunt && x11vnc -storepasswd ~/.config/jobhunt/vncpasswd && chmod 600 ~/.config/jobhunt/vncpasswd
