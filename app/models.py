@@ -331,3 +331,56 @@ class SiteNote(Base):
     host: Mapped[str] = mapped_column(String(255))
     note: Mapped[str] = mapped_column(Text, default="", server_default="")
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class Run(Base):
+    """A web-driven Claude Code run (#88): queued by a button, claimed by the runner
+    on the VM, finished as done, failed or stopped. **Private** (non-negotiable 1).
+    `stop_requested` is Sean's Stop button, seen at the run's next wait."""
+
+    __tablename__ = "runs"
+    __table_args__ = (
+        CheckConstraint("kind IN ('apply', 'profile')", name="runs_kind"),
+        CheckConstraint("status IN ('queued', 'running', 'done', 'failed', 'stopped')", name="runs_status"),
+        CheckConstraint("(kind = 'apply') = (saved_job_id IS NOT NULL)", name="runs_apply_has_job"),
+        CheckConstraint("char_length(summary) <= 2000", name="runs_summary_length"),
+        Index("runs_user_status", "user_id", "status", "created_at"),
+        Index("runs_saved_job", "saved_job_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    kind: Mapped[str] = mapped_column(String(16))
+    saved_job_id: Mapped[int | None] = mapped_column(ForeignKey("saved_jobs.id", ondelete="CASCADE"))
+    status: Mapped[str] = mapped_column(String(16), default="queued", server_default="queued")
+    stop_requested: Mapped[bool] = mapped_column(default=False, server_default=false())
+    summary: Mapped[str] = mapped_column(Text, default="", server_default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RunEvent(Base):
+    """What a run shows on the job's page (#88): a progress line, or a prompt
+    (question, browser, submit) waiting for Sean's answer, or cancelled when the run
+    stopped first. A submit prompt carries the filled form's screenshot."""
+
+    __tablename__ = "run_events"
+    __table_args__ = (
+        CheckConstraint("kind IN ('progress', 'question', 'browser', 'submit')", name="run_events_kind"),
+        CheckConstraint("char_length(text) <= 4000", name="run_events_text_length"),
+        CheckConstraint("char_length(answer) <= 2000", name="run_events_answer_length"),
+        CheckConstraint("octet_length(screenshot) <= 5242880", name="run_events_screenshot_size"),
+        Index("run_events_run", "run_id", "id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    run_id: Mapped[int] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"))
+    kind: Mapped[str] = mapped_column(String(16))
+    text: Mapped[str] = mapped_column(Text, default="", server_default="")
+    options: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]")
+    screenshot: Mapped[bytes | None] = mapped_column(LargeBinary)
+    answer: Mapped[str | None] = mapped_column(Text)
+    answered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    cancelled: Mapped[bool] = mapped_column(default=False, server_default=false())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
