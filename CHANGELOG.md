@@ -10,7 +10,8 @@ and why it matters, not what the diff says.
 - A fixed definition of "Greater Pittsburgh" (#42), ready for job discovery in 0.3: the seven-county
   metro (Allegheny, Armstrong, Beaver, Butler, Fayette, Washington, Westmoreland) plus anywhere
   within 50 miles of downtown. Every job's location text is read against a table of the area's
-  towns, townships and boroughs from the Census Gazetteer. The result is in the area, remote,
+  towns, townships and boroughs from the Census Gazetteer, plus post-office names like Wexford
+  and Warrendale from GeoNames (CC BY 4.0). The result is in the area, remote,
   somewhere else, or unknown, and unknown jobs are kept out rather than guessed. Pittsburg, Kansas
   is not Pittsburgh, and a hybrid job in Cranberry is in the area.
 

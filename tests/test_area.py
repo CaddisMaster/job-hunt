@@ -45,6 +45,11 @@ CASES = [
     ("Hybrid (Pittsburgh)", IN),
     ("Hybrid - Pittsburgh, PA", IN),
     ("On-site: Pittsburgh, PA", IN),
+    # post-office names, which aren't Census places (GeoNames)
+    ("Wexford, PA", IN),
+    ("Warrendale, PA 15086", IN),
+    ("Gibsonia, Pennsylvania", IN),
+    ("Wexford, Pennsylvania, United States", IN),
     # a neighbourhood or a missing comma
     ("Strip District, Pittsburgh, PA", IN),
     ("Southpointe, Canonsburg, PA", IN),

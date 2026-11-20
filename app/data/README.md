@@ -8,8 +8,8 @@ it by hand.
 
 - **Municipalities and Census places:** U.S. Census Bureau, 2024 Gazetteer Files (county
   subdivisions and places). Public domain.
-- **Post-office names (not in the table yet, #42):** the build script can add the seven
-  counties' post-office names (Wexford, Warrendale…) from [GeoNames](https://www.geonames.org/)
-  US postal codes, licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). When
-  they're added, this line becomes the attribution: place names © GeoNames, filtered to the seven
-  counties, with each one's county and coordinates.
+- **Post-office names:** place names © [GeoNames](https://www.geonames.org/), from its US postal
+  codes file (`US.zip`, fetched 2026-11-19), licensed under
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Changes: filtered to the seven
+  counties, one row per name, with each one's county and coordinates. They add the names job
+  postings use that aren't municipalities (Wexford, Warrendale, Gibsonia…).

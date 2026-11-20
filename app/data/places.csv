@@ -1,20 +1,27 @@
 name,state,county,lat,lon
 Aaronsburg,PA,,40.010823,-80.000926
+Acme,PA,Westmoreland,40.1201,-79.4051
+Adah,PA,Fayette,39.8965,-79.922
 Adams,PA,Butler,40.717313,-80.006372
 Adamsburg,PA,Westmoreland,40.312434,-79.654279
 Adena,OH,,40.216663,-80.87621
+Adrian,PA,Armstrong,40.9049,-79.5074
 Aleppo,PA,Allegheny,40.532934,-80.1435
 Aliquippa,PA,Beaver,40.615827,-80.255162
 Allegheny,PA,Westmoreland,40.614925,-79.639675
 Allenport,PA,Washington,40.088805,-79.859395
 Allison,PA,,39.985305,-79.873134
 Allison Park,PA,,40.573021,-79.960294
+Alverton,PA,Westmoreland,40.1373,-79.5997
 Ambridge,PA,Beaver,40.591646,-80.226911
 Ambridge Heights,PA,,40.592832,-80.214116
+Amity,PA,Washington,40.0498,-80.1681
 Amsterdam,OH,,40.471733,-80.921688
 Amwell,PA,Washington,40.075465,-80.193446
 Apollo,PA,Armstrong,40.585004,-79.564677
 Applewold,PA,Armstrong,40.808227,-79.522029
+Ardara,PA,Westmoreland,40.3578,-79.735
+Armbrust,PA,Westmoreland,40.2237,-79.5512
 Arnold,PA,Westmoreland,40.578916,-79.765293
 Arnold City,PA,,40.117314,-79.822597
 Arona,PA,Westmoreland,40.268182,-79.655373
@@ -61,21 +68,26 @@ Bobtown,PA,,39.760344,-79.984788
 Boggs,PA,Armstrong,40.889293,-79.413525
 Bolivar,PA,Westmoreland,40.395006,-79.152089
 Boston,PA,,40.311678,-79.823518
+Bovard,PA,Westmoreland,40.3198,-79.5034
 Boyers,PA,,41.107485,-79.900879
 Brackenridge,PA,Allegheny,40.607982,-79.740016
 Braddock,PA,Allegheny,40.401736,-79.868622
 Braddock Hills,PA,Allegheny,40.41456,-79.861273
 Bradenville,PA,,40.323621,-79.340254
 Bradford Woods,PA,Allegheny,40.636949,-80.0809
+Bradfordwoods,PA,Allegheny,40.6372,-80.0811
 Brady,PA,Butler,40.991662,-80.019328
 Bradys Bend,PA,Armstrong,40.984234,-79.647885
+Branchton,PA,Butler,41.0726,-79.9856
 Brentwood,PA,Allegheny,40.373378,-79.975784
 Bridgeport,OH,,40.064562,-80.748943
 Bridgeville,PA,Allegheny,40.358204,-80.10755
 Bridgewater,PA,Beaver,40.705077,-80.30041
+Brier Hill,PA,Fayette,39.9808,-79.8504
 Brighton,PA,Beaver,40.702589,-80.380924
 Brilliant,OH,,40.26823,-80.637584
 Brookside,OH,,40.070945,-80.760847
+Brownfield,PA,Fayette,39.857,-79.712
 Brownsville,PA,Fayette,40.024547,-79.868901
 Bruin,PA,Butler,41.05439,-79.727301
 Buena Vista,PA,,40.277723,-79.80049
@@ -87,6 +99,7 @@ Bunola,PA,,40.233582,-79.950497
 Burgettstown,PA,Washington,40.381293,-80.392613
 Burrell,PA,Armstrong,40.668756,-79.469504
 Butler,PA,Butler,40.851315,-79.925174
+Cabot,PA,Butler,40.7924,-79.76
 Cadogan,PA,Armstrong,40.754392,-79.583922
 Calcutta,OH,,40.689443,-80.549931
 California,PA,Washington,40.066665,-79.91198
@@ -94,6 +107,7 @@ Callery,PA,Butler,40.739383,-80.037966
 Calumet,PA,,40.218902,-79.48919
 Canonsburg,PA,Washington,40.264246,-80.186776
 Canton,PA,Washington,40.199182,-80.300944
+Cardale,PA,Fayette,39.9567,-79.8662
 Carmichaels,PA,,39.897595,-79.974988
 Carnegie,PA,Allegheny,40.407987,-80.086037
 Carnot-Moon,PA,,40.518718,-80.217742
@@ -104,12 +118,15 @@ Cecil-Bishop,PA,,40.318488,-80.191902
 Center,PA,Butler,40.921939,-79.925956
 Centerville,PA,Washington,40.032477,-79.95948
 Chalfant,PA,Allegheny,40.410124,-79.838594
+Chalk Hill,PA,Fayette,39.8451,-79.5991
 Chalkhill,PA,,39.847801,-79.618245
+Champion,PA,Westmoreland,40.044,-79.3247
 Charleroi,PA,Washington,40.137859,-79.899756
 Chartiers,PA,Washington,40.250445,-80.249468
 Cherry,PA,Butler,41.06392,-79.92382
 Cherry Valley,PA,Butler,41.159412,-79.801195
 Chester,WV,,40.612924,-80.56273
+Chestnut Ridge,PA,Fayette,39.9812,-79.8116
 Cheswick,PA,Allegheny,40.543024,-79.800984
 Chevy Chase Heights,PA,,40.64037,-79.14562
 Chewton,PA,,40.897578,-80.318456
@@ -117,6 +134,7 @@ Chicora,PA,Butler,40.952507,-79.73905
 Chippewa,PA,Beaver,40.761435,-80.379079
 Churchill,PA,Allegheny,40.438847,-79.84159
 Clairton,PA,Allegheny,40.296656,-79.889026
+Claridge,PA,Westmoreland,40.3692,-79.619
 Clarksville,PA,,39.974396,-80.043902
 Clay,PA,Butler,40.992443,-79.929034
 Claysville,PA,Washington,40.120644,-80.413275
@@ -138,23 +156,32 @@ Cook,PA,Westmoreland,40.166926,-79.288089
 Coral,PA,,40.503555,-79.175216
 Coraopolis,PA,Allegheny,40.514618,-80.161825
 Coulter,PA,,40.300059,-79.794091
+Coulters,PA,Allegheny,40.4344,-80.0248
 Cowanshannock,PA,Armstrong,40.799357,-79.29559
+Cowansville,PA,Armstrong,40.923,-79.5946
 Crabtree,PA,,40.363841,-79.46949
 Crafton,PA,Allegheny,40.433301,-80.071133
 Cranberry,PA,Butler,40.709967,-80.105642
+Cranberry Township,PA,Butler,40.685,-80.1071
 Creekside,PA,,40.681932,-79.193613
+Creighton,PA,Allegheny,40.5821,-79.7818
 Crescent,PA,Allegheny,40.555653,-80.228561
 Cross Creek,PA,Washington,40.295967,-80.41166
 Crucible,PA,,39.947936,-79.966613
+Cuddy,PA,Allegheny,40.3547,-80.1669
 Curtisville,PA,,40.649746,-79.849193
+Daisytown,PA,Washington,40.0743,-79.967
 Darlington,PA,Beaver,40.817223,-80.451797
+Darragh,PA,Westmoreland,40.2665,-79.6787
 Daugherty,PA,Beaver,40.748545,-80.274196
 Dawson,PA,Fayette,40.047175,-79.656942
 Dayton,PA,Armstrong,40.881195,-79.241127
 Deemston,PA,Washington,40.027272,-80.033355
 Deer Lake,PA,,39.847251,-79.589543
 Delmont,PA,Westmoreland,40.414408,-79.57289
+Denbo,PA,Washington,40.0081,-79.9392
 Derry,PA,Westmoreland,40.374469,-79.311331
+Dickerson Run,PA,Fayette,40.0418,-79.66
 Dillonvale,OH,,40.198544,-80.775442
 Distant,PA,,40.974232,-79.358261
 Donegal,PA,Westmoreland,40.102102,-79.3321
@@ -175,7 +202,9 @@ East Franklin,PA,Armstrong,40.866978,-79.560709
 East Huntingdon,PA,Westmoreland,40.141682,-79.603978
 East Liverpool,OH,,40.632996,-80.567393
 East Marianna,PA,,40.021608,-80.088321
+East Mc Keesport,PA,Allegheny,40.3839,-79.8079
 East McKeesport,PA,Allegheny,40.384812,-79.807439
+East Millsboro,PA,Fayette,39.9822,-79.9664
 East Palestine,OH,,40.839067,-80.546607
 East Pittsburgh,PA,Allegheny,40.396866,-79.8382
 East Rochester,PA,Beaver,40.698201,-80.268983
@@ -207,6 +236,7 @@ Etna,PA,Allegheny,40.495161,-79.949631
 Evans City,PA,Butler,40.768498,-80.058366
 Everson,PA,Fayette,40.090648,-79.587044
 Export,PA,Westmoreland,40.416912,-79.623063
+Fairbank,PA,Fayette,39.9434,-79.8495
 Fairchance,PA,Fayette,39.825088,-79.753998
 Fairdale,PA,,39.893169,-79.966679
 Fairfield,PA,Westmoreland,40.331766,-79.144791
@@ -222,6 +252,8 @@ Fenelton,PA,,40.872431,-79.728709
 Findlay,PA,Allegheny,40.478253,-80.281066
 Finleyville,PA,Washington,40.252765,-80.002032
 Follansbee,WV,,40.337005,-80.597203
+Fombell,PA,Beaver,40.8125,-80.2073
+Forbes Road,PA,Westmoreland,40.354,-79.5217
 Ford City,PA,Armstrong,40.769615,-79.532999
 Ford Cliff,PA,Armstrong,40.760813,-79.535765
 Forest Hills,PA,Allegheny,40.425081,-79.854465
@@ -237,10 +269,12 @@ Freedom,PA,Beaver,40.685145,-80.253612
 Freeport,PA,Armstrong,40.686223,-79.682568
 Frisco,PA,,40.851568,-80.268464
 Frizzleburg,PA,,41.074025,-80.438923
+Gans,PA,Fayette,39.7429,-79.8242
 Gastonville,PA,,40.26684,-80.009551
 Georges,PA,Fayette,39.848315,-79.792341
 Georgetown,PA,Beaver,40.642105,-80.498668
 German,PA,Fayette,39.879669,-79.867063
+Gibbon Glade,PA,Fayette,39.7364,-79.5736
 Gibsonia,PA,,40.63223,-79.968348
 Gilpin,PA,Armstrong,40.669836,-79.603592
 Glasgow,PA,Beaver,40.644495,-80.50767
@@ -261,6 +295,7 @@ Greensburg,PA,Westmoreland,40.311155,-79.544431
 Grindstone,PA,,40.021877,-79.823099
 Grove City,PA,,41.157116,-80.088596
 Hampton,PA,Allegheny,40.586856,-79.953681
+Hannastown,PA,Westmoreland,40.352,-79.4979
 Hanover,PA,Washington,40.427073,-80.461541
 Harlansburg,PA,,41.018656,-80.184754
 Harmar,PA,Allegheny,40.545196,-79.847585
@@ -275,9 +310,12 @@ Heidelberg,PA,Allegheny,40.391467,-80.092179
 Hempfield,PA,Westmoreland,40.281976,-79.584662
 Hendersonville,PA,,40.300734,-80.158317
 Henry Clay,PA,Fayette,39.773223,-79.446449
+Herman,PA,Butler,40.8301,-79.8112
 Herminie,PA,,40.263225,-79.713603
+Hibbs,PA,Fayette,39.9317,-79.8825
 Hickory,PA,,40.295719,-80.305135
 Hiller,PA,,40.007769,-79.910027
+Hilliards,PA,Butler,41.1009,-79.8215
 Hillsville,PA,,41.011752,-80.49726
 Homeacre-Lyndora,PA,,40.872097,-79.921114
 Homer City,PA,,40.540735,-79.15995
@@ -292,41 +330,55 @@ Hostetter,PA,,40.263951,-79.397769
 Houston,PA,Washington,40.249451,-80.21113
 Hovey,PA,Armstrong,41.132041,-79.684907
 Hunker,PA,Westmoreland,40.204003,-79.615471
+Hutchinson,PA,Westmoreland,40.2251,-79.7328
 Hyde Park,PA,Westmoreland,40.631645,-79.589328
 Imperial,PA,,40.453677,-80.249934
 Independence,PA,Washington,40.241891,-80.483099
+Indian Head,PA,Fayette,40.0248,-79.395
 Indiana,PA,Allegheny,40.572997,-79.873674
+Indianola,PA,Allegheny,40.5695,-79.8637
 Industry,PA,Beaver,40.656819,-80.41092
+Ingomar,PA,Allegheny,40.5809,-80.0609
 Ingram,PA,Allegheny,40.444827,-80.068508
 Irondale,OH,,40.57215,-80.725708
 Irwin,PA,Westmoreland,40.325068,-79.699757
+Isabella,PA,Fayette,39.946,-79.9393
 Jackson,PA,Butler,40.783722,-80.110092
 Jacksonville,PA,,40.56093,-79.30181
+Jacobs Creek,PA,Westmoreland,40.1331,-79.7417
 Jeannette,PA,Westmoreland,40.327756,-79.613906
 Jefferson,PA,Washington,40.333998,-80.482645
 Jefferson Hills,PA,Allegheny,40.297236,-79.942469
 Joffre,PA,,40.380891,-80.353172
+Jones Mills,PA,Westmoreland,40.0889,-79.3427
 Karns City,PA,Butler,40.996952,-79.726353
+Keisterville,PA,Fayette,39.9636,-79.7853
 Kennedy,PA,Allegheny,40.476345,-80.101742
 Kilbuck,PA,Allegheny,40.52378,-80.100932
 Kiskimere,PA,,40.619013,-79.585698
 Kiskiminetas,PA,Armstrong,40.579193,-79.480539
 Kittanning,PA,Armstrong,40.758472,-79.442388
 Koppel,PA,Beaver,40.835927,-80.318307
+La Belle,PA,Fayette,39.9983,-79.9754
 La Croft,OH,,40.64683,-80.599784
 Laboratory,PA,,40.151392,-80.214708
 Lake Arthur Estates,PA,,40.961625,-80.148257
+Lake Lynn,PA,Fayette,39.7501,-79.8618
 Lake Tomahawk,OH,,40.761379,-80.596337
 Lancaster,PA,Butler,40.835955,-80.113032
 Langeloth,PA,,40.36314,-80.413666
 Lansing,OH,,40.076071,-80.792415
+Larimer,PA,Westmoreland,40.3453,-79.7264
 Latrobe,PA,Westmoreland,40.312434,-79.382596
+Laughlintown,PA,Westmoreland,40.212,-79.1978
 Laurel Mountain,PA,Westmoreland,40.211168,-79.185012
 Lawrence,PA,,40.303102,-80.119608
 Lawson Heights,PA,,40.293802,-79.387335
+Leckrone,PA,Fayette,39.8615,-79.8701
 Leechburg,PA,Armstrong,40.630442,-79.602156
 Leet,PA,Allegheny,40.574019,-80.203779
 Leetsdale,PA,Allegheny,40.56389,-80.216015
+Leisenring,PA,Fayette,39.9985,-79.6435
 Leith-Hatfield,PA,,39.877217,-79.731331
 Lemont Furnace,PA,,39.911058,-79.663031
 Lenape Heights,PA,,40.763374,-79.521619
@@ -336,11 +388,14 @@ Ligonier,PA,Westmoreland,40.234387,-79.220853
 Lincoln,PA,Allegheny,40.291407,-79.859919
 Lisbon,OH,,40.775134,-80.762771
 Long Branch,PA,Washington,40.098348,-79.880078
+Lowber,PA,Westmoreland,40.2459,-79.7709
 Lower Burrell,PA,Westmoreland,40.58329,-79.718007
 Lower Tyrone,PA,Fayette,40.074411,-79.662475
 Loyalhanna,PA,Westmoreland,40.426263,-79.435587
 Lucerne Mines,PA,,40.556545,-79.153895
+Luxor,PA,Westmoreland,40.3342,-79.4781
 Luzerne,PA,Fayette,39.973782,-79.932603
+Lyndora,PA,Butler,40.8528,-79.9167
 Lynnwood-Pricedale,PA,,40.130076,-79.851945
 Madison,PA,Westmoreland,40.245557,-79.674861
 Mahoning,PA,Armstrong,40.957446,-79.33931
@@ -353,9 +408,14 @@ Marion,PA,Butler,41.135659,-79.932289
 Markleysburg,PA,Fayette,39.736099,-79.451856
 Mars,PA,Butler,40.696952,-80.014099
 Marshall,PA,Allegheny,40.645262,-80.110017
+Martin,PA,Fayette,39.8065,-79.9098
 Martins Ferry,OH,,40.104296,-80.729125
 Masontown,PA,Fayette,39.848744,-79.908736
 Mather,PA,,39.935584,-80.074474
+Mc Clellandtown,PA,Fayette,39.8882,-79.8694
+Mc Donald,PA,Washington,40.3697,-80.2562
+Mc Grann,PA,Armstrong,40.7818,-79.5218
+Mc Kees Rocks,PA,Allegheny,40.4717,-80.0876
 McCandless,PA,Allegheny,40.579448,-80.026652
 McDonald,PA,Washington,40.369174,-80.23581
 McGovern,PA,,40.236233,-80.226766
@@ -363,14 +423,18 @@ McKees Rocks,PA,Allegheny,40.469019,-80.063328
 McKeesport,PA,Allegheny,40.341877,-79.845007
 McMechen,WV,,39.986517,-80.733493
 McMurray,PA,,40.281468,-80.087433
+Meadow Lands,PA,Washington,40.2174,-80.2269
 Meadowlands,PA,,40.217306,-80.229979
 Meadowood,PA,,40.84074,-79.895954
+Melcroft,PA,Fayette,40.052,-79.3892
 Menallen,PA,Fayette,39.943647,-79.781317
 Mercer,PA,Butler,41.118239,-80.017486
 Meridian,PA,,40.852595,-79.954854
+Merrittstown,PA,Fayette,39.8825,-79.8336
 Middlesex,PA,Butler,40.707082,-79.927088
 Midland,PA,Beaver,40.634358,-80.458011
 Midway,PA,Washington,40.368664,-80.291209
+Mill Run,PA,Fayette,39.968,-79.4622
 Millsboro,PA,,39.990132,-80.002241
 Millvale,PA,Allegheny,40.481749,-79.973795
 Millwood,PA,,40.3504,-79.285332
@@ -380,8 +444,10 @@ Monessen,PA,Westmoreland,40.151966,-79.883008
 Monongahela,PA,Washington,40.191166,-79.922476
 Monroeville,PA,Allegheny,40.426324,-79.761379
 Moon,PA,Allegheny,40.509911,-80.207847
+Morgan,PA,Allegheny,40.3542,-80.1398
 Morris,PA,Washington,40.036765,-80.299332
 Morrisville,PA,,39.90068,-80.167815
+Mount Braddock,PA,Fayette,39.9321,-79.6522
 Mount Jackson,PA,,40.968135,-80.432262
 Mount Lebanon,PA,Allegheny,40.376696,-80.048942
 Mount Morris,PA,,39.73325,-80.081989
@@ -405,9 +471,11 @@ New Brighton,PA,Beaver,40.735641,-80.309473
 New Castle,PA,,40.995617,-80.345807
 New Castle Northwest,PA,,41.022139,-80.355785
 New Cumberland,WV,,40.526958,-80.616868
+New Derry,PA,Westmoreland,40.3494,-79.3225
 New Eagle,PA,Washington,40.207156,-79.953342
 New Florence,PA,Westmoreland,40.379052,-79.075136
 New Galilee,PA,Beaver,40.833417,-80.401018
+New Geneva,PA,Fayette,39.7884,-79.9092
 New Kensington,PA,Westmoreland,40.572482,-79.753051
 New Middletown,OH,,40.965546,-80.558322
 New Salem,PA,,39.930108,-79.825986
@@ -421,6 +489,7 @@ Newell,WV,,40.615887,-80.597794
 Nicholson,PA,Fayette,39.813694,-79.866483
 Nixon,PA,,40.785833,-79.937501
 Noblestown,PA,,40.395461,-80.201869
+Normalville,PA,Fayette,40.0418,-79.4151
 North Apollo,PA,Armstrong,40.593808,-79.556616
 North Belle Vernon,PA,Westmoreland,40.132048,-79.863957
 North Bethlehem,PA,Washington,40.097214,-80.102
@@ -440,8 +509,10 @@ North Versailles,PA,Allegheny,40.375736,-79.808765
 North Washington,PA,,41.048803,-79.814329
 Norvelt,PA,,40.204995,-79.497011
 Nottingham,PA,Washington,40.214113,-80.053214
+Nu Mine,PA,Armstrong,40.8478,-79.4516
 O'Hara,PA,Allegheny,40.496976,-79.87485
 Oak Hills,PA,,40.826268,-79.915113
+Oak Ridge,PA,Armstrong,41.0076,-79.2959
 Oakdale,PA,Allegheny,40.400165,-80.18715
 Oakland,PA,Butler,40.917194,-79.82938
 Oakmont,PA,Allegheny,40.519756,-79.836672
@@ -470,6 +541,7 @@ Pine Run,PA,,40.686433,-80.23942
 Pitcairn,PA,Allegheny,40.407774,-79.776354
 Pittsburgh,PA,Allegheny,40.439936,-79.975676
 Pleasant Hills,PA,Allegheny,40.329832,-79.959628
+Pleasant Unity,PA,Westmoreland,40.2424,-79.4542
 Pleasant View,PA,,40.609262,-79.575054
 Plum,PA,Allegheny,40.501869,-79.748178
 Plumcreek,PA,Armstrong,40.716028,-79.34034
@@ -479,12 +551,16 @@ Port Vue,PA,Allegheny,40.337869,-79.874116
 Portersville,PA,Butler,40.924332,-80.146883
 Potter,PA,Beaver,40.645687,-80.355195
 Pottery Addition,OH,,40.402456,-80.624412
+Presto,PA,Allegheny,40.3847,-80.1209
+Pricedale,PA,Westmoreland,40.1393,-79.8562
 Prospect,PA,Butler,40.899213,-80.04865
+Prosperity,PA,Washington,40.0224,-80.2613
 Pulaski,PA,Beaver,40.733888,-80.297766
 Raccoon,PA,Beaver,40.599005,-80.377298
 Rankin,PA,Allegheny,40.413364,-79.88382
 Rayburn,PA,Armstrong,40.831687,-79.487003
 Rayland,OH,,40.183359,-80.691751
+Rector,PA,Westmoreland,40.1864,-79.2473
 Redbank,PA,Armstrong,40.979169,-79.258075
 Redstone,PA,Fayette,39.976979,-79.850255
 Renfrew,PA,,40.80655,-79.962331
@@ -492,8 +568,10 @@ Rennerdale,PA,,40.400154,-80.139602
 Republic,PA,,39.966378,-79.876857
 Reserve,PA,Allegheny,40.485092,-79.988804
 Rices Landing,PA,,39.94495,-79.998167
+Richeyville,PA,Washington,40.0563,-79.9926
 Richland,PA,Allegheny,40.643975,-79.957954
 Richmond,OH,,40.43285,-80.77189
+Rillton,PA,Westmoreland,40.2872,-79.7262
 Rimersburg,PA,,41.040797,-79.502406
 Robinson,PA,Washington,40.415069,-80.301151
 Rochester,PA,Beaver,40.713234,-80.269218
@@ -505,18 +583,24 @@ Ross,PA,Allegheny,40.525597,-80.024247
 Rosslyn Farms,PA,Allegheny,40.422418,-80.088537
 Rostraver,PA,Westmoreland,40.170041,-79.803859
 Rowes Run,PA,,40.008873,-79.817702
+Ruffs Dale,PA,Westmoreland,40.1585,-79.6277
+Rural Ridge,PA,Allegheny,40.5856,-79.8287
 Rural Valley,PA,Armstrong,40.799109,-79.314947
 Russellton,PA,,40.608085,-79.840132
 S.N.P.J.,PA,,40.929,-80.496224
 Sagamore,PA,,40.781378,-79.231011
 Salem,PA,Westmoreland,40.419114,-79.52124
+Salina,PA,Westmoreland,40.5189,-79.4959
 Salineville,OH,,40.620724,-80.834424
 Saltlick,PA,Fayette,40.049259,-79.393238
 Saltsburg,PA,,40.484636,-79.448248
+Sarver,PA,Butler,40.7143,-79.7424
 Saxonburg,PA,Butler,40.750962,-79.814959
+Scenery Hill,PA,Washington,40.0859,-80.0703
 Schenley,PA,,40.686167,-79.648863
 Scott,PA,Allegheny,40.387505,-80.079141
 Scottdale,PA,Westmoreland,40.103389,-79.589818
+Seminole,PA,Armstrong,40.9548,-79.3428
 Seven Fields,PA,Butler,40.68673,-80.063904
 Seven Springs,PA,Fayette,40.034588,-79.299922
 Seward,PA,Westmoreland,40.413067,-79.021854
@@ -555,6 +639,7 @@ South Uniontown,PA,,39.893883,-79.746607
 South Versailles,PA,Allegheny,40.303077,-79.796957
 Southpointe,PA,,40.29728,-80.182166
 Southview,PA,,40.331993,-80.256058
+Southwest,PA,Westmoreland,40.3602,-79.4398
 Southwest Greensburg,PA,Westmoreland,40.29187,-79.547812
 Speers,PA,Washington,40.122367,-79.880588
 Spring Church,PA,,40.605582,-79.484378
@@ -563,6 +648,7 @@ Springfield,PA,Fayette,39.980749,-79.440729
 Springhill,PA,Fayette,39.754589,-79.842066
 St. Clair,PA,Westmoreland,40.352447,-79.032399
 St. Vincent College,PA,,40.291313,-79.405461
+Stahlstown,PA,Westmoreland,40.1386,-79.3445
 Star Junction,PA,,40.061009,-79.765628
 Steubenville,OH,,40.36631,-80.657061
 Stewart,PA,Fayette,39.876032,-79.481254
@@ -577,19 +663,23 @@ Summitville,OH,,40.671828,-80.889552
 Sutersville,PA,Westmoreland,40.234508,-79.801464
 Swissvale,PA,Allegheny,40.420271,-79.886028
 Tarentum,PA,Allegheny,40.604472,-79.759987
+Tarrs,PA,Westmoreland,40.1686,-79.5848
 Taylorstown,PA,,40.156767,-80.386568
 Templeton,PA,,40.917975,-79.460109
 Thompsonville,PA,,40.273553,-80.113314
 Thornburg,PA,Allegheny,40.434575,-80.084052
 Tiltonsville,OH,,40.172393,-80.697599
 Toronto,OH,,40.457934,-80.60963
+Torrance,PA,Westmoreland,40.3992,-79.2177
 Trafford,PA,Westmoreland,40.38487,-79.75562
 Triadelphia,WV,,40.043174,-80.618284
 Turtle Creek,PA,Allegheny,40.408561,-79.821466
 Twilight,PA,Washington,40.115782,-79.893603
+Uledi,PA,Fayette,39.8936,-79.7856
 Union,PA,Washington,40.244407,-79.983887
 Uniontown,PA,Fayette,39.899302,-79.724529
 Unionville,PA,,40.745899,-80.210673
+United,PA,Westmoreland,40.2184,-79.4878
 Unity,PA,Westmoreland,40.280751,-79.426071
 Upper Burrell,PA,Westmoreland,40.547182,-79.672877
 Upper St. Clair,PA,Allegheny,40.333599,-80.084154
@@ -602,11 +692,15 @@ Vanderbilt,PA,Fayette,40.033951,-79.662825
 Vandergrift,PA,Westmoreland,40.59944,-79.575534
 Vanport,PA,Beaver,40.684938,-80.330164
 Venango,PA,Butler,41.134107,-79.842071
+Venetia,PA,Washington,40.2755,-80.0598
 Verona,PA,Allegheny,40.505672,-79.841947
 Versailles,PA,Allegheny,40.318171,-79.830809
+Vestaburg,PA,Washington,40.0144,-79.9889
 Volant,PA,,41.112426,-80.259851
 Wall,PA,Allegheny,40.391594,-79.785852
+Waltersburg,PA,Fayette,39.9763,-79.7689
 Wampum,PA,,40.885074,-80.34044
+Warrendale,PA,Allegheny,40.6534,-80.0795
 Washington,PA,Westmoreland,40.514782,-79.601134
 Wayne,PA,Armstrong,40.887786,-79.287729
 Waynesburg,PA,,39.898255,-80.185537
@@ -614,6 +708,7 @@ Webster,PA,,40.192436,-79.850726
 Weirton,WV,,40.406331,-80.56558
 Wellsburg,WV,,40.280882,-80.610647
 Wellsville,OH,,40.603924,-80.655745
+Wendel,PA,Westmoreland,40.294,-79.6866
 West Alexander,PA,,40.107001,-80.509206
 West Bethlehem,PA,Washington,40.036694,-80.109389
 West Brownsville,PA,Washington,40.031502,-79.891667
@@ -625,6 +720,7 @@ West Hills,PA,,40.842868,-79.54412
 West Homestead,PA,Allegheny,40.39378,-79.91019
 West Kittanning,PA,Armstrong,40.812738,-79.531209
 West Leechburg,PA,Westmoreland,40.633541,-79.619034
+West Leisenring,PA,Fayette,39.9561,-79.7007
 West Liberty,PA,Butler,41.009303,-80.066626
 West Liberty,WV,,40.164439,-80.597091
 West Mayfield,PA,Beaver,40.780205,-80.338676
@@ -638,13 +734,19 @@ West View,PA,Allegheny,40.518155,-80.033299
 West Waynesburg,PA,,39.900072,-80.200645
 West Wilmerding,PA,,40.396971,-79.821809
 Westland,PA,,40.278901,-80.273191
+Westmoreland City,PA,Westmoreland,40.3294,-79.6806
+Wexford,PA,Allegheny,40.612,-80.0649
 Wharton,PA,Fayette,39.780202,-79.612138
 Wheeling,WV,,40.073753,-80.696027
 Whitaker,PA,Allegheny,40.40051,-79.885399
 White,PA,Beaver,40.766908,-80.335561
 White Oak,PA,Allegheny,40.338791,-79.796071
 Whitehall,PA,Allegheny,40.360205,-79.989793
+Whitney,PA,Westmoreland,40.2534,-79.4103
 Wickerham Manor-Fisher,PA,,40.177106,-79.907933
+Wickhaven,PA,Fayette,40.1194,-79.7623
+Widnoon,PA,Armstrong,40.9612,-79.4673
+Wildwood,PA,Allegheny,40.5942,-79.9701
 Wilkins,PA,Allegheny,40.426483,-79.823012
 Wilkinsburg,PA,Allegheny,40.444207,-79.873329
 Wilmerding,PA,Allegheny,40.39418,-79.810049
