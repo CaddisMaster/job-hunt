@@ -3,36 +3,33 @@
 *Reconcile this against `git log` and `gh issue list` at the start of a session.*
 
 **v0.2.0 is live** at apply.seandesmet.com (deployed 2026-11-19). On `main` for v0.3.0, not yet
-released: the worker (#41), the employer registry (#43) with its Pittsburgh starter list, the
-area check (#42) and the nightly crawl from Greenhouse, Lever and Ashby (#44). Open in 0.3: #63,
-#46, #47, and #59 (parked).
+released: the worker (#41, housekeeping only) and **Saved jobs** (#63).
 
-**Pivots, 2026-11-20** (plan §10 decisions 7–9): Job Hunt is **Sean's alone**; the aggregators
-are dropped (#45 closed, #65 closed unmerged) in favour of **paste a link** (#63); the browser
-will run on Sean's Mac, where he logs in himself (#66, parked to 0.6).
+**The shape since 2026-11-20** (plan §10 decisions 7–10, and the box at the top of the plan):
+Sean's alone; jobs get in only by pasting a link; per job, a tailored resume (PDF), then
+Playwright applies (server first, Mac #66 as the fallback); Sean clicks Submit. No crawling, no
+ranking, no location filter. The registry, crawl, area check and aggregators were removed before
+release (#45, #46, #47, #59 closed).
 
 ## Pick up here
 
-1. **#63: paste a job link, Job Hunt reads the posting.** Next to build. A private table
-   (`user_id`), so its migration ships alone first. Greenhouse/Lever/Ashby links via their APIs;
-   other pages by one GET and their schema.org `JobPosting`; else the pasted text. LinkedIn and
-   Indeed never fetched; a challenge stops it. Not hidden for being out of the area. Then #67
-   (one line off the sign-in page).
-2. **The API key (Mac), still unconfirmed:** check `ANTHROPIC_API_KEY` reached the droplet's
-   `.env` and `job-hunt-env-prod`, then Sean builds his profile from his real resume.
-3. **#59 Workday is parked.** The migration shipped (#62); the fetcher is on the **local,
-   unpushed** branch `59-workday` (`6e14af9`). Cloudflare answered the app's requests with a bot
-   challenge (`429`, `cf-mitigated: challenge`) after about 15 requests in a few minutes, so it's
-   off the table; paste a link (#63) covers those employers. UPMC's feed refuses anything
-   but a browser on UPMC's page. Neither is to be got around (non-negotiable 9, and Job Hunt always
-   identifies itself).
-4. **Then #46 (duplicates) and #47 (the Jobs page).** The Jobs page shows pasted jobs too.
-5. **Area follow-ups seen in the first real crawl's unknown list:** "Mexico City" (no country
-   named), "Onsite- Salem, OR" (a dash without a space isn't split), "United States" alone.
-6. **When v0.3.0 deploys:** run `alembic upgrade head` (the release does it), press "Add the
-   starter list" at /admin/employers, and watch the worker's memory during the 02:30 crawl
-   (`docker stats`, 192 MB cap; 62 MB in dev after a crawl run as a separate process).
-7. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
+1. **The migration that drops the never-released tables** (if not merged yet): delete 0009–0011
+   (employers, postings, workday) and their models; `saved_jobs` becomes 0009 with no `area` and
+   `source` in pending/page/text. Production is at 0008, so it never sees the dropped tables. The
+   dev database must be downgraded to 0008 **before** the files go.
+2. **#67** (one line off the sign-in page), then **release v0.3.0**.
+3. **0.4: the tailored resume (PDF) per saved job.** Needs an issue with criteria. Grounded in
+   the real resume (non-negotiable 7, `app/grounding.py`); show what changed before it's used.
+4. **The API key (Mac), still unconfirmed:** check `ANTHROPIC_API_KEY` reached the droplet's
+   `.env` and `job-hunt-env-prod`, then Sean builds his profile from his real resume. Tailoring
+   needs it.
+5. **0.5: the applier on the server.** The droplet resize to 4 GB (droplet-infra Terraform) comes
+   first. Open question: how Sean logs in to a site when the browser is on the server (show him
+   that browser, or keep a session after one login). #66 is the fallback.
+6. **Greenhouse job pages carry no job data** (checked 2026-11-20), so pasted Greenhouse links
+   ask for the text. Lever, Ashby and SmartRecruiters pages read in full.
+7. **The local branch `59-workday`** (unpushed, `6e14af9`) is dead: delete it when Sean OKs.
+8. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
    the VM's Python 3.12. Close them and exclude `infra/` the way Job Hunt's #38 did.
 
 ## Sessions

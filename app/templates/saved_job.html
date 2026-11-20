@@ -6,9 +6,9 @@
   <h1>{{ job.title or 'A job waiting for its text' }}</h1>
   <dl class="facts">
     <dt>Company</dt><dd>{{ job.company or '—' }}</dd>
-    <dt>Where</dt><dd>{{ job.location or '—' }}{% if job.area == 'out_of_area' %} (outside Pittsburgh){% elif job.area == 'remote' %} (remote){% endif %}</dd>
+    <dt>Where</dt><dd>{{ job.location or '—' }}{% if job.remote %} (remote){% endif %}</dd>
     <dt>Link</dt><dd><a href="{{ job.url }}" rel="noopener noreferrer" target="_blank">{{ job.url }}</a></dd>
-    <dt>Read from</dt><dd>{{ {'greenhouse': 'Greenhouse', 'lever': 'Lever', 'ashby': 'Ashby', 'page': 'the page', 'text': 'your text', 'pending': 'nothing yet'}[job.source] }}</dd>
+    <dt>Read from</dt><dd>{{ {'page': 'the page', 'text': 'your text', 'pending': 'nothing yet'}.get(job.source, job.source) }}</dd>
   </dl>
   {% if job.description %}<div class="posting">{{ job.description }}</div>{% endif %}
 </section>

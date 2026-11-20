@@ -1,12 +1,19 @@
 # Job Hunt: the plan
 
-*Drafted 2026-11-18. Status: **planning only, nothing built.** The open decisions in §10 were
-answered on 2026-11-18, so the next step is filing the 0.1 issues.*
+*Drafted 2026-11-18.*
+
+> **The shape since 2026-11-20 (§10 decisions 7–10), which overrides the sections below where
+> they disagree:** Job Hunt is **Sean's alone**. Jobs get in **only by Sean pasting a link** (Saved
+> jobs, #63): no crawling, no aggregators, no ranking or scoring, no location filter. For each saved
+> job, Job Hunt **tailors his resume** (a PDF, grounded in his real resume: non-negotiable 7), and
+> **Playwright fills in the application**, on the server first, on his Mac (#66) if the server
+> can't. A person always clicks the final Submit. §3's profile and answer bank, §6's applier and
+> its safety rules, and §1's infrastructure still hold. §4 (discovery) and §5 (the nightly loop
+> and morning queue) are history.
 
 A control center for job applications. Each night it finds jobs in the Pittsburgh area that match
 the user's resume and drafts the materials. Each morning the user opens one page, approves the
-applications they want, and a worker fills them out. It is for Sean alone (2026-11-20, §10
-decision 7; it was planned for family and friends too).
+applications they want, and a worker fills them out. *(The original idea; see the box above.)*
 
 ## 1. Where it lives and what it's built on
 
@@ -219,12 +226,10 @@ people's personal data, so check where `backup-export` sends them.
 |---|---|
 | **0.1** | Skeleton copied from Orbit Ops: auth, admin creating users, droplet tenant, release pipeline, `/healthz` |
 | **0.2** | Resume upload → structured profile → answer bank |
-| **0.3** | Discovery: employer registry, Greenhouse/Lever/Ashby, location filter, paste a link (#63), removing duplicates |
-| **0.4** | Scoring and the morning queue, with email and push. **Useful on its own:** apply by hand from good matches |
-| **0.5** | Tailored resumes and drafted answers, with the diff view |
-| **0.6** | Applier for Greenhouse/Lever/Ashby (review, then a human clicks Submit), plus Needs you. The browser runs on Sean's Mac (#66, §10 decision 9), so revisit the droplet resize |
-| **0.7** | Pipeline board, reminders, stats |
-| **0.8+** | Email forwarding for status, general agent for unknown sites, Workday |
+| **0.3** | Saved jobs: paste a link, the posting is read (#63). *(Re-planned 2026-11-20: the registry, crawl and location filter built earlier were removed before release.)* |
+| **0.4** | A tailored resume for each saved job, as a PDF, grounded in the real resume, with what changed shown before it's used |
+| **0.5** | The applier: Playwright fills the application from the tailored resume and the answer bank, stops with a screenshot, and Sean clicks Submit. On the server first (droplet resized to 4 GB before it ships); Sean's Mac (#66) if the server can't |
+| **0.6** | Tracking after applying: status, reminders |
 
 0.4 comes first because it is useful within weeks, and the riskiest piece (browser automation on
 a 2 GB droplet) comes after the matching has proven worth it.
@@ -245,5 +250,6 @@ a 2 GB droplet) comes after the matching has proven worth it.
 | # | Question | Decision |
 |---|---|---|
 | 7 | Who it's for | **Sean alone.** No family or friends. The multi-user plumbing already built stays; nothing new is built for others. |
-| 8 | Discovery beyond the registry | **Paste a link (#63)**, not aggregators: Adzuna and USAJobs dropped (#45 closed). Greenhouse, Lever and Ashby stay. |
-| 9 | Where the browser runs, and logins | **On Sean's Mac** (#66): a visible Playwright browser where he logs in himself. No password is ever stored. An honest browser: no stealth, and a challenge stops it (non-negotiable 9). |
+| 8 | Discovery beyond the registry | **Paste a link (#63)**, not aggregators: Adzuna and USAJobs dropped (#45 closed). *(Then decision 10 removed the registry too.)* |
+| 9 | Where the browser runs, and logins | **On the server first; Sean's Mac (#66) if that runs into problems** (revised the same day). Logins: Sean logs in himself when a site asks, and no password is ever stored. An honest browser: no stealth, and a challenge stops it (non-negotiable 9). The droplet resize (decision 3) comes back with a server browser. |
+| 10 | What Job Hunt does | **Only jobs Sean pastes**, then a **tailored resume (PDF)** per job and **Playwright applying**. No crawling, no ranking or scoring, no location filter: the registry, the Greenhouse/Lever/Ashby crawl and the Greater Pittsburgh check were removed before they shipped (#46, #47, #59 closed). A pasted page is read from its embedded job data (JSON-LD or microdata), else Sean pastes the text. |

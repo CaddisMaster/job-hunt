@@ -1,7 +1,7 @@
 """Saved jobs (#63): paste a link, Job Hunt reads the posting.
 
-Never the network: the hiring systems' APIs answer through `sources._get`, a page
-through `saved._open`, and DNS through `saved._addresses`. Each test's links are its
+Never the network: a page answers through `saved._open`, and DNS through
+`saved._addresses`. Each test's links are its
 own, and saved jobs belong to the test's own users, so tests share nothing.
 """
 
@@ -11,30 +11,20 @@ import uuid
 import pytest
 from sqlalchemy import select
 
-from app import saved, sources
+from app import saved
 from app.db import SessionLocal
 from app.models import SavedJob
-from app.sources import FetchError
 from tests.conftest import login
 
 
 class Web:
-    """Stands in for the internet: `apis[url]` for the hiring systems' APIs (a
-    payload or a FetchError), `pages[url]` for pages ((status, headers, html)), and
-    `dns[host]` for addresses (public by default)."""
+    """Stands in for the internet: `pages[url]` for pages ((status, headers, html)),
+    and `dns[host]` for addresses (public by default)."""
 
     def __init__(self) -> None:
-        self.apis: dict[str, object] = {}
         self.pages: dict[str, tuple[int, dict, str]] = {}
         self.dns: dict[str, list[str]] = {}
         self.asked: list[str] = []
-
-    def api(self, url: str, headers: dict | None = None) -> bytes:
-        self.asked.append(url)
-        answer = self.apis.get(url, FetchError("answered 404"))
-        if isinstance(answer, Exception):
-            raise answer
-        return json.dumps(answer).encode()
 
     def open(self, url: str):
         self.asked.append(url)
@@ -48,7 +38,6 @@ class Web:
 @pytest.fixture
 def web(monkeypatch):
     fake = Web()
-    monkeypatch.setattr(sources, "_get", fake.api)
     monkeypatch.setattr(saved, "_open", fake.open)
     monkeypatch.setattr(saved, "_addresses", fake.addresses)
     return fake
@@ -97,69 +86,6 @@ POSTING = {
 }
 
 
-# ---- From a hiring system's API --------------------------------------------------------
-
-
-@pytest.mark.criterion(63, "A Greenhouse, Lever or Ashby link is read from its API")
-@pytest.mark.parametrize("system", ["greenhouse", "lever", "ashby"])
-def test_a_board_link_is_read_from_its_api(web, signed_in, system):
-    token = f"t{uuid.uuid4().hex[:10]}"
-    job_id = str(uuid.uuid4())
-    if system == "greenhouse":
-        job_id = str(uuid.uuid4().int % 10**10)
-        link = f"https://job-boards.greenhouse.io/{token}/jobs/{job_id}"
-        web.apis[f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{job_id}"] = {
-            "id": int(job_id), "title": "Staff Accountant", "company_name": "Allegheny Mutual",
-            "absolute_url": f"https://boards.greenhouse.io/{token}/jobs/{job_id}",
-            "location": {"name": "Pittsburgh, PA"}, "content": "&lt;p&gt;Close the books.&lt;/p&gt;",
-        }  # fmt: skip
-        company = "Allegheny Mutual"
-    elif system == "lever":
-        link = f"https://jobs.lever.co/{token}/{job_id}/apply"
-        web.apis[f"https://api.lever.co/v0/postings/{token}/{job_id}?mode=json"] = {
-            "id": job_id, "text": "Staff Accountant", "hostedUrl": link,
-            "categories": {"location": "Pittsburgh, PA"}, "description": "<p>Close the books.</p>",
-        }  # fmt: skip
-        company = token.title()  # Lever doesn't say; not in the registry either
-    else:
-        link = f"https://jobs.ashbyhq.com/{token}/{job_id}"
-        web.apis[f"https://api.ashbyhq.com/posting-api/job-board/{token}"] = {"jobs": [
-            {"id": str(uuid.uuid4()), "title": "Other", "jobUrl": "https://jobs.ashbyhq.com/x/1", "location": "Erie, PA"},
-            {"id": job_id, "title": "Staff Accountant", "jobUrl": link, "location": "Pittsburgh, PA", "descriptionHtml": "<p>Close the books.</p>"},
-        ]}  # fmt: skip
-        company = token.title()
-    response = paste(signed_in, link)
-    assert response.status_code == 303
-    [job] = jobs_of(signed_in.user)
-    assert (job.source, job.title, job.company, job.location) == (system, "Staff Accountant", company, "Pittsburgh, PA")
-    assert job.description == "Close the books." and job.area == "in_area" and job.read_error is None
-    assert response.headers["location"] == f"/saved/{job.id}"
-    page = signed_in.get(f"/saved/{job.id}").text
-    assert "Staff Accountant" in page and "Close the books." in page
-
-
-def test_a_board_job_that_has_closed_asks_for_the_text(web, signed_in):
-    paste(signed_in, f"https://boards.greenhouse.io/t{uuid.uuid4().hex[:8]}/jobs/123")
-    [job] = jobs_of(signed_in.user)
-    assert job.source == "pending" and job.read_error == "Greenhouse has no open job at that link. It may have closed."
-
-
-@pytest.mark.parametrize(
-    ("url", "expected"),
-    [
-        ("https://boards.greenhouse.io/acme/jobs/4012", ("greenhouse", "acme", "4012")),
-        ("https://job-boards.greenhouse.io/acme/jobs/4012?gh_src=x", ("greenhouse", "acme", "4012")),
-        ("https://jobs.lever.co/acme/6ED76CE8-0000-4000-8000-000000000001/apply", ("lever", "acme", "6ed76ce8-0000-4000-8000-000000000001")),  # fmt: skip
-        ("https://jobs.ashbyhq.com/acme.inc/6ed76ce8-0000-4000-8000-000000000001/application", ("ashby", "acme.inc", "6ed76ce8-0000-4000-8000-000000000001")),  # fmt: skip
-        ("https://boards.greenhouse.io/acme", None),
-        ("https://jobs.lever.co/acme/not-a-uuid", None),
-        ("https://careers.example.com/jobs/4012", None),
-    ],
-)
-def test_board_job_links(url, expected):
-    assert saved.board_job(url) == expected
-
-
 # ---- From the page -----------------------------------------------------------------------
 
 
@@ -170,7 +96,7 @@ def test_a_page_with_a_jobposting_is_read_from_it(web, signed_in):
     paste(signed_in, link)
     [job] = jobs_of(signed_in.user)
     assert (job.source, job.title, job.company, job.location) == ("page", "Financial Analyst", "Three Rivers Health", "Pittsburgh, PA")  # fmt: skip
-    assert job.description == "Build budgets.\n\n• Excel" and job.area == "in_area"
+    assert job.description == "Build budgets.\n\n• Excel"
     assert "<" not in job.description and "alert" not in job.description
 
 
@@ -206,7 +132,7 @@ def test_a_page_without_a_posting_asks_for_the_text_and_takes_it(web, signed_in)
     )
     assert response.status_code == 303
     [job] = jobs_of(signed_in.user)
-    assert (job.source, job.title, job.company, job.area, job.read_error) == ("text", "Analyst <b>II</b>", "Acme", "in_area", None)  # fmt: skip
+    assert (job.source, job.title, job.company, job.location, job.read_error) == ("text", "Analyst <b>II</b>", "Acme", "Cranberry Township, PA", None)  # fmt: skip
     page = signed_in.get(f"/saved/{job.id}").text
     assert "Do &lt;script&gt;x&lt;/script&gt; things." in page and "<script>x" not in page
     assert "Paste the posting" not in page
@@ -355,15 +281,6 @@ def test_a_saved_job_can_be_removed(web, signed_in):
     [job] = jobs_of(signed_in.user)
     response = signed_in.post(f"/saved/{job.id}/delete", data={"csrf_token": csrf_of(signed_in)}, follow_redirects=False)
     assert response.status_code == 303 and jobs_of(signed_in.user) == []
-
-
-def test_an_out_of_area_job_is_kept_and_labelled(web, signed_in):
-    link = f"https://careers.example.com/{uuid.uuid4().hex}"
-    posting = {**POSTING, "jobLocation": {"address": {"addressLocality": "Columbus", "addressRegion": "Ohio"}}}
-    web.pages[link] = (200, {}, page_with(posting))
-    paste(signed_in, link)
-    assert jobs_of(signed_in.user)[0].area == "out_of_area"
-    assert "(outside Pittsburgh)" in signed_in.get("/saved").text
 
 
 MICRODATA = """<html><body>
