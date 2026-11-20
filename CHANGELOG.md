@@ -12,6 +12,14 @@ registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater P
 never shipped and has been removed.
 
 ### Added
+- Tailored resumes (#73). In a Claude Code session, Claude chooses which lines of Sean's resume
+  lead for one saved job and sends them to Job Hunt, which checks every line before making a PDF.
+  Roles, titles and dates always come from his confirmed profile. A bullet must be in his resume
+  under that same job, so it can't move to another one. Skills and degrees must be confirmed ones.
+  Anything that fails is left off and listed with the reason. The PDF is plain, one column and
+  real text, which applicant tracking systems can read. It's stored with the job, and it's only
+  used to apply once he approves it, on the job's page or in the session. A new version needs
+  approving again.
 - Access tokens and a small JSON API (#74), so Claude Code on Sean's Mac can work with Job Hunt:
   list his saved jobs, fetch everything for one (the posting, his resume's text, his confirmed
   profile and his answer bank), and add an answer he gave during an application to the answer

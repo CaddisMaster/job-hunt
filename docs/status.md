@@ -17,8 +17,8 @@ release (#45, #46, #47, #59 closed).
 Code session on his Mac, `/apply next` tailors his resume (sent to the web app, which checks it
 and makes the PDF) and fills the application through Playwright MCP; he clicks Submit.
 
-1. **#73: check, render and store a tailored resume** sent through the bridge. ReportLab pins
-   resolved 2026-11-20: `reportlab==5.1.0`, `pillow==13.0.0`, `charset-normalizer==3.5.2`.
+1. **Look at a real tailored PDF.** The layout was only checked as extracted text (no
+   `pdftoppm` on the VM); the first one Sean opens is the real check.
 2. **#76: applications, site notes, `/apply next`, and the local MCP server.**
 3. **#66: the `/apply` skill** and Playwright MCP on the Mac (`docs/apply.md`).
 4. **#67** (one line off the sign-in page), and **release v0.3.0** whenever it's wanted: Saved
