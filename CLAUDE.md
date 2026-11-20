@@ -59,7 +59,7 @@ alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limi
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
 tools/jobhunt_mcp.py the bridge as MCP tools for Claude Code (stdio, stdlib only; token from ~/.config/jobhunt/token)
 tools/apparmor/      the AppArmor profile that lets Playwright's Chromium keep its sandbox on Ubuntu 24.04
-tools/apply-screen.sh  the virtual screen + VNC /apply's browser draws on, viewed from Sean's Mac (docs/apply.md)
+tools/apply-screen.sh  install/status of the user services (tools/systemd/) for the virtual screen + VNC /apply's browser draws on, viewed from Sean's Mac
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
 ```
 

@@ -1,0 +1,17 @@
+# VNC for the virtual screen, on the VM's loopback only: Sean opens it from his Mac
+# through an SSH tunnel (docs/apply.md). Needs the password file Sean made with
+# `x11vnc -storepasswd`; without it the service doesn't start.
+[Unit]
+Description=Job Hunt: VNC for /apply's screen (localhost:5901)
+Requires=jobhunt-xvfb.service
+After=jobhunt-xvfb.service
+ConditionPathExists=%h/.config/jobhunt/vncpasswd
+
+[Service]
+# Port 5901, not 5900: the Mac's own Screen Sharing may hold 5900 at the tunnel's end.
+ExecStart=/usr/bin/x11vnc -display :99 -localhost -rfbport 5901 -rfbauth %h/.config/jobhunt/vncpasswd -forever -shared -noxdamage -quiet
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
