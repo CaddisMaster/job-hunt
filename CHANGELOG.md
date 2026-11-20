@@ -26,6 +26,16 @@ and why it matters, not what the diff says.
   and Warrendale from GeoNames (CC BY 4.0). The result is in the area, remote, somewhere else,
   or unknown, and unknown jobs are kept out rather than guessed. Pittsburg, Kansas is not
   Pittsburgh, and a hybrid job in Cranberry is in the area.
+- The nightly search for jobs (#44). At 02:30 the worker asks each enabled employer in the registry
+  for its open jobs, one request each, through Greenhouse's, Lever's or Ashby's public job-board
+  API: no logins and no scraping. Each job is stored once, however many nights it's seen. One
+  that's missing from three successful fetches in a row is closed and kept for history, and a
+  board that's down doesn't close anything. If one employer's board fails, the rest are still
+  fetched, and the reason shows beside that employer on the registry page. Descriptions are kept
+  as plain text, never markup. A job whose location Job Hunt can't place is shown to no one, and
+  the admin page lists those locations with a count, so the places table grows from real misses.
+  Locations in another country ("Tokyo, Japan") and "Washington, D.C." are now read as outside
+  the area rather than unknown.
 
 ## [0.2.0] - 2026-11-19
 

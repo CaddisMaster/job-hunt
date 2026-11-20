@@ -58,6 +58,19 @@ CASES = [
     ("Columbus OH", UNKNOWN),  # a two-letter code without a comma only ever says yes
     ("Seattle WA", UNKNOWN),
     ("Erie Pennsylvania", OUT),  # spelled out, it's certainly a state
+    # another country, or a region of the world
+    ("Tokyo, Japan", OUT),
+    ("London, England", OUT),
+    ("London, United Kingdom", OUT),
+    ("Bangalore, India", OUT),
+    ("Toronto, ON", OUT),
+    ("Toronto, Ontario, Canada", OUT),
+    ("Europe", OUT),
+    ("Tbilisi, Georgia", OUT),  # read as the state, and still not here
+    ("Washington, D.C.", OUT),
+    ("Sewickley, Pa.", IN),
+    ("Remote (US); Europe", REMOTE),
+    ("Pittsburgh, PA; London, England", IN),
     # several locations: in the area if any one is
     ("New York, NY; Pittsburgh, PA", IN),
     ("Boston, MA | Cranberry Township, PA", IN),

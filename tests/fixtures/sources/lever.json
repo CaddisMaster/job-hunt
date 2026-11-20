@@ -1,0 +1,36 @@
+[
+  {
+    "additionalPlain": "We offer health insurance.\n",
+    "additional": "<div>We offer <b>health insurance</b>.</div>",
+    "categories": {"commitment": "Full-time", "location": "Cranberry Township, PA", "team": "Finance", "allLocations": ["Cranberry Township, PA"]},
+    "createdAt": 1786469891368,
+    "descriptionPlain": "Join our finance team.\n",
+    "description": "<div>Join our finance team.</div>",
+    "id": "TOKEN-6ed76ce8-0001",
+    "lists": [{"text": "What you'll do", "content": "<li>Prepare journal entries</li><li>Reconcile accounts</li>"}],
+    "text": "Accounts Payable Specialist",
+    "country": "US",
+    "workplaceType": "hybrid",
+    "opening": "",
+    "openingPlain": "",
+    "descriptionBody": "<div>Join our finance team.</div>",
+    "descriptionBodyPlain": "Join our finance team.\n",
+    "hostedUrl": "https://jobs.lever.co/example/TOKEN-6ed76ce8-0001",
+    "applyUrl": "https://jobs.lever.co/example/TOKEN-6ed76ce8-0001/apply"
+  },
+  {
+    "additionalPlain": "",
+    "additional": "",
+    "categories": {"commitment": "Full-time", "location": "New York, NY", "team": "Finance", "allLocations": ["New York, NY"]},
+    "createdAt": 1786469891369,
+    "descriptionPlain": "Work from anywhere in the US.\n",
+    "description": "<div>Work from anywhere in the US.</div>",
+    "id": "TOKEN-6ed76ce8-0002",
+    "lists": [],
+    "text": "Revenue Accountant",
+    "country": "US",
+    "workplaceType": "remote",
+    "hostedUrl": "https://jobs.lever.co/example/TOKEN-6ed76ce8-0002",
+    "applyUrl": "https://jobs.lever.co/example/TOKEN-6ed76ce8-0002/apply"
+  }
+]
