@@ -273,3 +273,39 @@ class Posting(Base):
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     missed_fetches: Mapped[int] = mapped_column(SmallInteger, default=0, server_default="0")
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SavedJob(Base):
+    """A job its user pasted a link to (#63): discovery by the user. **Private** to
+    that user (non-negotiable 1): every query is scoped to `user_id`. One row per user
+    per link.
+
+    `source` is how the posting was read: a hiring system's API (greenhouse, lever,
+    ashby), the page's schema.org JobPosting (page), or text the user pasted (text).
+    `pending` means not read yet, or unreadable: `read_error` says why, and the job
+    waits for its text. `area` is app/area.py's answer, but a pasted job is never
+    hidden for it: the user chose it. `description` is plain text, never markup."""
+
+    __tablename__ = "saved_jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "source IN ('pending', 'greenhouse', 'lever', 'ashby', 'page', 'text')", name="saved_jobs_source"
+        ),
+        CheckConstraint("area IN ('in_area', 'remote', 'out_of_area', 'unknown')", name="saved_jobs_area"),
+        CheckConstraint("char_length(description) <= 50000", name="saved_jobs_description_length"),
+        UniqueConstraint("user_id", "url", name="saved_jobs_user_url"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    url: Mapped[str] = mapped_column(String(1000))
+    source: Mapped[str] = mapped_column(String(16), default="pending", server_default="pending")
+    read_error: Mapped[str | None] = mapped_column(String(300))
+    company: Mapped[str] = mapped_column(String(200), default="", server_default="")
+    title: Mapped[str] = mapped_column(String(300), default="", server_default="")
+    location: Mapped[str] = mapped_column(String(500), default="", server_default="")
+    area: Mapped[str] = mapped_column(String(16), default="unknown", server_default="unknown")
+    remote: Mapped[bool] = mapped_column(default=False, server_default=false())
+    description: Mapped[str] = mapped_column(Text, default="", server_default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
