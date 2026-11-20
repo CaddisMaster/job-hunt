@@ -6,7 +6,7 @@ from app.db import SessionLocal
 from app.main import create_app
 from app.models import User
 from app.security import login_limiter
-from tests.conftest import PASSWORD, csrf, login
+from tests.conftest import PASSWORD, csrf, fresh_rate_window, login
 
 
 @pytest.mark.criterion(2, "A user logs in and out")
@@ -65,6 +65,7 @@ def test_a_rotated_session_token_ends_the_session(logged_in, user):
 
 @pytest.mark.criterion(2, "Repeated failed logins are throttled across restarts")
 def test_the_login_limit_survives_a_restart(client_address, user):
+    fresh_rate_window()
     with TestClient(create_app(), client=(client_address, 50000)) as first:
         for _ in range(login_limiter.limit):
             assert login(first, user.email, "wrong").status_code == 401

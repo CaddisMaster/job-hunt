@@ -15,6 +15,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from app import tokens
 from app.config import get_settings
 from app.db import get_db
 from app.models import User
@@ -107,6 +108,10 @@ def csrf_token(request: Request) -> str:
 async def csrf_protect(request: Request) -> None:
     if request.method in SAFE_METHODS:
         return
+    if request.url.path.startswith("/api/"):
+        # The API authenticates by bearer token only, never the session cookie
+        # (require_token), so a page can't make a browser call it: no CSRF to stop.
+        return
     expected = request.session.get("csrf")
     sent = request.headers.get("x-csrf-token")
     if sent is None and request.headers.get("content-type", "").startswith(
@@ -122,6 +127,8 @@ async def csrf_protect(request: Request) -> None:
 # Rate limiting (Postgres-backed, app/rate_limit.py).
 # ---------------------------------------------------------------------------
 login_limiter = RateLimiter("login", get_settings().login_rate_limit)
+# Wrong API tokens per client address per minute (#74). Only failures count.
+api_auth_limiter = RateLimiter("api-auth", 20)
 
 
 def client_ip(request: Request) -> str:
@@ -184,3 +191,27 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         if get_settings().cookie_secure:
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
+
+
+# ---------------------------------------------------------------------------
+# The bridge's API (#74): a bearer token, never the session cookie.
+# ---------------------------------------------------------------------------
+class TokenRequired(Exception):
+    """401 for /api/: no token, or not a live one."""
+
+
+class TooManyAttempts(Exception):
+    """429 for /api/: too many wrong tokens from this address."""
+
+
+def require_token(request: Request, db: Session = Depends(get_db)) -> User:
+    """The owner of the request's bearer token. Wrong tokens are counted per address
+    in Postgres (non-negotiable 2); past the limit, 429."""
+    header = request.headers.get("authorization", "")
+    scheme, _, raw = header.partition(" ")
+    user = tokens.authenticate(db, raw.strip()) if scheme.lower() == "bearer" else None
+    if user is None:
+        if not api_auth_limiter.hit(client_ip(request)):
+            raise TooManyAttempts
+        raise TokenRequired
+    return user

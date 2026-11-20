@@ -47,10 +47,11 @@ app/admin.py         the admin panel's queries — accounts and job runs, never 
 app/worker.py        the `worker` service: scheduled jobs (JOBS: housekeeping), due once a day, advisory-locked, runs in job_runs
 app/saved.py         saved jobs (#63): a pasted link → the page's JobPosting (JSON-LD or microdata), or pasted text; SSRF-guarded
 app/text.py          markup in, plain text out: plain_text(), tidy(), clip()
+app/tokens.py        personal access tokens for the bridge (#74): made once, stored hashed, revocable; authenticate()
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile), saved.py (/saved)
-alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 saved_jobs)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile, its tokens), saved.py (/saved), api.py (/api/, bearer token only, JSON)
+alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 saved_jobs, 0010 tailored_resumes, 0011 api_tokens)
 .claude/             /wrap (end of session), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
 scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)

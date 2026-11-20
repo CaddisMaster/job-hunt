@@ -59,6 +59,45 @@
   a resume doesn't say. <a href="/profile/answers">Fill in your answers</a>.</p>
 </section>
 
+<section class="card" id="tokens">
+  <h2>Access tokens for Claude Code</h2>
+  <p class="muted">How Claude Code on your Mac reads your saved jobs, resume and answer bank to tailor a resume and fill an application. Keep a token in your Mac's Keychain, never in a file. Revoke one you no longer use.</p>
+  {% if new_token %}
+  <div class="notice" aria-live="polite">
+    <p><strong>Your new token, shown only this once.</strong> Copy it now:</p>
+    <p><code class="token">{{ new_token }}</code></p>
+  </div>
+  {% endif %}
+  <form method="post" action="/profile/tokens" class="row">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <label>Name <input name="name" maxlength="100" placeholder="Claude Code on my Mac"></label>
+    <button type="submit">Make a token</button>
+  </form>
+  {% if tokens %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Name</th><th>Starts with</th><th>Made</th><th>Last used</th><th></th></tr></thead>
+    <tbody>
+    {% for token in tokens %}
+      <tr>
+        <td>{{ token.name }}</td>
+        <td><code>{{ token.prefix }}…</code></td>
+        <td>{{ token.created_at.strftime('%Y-%m-%d') }}</td>
+        <td>{{ token.last_used_at.strftime('%Y-%m-%d %H:%M') if token.last_used_at else '—' }}</td>
+        <td class="actions">{% if token.revoked_at %}Revoked{% else %}
+          <form method="post" action="/profile/tokens/{{ token.id }}/revoke" class="inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+            <button type="submit" class="danger">Revoke</button>
+          </form>{% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% endif %}
+</section>
+
 <section class="card">
   <h2>Uploaded</h2>
   {% if resumes %}

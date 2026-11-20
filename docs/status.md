@@ -13,22 +13,25 @@ release (#45, #46, #47, #59 closed).
 
 ## Pick up here
 
-1. **Dev databases from before 2026-11-20 midday:** migrations 0009–0011 were deleted and
-   `saved_jobs` renumbered to 0009 (#72). A database at 0010–0012 must go back to 0008 with the old
-   files (`git checkout f7c0ea6`) before upgrading. Production was at 0008, so it's unaffected.
-2. **#67** (one line off the sign-in page), then **release v0.3.0**.
-3. **0.4: the tailored resume (PDF) per saved job.** Needs an issue with criteria. Grounded in
-   the real resume (non-negotiable 7, `app/grounding.py`); show what changed before it's used.
-4. **The API key (Mac), still unconfirmed:** check `ANTHROPIC_API_KEY` reached the droplet's
-   `.env` and `job-hunt-env-prod`, then Sean builds his profile from his real resume. Tailoring
-   needs it.
-5. **0.5: the applier on the server.** The droplet resize to 4 GB (droplet-infra Terraform) comes
-   first. Open question: how Sean logs in to a site when the browser is on the server (show him
-   that browser, or keep a session after one login). #66 is the fallback.
+**How it works now** (plan §10 decisions 9–11): Sean pastes job links into the web app. In a Claude
+Code session on his Mac, `/apply next` tailors his resume (sent to the web app, which checks it
+and makes the PDF) and fills the application through Playwright MCP; he clicks Submit.
+
+1. **#73: check, render and store a tailored resume** sent through the bridge. ReportLab pins
+   resolved 2026-11-20: `reportlab==5.1.0`, `pillow==13.0.0`, `charset-normalizer==3.5.2`.
+2. **#76: applications, site notes, `/apply next`, and the local MCP server.**
+3. **#66: the `/apply` skill** and Playwright MCP on the Mac (`docs/apply.md`).
+4. **#67** (one line off the sign-in page), and **release v0.3.0** whenever it's wanted: Saved
+   jobs plus the bridge. Production is at migration 0008; the release goes straight to 0011.
+5. **Dev databases from before 2026-11-20 midday:** migrations 0009–0011 were deleted and
+   renumbered (#72). A database at 0010–0012 from then must go back to 0008 with the old files
+   (`git checkout f7c0ea6`) before upgrading. Production was at 0008, so it's unaffected.
 6. **Greenhouse job pages carry no job data** (checked 2026-11-20), so pasted Greenhouse links
    ask for the text. Lever, Ashby and SmartRecruiters pages read in full.
 7. **The local branch `59-workday`** (unpushed, `6e14af9`) is dead: delete it when Sean OKs.
-8. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
+8. **The `ANTHROPIC_API_KEY` on the droplet** matters only for the profile build now (0.2);
+   tailoring runs in Claude Code.
+9. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
    the VM's Python 3.12. Close them and exclude `infra/` the way Job Hunt's #38 did.
 
 ## Sessions

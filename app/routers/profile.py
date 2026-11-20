@@ -4,14 +4,15 @@ the answer bank (#25).
 ⚠️ Every route here is the current user's own data: app.resumes scopes every query
 to them, and someone else's resume id is a 404."""
 
+from typing import Annotated
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile  # what request.form() holds (FastAPI's is a subclass)
 
-from app import ai, answers, resumes, spend
+from app import ai, answers, resumes, spend, tokens
 from app import profile as profiles
 from app.db import get_db
 from app.flash import flash
@@ -23,7 +24,14 @@ router = APIRouter(prefix="/profile")
 
 
 def _page(
-    request: Request, db: Session, user: User, *, status: int = 200, error: str | None = None, build_error: str | None = None
+    request: Request,
+    db: Session,
+    user: User,
+    *,
+    status: int = 200,
+    error: str | None = None,
+    build_error: str | None = None,
+    new_token: str | None = None,
 ) -> HTMLResponse:
     found = resumes.for_user(db, user)
     base = found[0] if found else None
@@ -40,6 +48,8 @@ def _page(
         "ai_message": ai.MESSAGES[refusal] if refusal else None,
         "build_error": build_error,
         "role_line": profiles.role_line,
+        "tokens": tokens.for_user(db, user),
+        "new_token": new_token,
     }
     return templates.TemplateResponse(request, "profile.html", context, status_code=status)
 
@@ -147,3 +157,27 @@ async def save_answers(request: Request, user: User = Depends(require_user), db:
         return _answers_page(request, db, user, typed, exc.errors, status=400)
     flash(request, "Your answers are saved.")
     return RedirectResponse("/profile/answers", status_code=303)
+
+
+# ---- Access tokens for Claude Code (#74) ---------------------------------------------
+
+
+@router.post("/tokens", response_class=HTMLResponse)
+def make_token(
+    request: Request,
+    name: Annotated[str, Form(max_length=200)] = "",
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    raw, _ = tokens.create(db, user, name)
+    db.commit()
+    # Rendered, not redirected: the token exists in the clear only in this response.
+    return _page(request, db, user, new_token=raw)
+
+
+@router.post("/tokens/{token_id}/revoke")
+def revoke_token(request: Request, token_id: int, user: User = Depends(require_user), db: Session = Depends(get_db)):
+    row = tokens.revoke(db, user, token_id)
+    db.commit()
+    flash(request, f"Revoked “{row.name}”. Anything using it is locked out.")
+    return RedirectResponse("/profile#tokens", status_code=303)

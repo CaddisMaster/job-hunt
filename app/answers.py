@@ -138,3 +138,44 @@ def save(db: Session, user: User, form: dict[str, str]) -> None:
         row.answer = value
         db.add(row)
     db.commit()
+
+
+QUESTION_MAX = 500
+
+
+def _added_key(question: str) -> str:
+    """A stable key for a question beyond the starter set: the same wording (case,
+    spacing and punctuation aside) is the same question."""
+    import hashlib
+
+    from app.grounding import normalize
+
+    return "q-" + hashlib.sha256(normalize(question).encode()).hexdigest()[:24]
+
+
+def add(db: Session, user: User, *, answer: str, key: str | None = None, question: str | None = None) -> Answer:
+    """Record one answer the user gave (uncommitted): to a starter question by `key`,
+    or to a new question by its wording, checked as the answers page checks it.
+    Invalid on a bad answer or no question."""
+    value = (answer or "").strip()
+    if key in BY_KEY:
+        starter, text = BY_KEY[key], None
+    elif key:
+        raise Invalid({"key": "There's no starter question with that key."})
+    else:
+        text = " ".join((question or "").split())
+        if not text:
+            raise Invalid({"question": "Say what the question was."})
+        if len(text) > QUESTION_MAX:
+            raise Invalid({"question": f"Keep the question under {QUESTION_MAX} characters."})
+        starter, key = Question(key="", label=text), _added_key(text)
+    if not value:
+        raise Invalid({"answer": "An empty answer isn't saved: blank already means \"ask me\"."})
+    if (problem := _check(starter, value)) is not None:
+        raise Invalid({"answer": problem})
+    row = db.scalar(select(Answer).where(Answer.user_id == user.id, Answer.key == key))
+    row = row or Answer(user_id=user.id, key=key)
+    row.question, row.answer = text, value
+    db.add(row)
+    db.flush()
+    return row
