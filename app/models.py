@@ -11,17 +11,14 @@ from sqlalchemy import (
     BigInteger,
     CheckConstraint,
     DateTime,
-    Float,
     ForeignKey,
     Index,
     LargeBinary,
-    SmallInteger,
     String,
     Text,
     UniqueConstraint,
     false,
     func,
-    true,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -205,93 +202,21 @@ class JobRun(Base):
     summary: Mapped[str] = mapped_column(Text, default="", server_default="")
 
 
-class Employer(Base):
-    """An employer in the shared registry (#43, app/employers.py). Shared by every
-    user: no `user_id`, and nothing here says whose search it came from.
-
-    `system` and `token` name the employer's public job board: the board at
-    boards.greenhouse.io/<token>, jobs.lever.co/<token> or jobs.ashbyhq.com/<token>; for
-    Workday (#59) the token is "<tenant>/wd<N>/<site>", for <tenant>.wd<N>.myworkdayjobs.com/<site>.
-    The nightly crawl (#44) fetches the enabled ones and records how it went."""
-
-    __tablename__ = "employers"
-    __table_args__ = (
-        CheckConstraint("system IN ('greenhouse', 'lever', 'ashby', 'workday')", name="employers_system"),
-        UniqueConstraint("system", "token", name="employers_board"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(200))
-    system: Mapped[str] = mapped_column(String(16))
-    token: Mapped[str] = mapped_column(String(100))
-    careers_url: Mapped[str] = mapped_column(String(500))
-    enabled: Mapped[bool] = mapped_column(default=True, server_default=true())
-    added_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    last_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    last_error: Mapped[str | None] = mapped_column(Text)
-
-
-class Posting(Base):
-    """A job the nightly crawl found (#44, app/postings.py): one row per job per
-    source, so a job seen again is updated, not duplicated. Shared by every user: no
-    `user_id`.
-
-    `area` is app/area.py's answer for `location` (and the coordinates, if the source
-    gave them); an `unknown` posting is kept but shown to no one. `missed_fetches`
-    counts its employer's successful fetches in a row that didn't return it; at 3 it
-    is closed, kept for history, and reopened if it comes back. `description` is
-    plain text, never markup: it is shown on pages and later read by a model."""
-
-    __tablename__ = "postings"
-    __table_args__ = (
-        CheckConstraint(
-            "source IN ('greenhouse', 'lever', 'ashby', 'workday', 'adzuna', 'usajobs')", name="postings_source"
-        ),
-        CheckConstraint("area IN ('in_area', 'remote', 'out_of_area', 'unknown')", name="postings_area"),
-        CheckConstraint("char_length(description) <= 50000", name="postings_description_length"),
-        UniqueConstraint("source", "external_id", name="postings_source_job"),
-        Index("postings_employer", "employer_id"),
-        # What's shown (open, in the area) and the admin's unknown-location count.
-        Index("postings_area_open", "area", "closed_at"),
-    )
-
-    id: Mapped[int] = mapped_column(primary_key=True)
-    source: Mapped[str] = mapped_column(String(16))
-    external_id: Mapped[str] = mapped_column(String(200))
-    employer_id: Mapped[int | None] = mapped_column(ForeignKey("employers.id", ondelete="SET NULL"))
-    company: Mapped[str] = mapped_column(String(200))
-    title: Mapped[str] = mapped_column(String(300))
-    url: Mapped[str] = mapped_column(String(1000))
-    location: Mapped[str] = mapped_column(String(500), default="", server_default="")
-    area: Mapped[str] = mapped_column(String(16))
-    latitude: Mapped[float | None] = mapped_column(Float)
-    longitude: Mapped[float | None] = mapped_column(Float)
-    remote: Mapped[bool] = mapped_column(default=False, server_default=false())
-    description: Mapped[str] = mapped_column(Text, default="", server_default="")
-    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    missed_fetches: Mapped[int] = mapped_column(SmallInteger, default=0, server_default="0")
-    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-
-
 class SavedJob(Base):
     """A job its user pasted a link to (#63): discovery by the user. **Private** to
     that user (non-negotiable 1): every query is scoped to `user_id`. One row per user
     per link.
 
-    `source` is how the posting was read: a hiring system's API (greenhouse, lever,
-    ashby), the page's schema.org JobPosting (page), or text the user pasted (text).
-    `pending` means not read yet, or unreadable: `read_error` says why, and the job
-    waits for its text. `area` is app/area.py's answer, but a pasted job is never
-    hidden for it: the user chose it. `description` is plain text, never markup."""
+    `source` is how the posting was read: the page's schema.org JobPosting (page), or
+    text the user pasted (text). `pending` means not read yet, or unreadable:
+    `read_error` says why, and the job waits for its text. `description` is plain
+    text, never markup."""
 
     __tablename__ = "saved_jobs"
     __table_args__ = (
         CheckConstraint(
-            "source IN ('pending', 'greenhouse', 'lever', 'ashby', 'page', 'text')", name="saved_jobs_source"
+            "source IN ('pending', 'page', 'text')", name="saved_jobs_source"
         ),
-        CheckConstraint("area IN ('in_area', 'remote', 'out_of_area', 'unknown')", name="saved_jobs_area"),
         CheckConstraint("char_length(description) <= 50000", name="saved_jobs_description_length"),
         UniqueConstraint("user_id", "url", name="saved_jobs_user_url"),
     )
@@ -304,7 +229,6 @@ class SavedJob(Base):
     company: Mapped[str] = mapped_column(String(200), default="", server_default="")
     title: Mapped[str] = mapped_column(String(300), default="", server_default="")
     location: Mapped[str] = mapped_column(String(500), default="", server_default="")
-    area: Mapped[str] = mapped_column(String(16), default="unknown", server_default="unknown")
     remote: Mapped[bool] = mapped_column(default=False, server_default=false())
     description: Mapped[str] = mapped_column(Text, default="", server_default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
