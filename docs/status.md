@@ -4,29 +4,29 @@
 
 **v0.2.0 is live** at apply.seandesmet.com (deployed 2026-11-19). On `main` for v0.3.0, not yet
 released: the worker (#41), the employer registry (#43) with its Pittsburgh starter list, the
-area check (#42) and the nightly crawl from Greenhouse, Lever and Ashby (#44). Open in 0.3: #45,
+area check (#42) and the nightly crawl from Greenhouse, Lever and Ashby (#44). Open in 0.3: #63,
 #46, #47, and #59 (parked).
+
+**Pivots, 2026-11-20** (plan §10 decisions 7–9): Job Hunt is **Sean's alone**; the aggregators
+are dropped (#45 closed, #65 closed unmerged) in favour of **paste a link** (#63); the browser
+will run on Sean's Mac, where he logs in himself (#66, parked to 0.6).
 
 ## Pick up here
 
-1. **#45: Adzuna and USAJobs.** Next to build; no migration needed (`postings.source` already
-   allows both). Blank keys = that source skipped. This is how UPMC, PNC, Highmark, CMU and
-   Covestro get in (see 3). Daily budget: `RateLimiter(name, budget, 86400)` from
-   `app/rate_limit.py`. Adzuna's `redirect_url` is Adzuna's own page, so the LinkedIn/Indeed drop
-   can only check the URL we're given. Unverified in the docs (check once Sean has keys): Adzuna's
-   US path (`/v1/api/jobs/us/search/<page>`), its radius parameter and unit, its free-tier limits,
-   and USAJobs' radius unit. The crawl's `Skip` when the registry is empty must change: skip only
-   if no source at all can run.
+1. **#63: paste a job link, Job Hunt reads the posting.** Next to build. A private table
+   (`user_id`), so its migration ships alone first. Greenhouse/Lever/Ashby links via their APIs;
+   other pages by one GET and their schema.org `JobPosting`; else the pasted text. LinkedIn and
+   Indeed never fetched; a challenge stops it. Not hidden for being out of the area. Then #67
+   (one line off the sign-in page).
 2. **The API key (Mac), still unconfirmed:** check `ANTHROPIC_API_KEY` reached the droplet's
    `.env` and `job-hunt-env-prod`, then Sean builds his profile from his real resume.
 3. **#59 Workday is parked.** The migration shipped (#62); the fetcher is on the **local,
    unpushed** branch `59-workday` (`6e14af9`). Cloudflare answered the app's requests with a bot
    challenge (`429`, `cf-mitigated: challenge`) after about 15 requests in a few minutes, so it's
-   off the table unless Adzuna's coverage of those employers is thin. UPMC's feed refuses anything
+   off the table; paste a link (#63) covers those employers. UPMC's feed refuses anything
    but a browser on UPMC's page. Neither is to be got around (non-negotiable 9, and Job Hunt always
    identifies itself).
-4. **Then #46 (duplicates) and #47 (the Jobs page).** #63 (paste a link, Job Hunt does the rest)
-   is a fallback idea, only if discovery stays thin after 0.3 runs for a couple of weeks.
+4. **Then #46 (duplicates) and #47 (the Jobs page).** The Jobs page shows pasted jobs too.
 5. **Area follow-ups seen in the first real crawl's unknown list:** "Mexico City" (no country
    named), "Onsite- Salem, OR" (a dash without a space isn't split), "United States" alone.
 6. **When v0.3.0 deploys:** run `alembic upgrade head` (the release does it), press "Add the
