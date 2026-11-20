@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import admin, employers, invites
+from app import admin, employers, invites, postings
 from app.config import get_settings
 from app.db import get_db
 from app.flash import flash
@@ -27,6 +27,7 @@ def _page(request: Request, db: Session, me: User, *, status: int = 200, **extra
         "pending": invites.pending(db),
         "spend": admin.month_spend(db),
         "jobs": admin.last_runs(db),
+        "unknown_locations": postings.unknown_locations(db),
         "timezone": get_settings().app_timezone,
         "user_budget_cents": get_settings().ai_monthly_budget_cents_per_user,
         **extra,

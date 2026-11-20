@@ -8,7 +8,8 @@ by scripts/build_places.py), and checks coordinates when a source gives them.
 
     in_area      a place in the table, a county, or coordinates within the radius
     remote       says it's remote and names no place in the area
-    out_of_area  names a place, but not one in the area (Pittsburg, KS; New York, NY)
+    out_of_area  names a place, but not one in the area (Pittsburg, KS; New York, NY;
+                 Tokyo, Japan)
     unknown      can't tell: kept out, and counted for the admin (decided 2026-11-19)
 
 A posting listing several locations is in the area if any one is. A hybrid or
@@ -47,6 +48,29 @@ STATES = {
     "wi": "WI", "wisconsin": "WI", "wy": "WY", "wyoming": "WY",
 }
 # Anything after these words is a country, which tells us nothing more.
+# Another country, a region of the world, or a Canadian province, as the last part
+# of a location ("Tokyo, Japan", "Toronto, ON", "Europe"): certainly not here, so
+# `out_of_area` rather than `unknown`, which keeps the admin's list of unplaced
+# locations to the ones worth adding. Georgia and the like are read as states first.
+ABROAD = frozenset({
+    "afghanistan", "albania", "algeria", "argentina", "armenia", "australia", "austria", "azerbaijan",
+    "bahrain", "bangladesh", "belarus", "belgium", "bolivia", "bosnia and herzegovina", "brazil", "bulgaria",
+    "cambodia", "cameroon", "canada", "chile", "china", "colombia", "costa rica", "croatia", "cyprus",
+    "czech republic", "czechia", "denmark", "dominican republic", "ecuador", "egypt", "el salvador",
+    "england", "estonia", "ethiopia", "finland", "france", "germany", "ghana", "greece", "guatemala",
+    "honduras", "hong kong", "hungary", "iceland", "india", "indonesia", "iran", "iraq", "ireland",
+    "israel", "italy", "jamaica", "japan", "jordan", "kazakhstan", "kenya", "korea", "south korea",
+    "kuwait", "latvia", "lebanon", "lithuania", "luxembourg", "malaysia", "malta", "mexico", "moldova",
+    "morocco", "netherlands", "the netherlands", "new zealand", "nicaragua", "nigeria", "northern ireland",
+    "norway", "pakistan", "panama", "paraguay", "peru", "philippines", "poland", "portugal", "puerto rico",
+    "qatar", "romania", "russia", "rwanda", "saudi arabia", "scotland", "serbia", "singapore", "slovakia",
+    "slovenia", "south africa", "spain", "sri lanka", "sweden", "switzerland", "taiwan", "tanzania",
+    "thailand", "tunisia", "turkey", "türkiye", "uae", "uganda", "uk", "ukraine", "united arab emirates",
+    "united kingdom", "great britain", "uruguay", "uzbekistan", "venezuela", "vietnam", "viet nam", "wales",
+    "europe", "emea", "apac", "latam", "asia", "africa", "middle east", "european union", "eu",
+    "ontario", "quebec", "british columbia", "alberta", "manitoba", "saskatchewan", "nova scotia",
+    "new brunswick", "newfoundland", "on", "qc", "bc", "ab", "mb", "sk", "ns", "nb", "nl",
+})  # fmt: skip
 _COUNTRY = re.compile(r",?\s*\b(united states( of america)?|usa|u\.s\.a?\.?|us)\b\.?$")
 _ZIP = re.compile(r"\b\d{5}(-\d{4})?\b")
 _REMOTE = re.compile(r"\b(remote|work from home|wfh|telecommute|anywhere|distributed|virtual)\b")
@@ -92,7 +116,8 @@ def _segment(segment: str) -> Where:
     if _METRO.match(_norm(text)):
         return Where.IN_AREA
     parts = [p.strip() for p in text.split(",") if p.strip()]
-    state = STATES.get(parts[-1].strip(" .")) if len(parts) > 1 else None
+    last = parts[-1].replace(".", "").strip()  # "D.C.", "Pa."
+    state = STATES.get(last) if len(parts) > 1 else None
     names = parts[:-1] if state else parts
     if state is None and len(parts) == 1:
         # The state without a comma: "Sewickley PA", "Pittsburgh Pennsylvania".
@@ -107,7 +132,9 @@ def _segment(segment: str) -> Where:
                     state, names = code, [rest]
                 break
     if state is None:
-        return Where.IN_AREA if any(_norm(n) == "pittsburgh" for n in names) else Where.UNKNOWN
+        if any(_norm(n) == "pittsburgh" for n in names):
+            return Where.IN_AREA
+        return Where.OUT_OF_AREA if last in ABROAD else Where.UNKNOWN
     # "Strip District, Pittsburgh, PA": a neighbourhood first, then the town. Any name in the
     # area will do.
     for name in names:

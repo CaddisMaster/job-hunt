@@ -30,9 +30,11 @@ from zoneinfo import ZoneInfo
 from sqlalchemy import delete, select, text, update
 from sqlalchemy.orm import Session
 
+from app import employers, postings
 from app.config import get_settings
 from app.db import SessionLocal, engine
-from app.models import JobRun
+from app.models import Employer, JobRun
+from app.sources import FetchError
 
 log = logging.getLogger("app.worker")
 
@@ -45,6 +47,11 @@ INTERRUPTED = "Interrupted: the worker stopped during this run."
 
 class Skip(Exception):
     """Raise from a job to record its run as skipped; the message is the summary."""
+
+
+class Failed(Exception):
+    """Raise from a job to record its run as failed with this summary (counts only),
+    when it knows why and nothing needs the traceback."""
 
 
 @dataclass(frozen=True)
@@ -77,6 +84,9 @@ def _execute(job: Job) -> tuple[str, str]:
         except Skip as skip:
             db.rollback()
             return "skipped", str(skip)
+        except Failed as failed:
+            db.rollback()
+            return "failed", str(failed)
         except Exception as error:
             db.rollback()
             log.exception("job %s failed", job.name)
@@ -156,9 +166,63 @@ def housekeeping(db: Session) -> str:
     return f"{deleted} old job run{'' if deleted == 1 else 's'} deleted"
 
 
-# The nightly crawl joins at 02:30 (#44). Times are APP_TIMEZONE's wall clock; the
-# database backup runs at 03:45, so nothing heavy is scheduled beside it.
-JOBS: tuple[Job, ...] = (Job("housekeeping", time(3, 15), housekeeping),)
+PAUSE_SECONDS = 1.0  # between employers: most share a host, and we're a guest there
+ERROR_MAX = 300
+
+
+def _plural(n: int, word: str) -> str:
+    return f"{n} {word}{'' if n == 1 else 's'}"
+
+
+def crawl(db: Session) -> str:
+    """Fetch every enabled employer's board (#44), one request each, and store what's
+    there (app/postings.py). One employer's failure is recorded on it, and the rest
+    are still fetched. The summary is counts only."""
+    ids = [employer.id for employer in employers.to_fetch(db)]
+    if not ids:
+        raise Skip("No enabled employers in the registry to fetch.")
+    totals, fetched, failed = postings.Counts(), 0, 0
+    for i, employer_id in enumerate(ids):
+        if i:
+            clock.sleep(PAUSE_SECONDS)
+        employer = db.get(Employer, employer_id)
+        if employer is None or not employer.enabled:
+            continue  # removed or disabled since the crawl started
+        now = datetime.now(UTC)
+        try:
+            totals += postings.record(db, employer, postings.fetch(employer), now)
+        except FetchError as error:
+            db.rollback()
+            reason = f"{postings.label(employer.system)} {error}"
+        except Exception as error:
+            db.rollback()
+            log.exception("crawl: employer %s failed", employer_id)
+            reason = f"Failed: {type(error).__name__}. The worker's log has the details."
+        else:
+            employer.last_fetched_at, employer.last_error = now, None
+            db.commit()
+            fetched += 1
+            continue
+        failed += 1
+        employer = db.get(Employer, employer_id)
+        if employer is not None:
+            employer.last_error = f"{now.astimezone(get_settings().tz):%Y-%m-%d %H:%M}: {reason}"[:ERROR_MAX]
+            db.commit()
+    summary = (
+        f"{_plural(fetched, 'employer')} fetched, {failed} failed; {_plural(totals.seen, 'job')} seen, "
+        f"{totals.new} new, {totals.closed} closed; {postings.open_unknown_count(db)} open with an unknown location"
+    )
+    if fetched == 0:
+        raise Failed(f"{summary}. Each employer's reason is on the employer registry page.")
+    return summary
+
+
+# Times are APP_TIMEZONE's wall clock. The database backup runs at 03:45, so nothing
+# heavy is scheduled beside it.
+JOBS: tuple[Job, ...] = (
+    Job("crawl", time(2, 30), crawl),
+    Job("housekeeping", time(3, 15), housekeeping),
+)
 
 
 # ---- The process ------------------------------------------------------------------

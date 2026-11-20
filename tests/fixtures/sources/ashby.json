@@ -1,0 +1,98 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "TOKEN-d3bc1ced-0001",
+      "title": "Financial Analyst",
+      "department": "Finance",
+      "team": "FP&A",
+      "employmentType": "FullTime",
+      "location": "Pittsburgh Office",
+      "secondaryLocations": [],
+      "publishedAt": "2026-11-01T20:13:45.158+00:00",
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "OnSite",
+      "address": {
+        "postalAddress": {
+          "addressRegion": "Pennsylvania",
+          "addressCountry": "USA",
+          "addressLocality": "Pittsburgh"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0001",
+      "applyUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0001/application",
+      "descriptionHtml": "<p>Build the budget.</p><style>p{color:red}</style>",
+      "descriptionPlain": "Build the budget."
+    },
+    {
+      "id": "TOKEN-d3bc1ced-0002",
+      "title": "Controller",
+      "department": "Finance",
+      "team": "Accounting",
+      "employmentType": "FullTime",
+      "location": "Remote (US)",
+      "secondaryLocations": [
+        {
+          "location": "Europe",
+          "address": {
+            "postalAddress": {
+              "addressCountry": "European Union"
+            }
+          }
+        }
+      ],
+      "publishedAt": "2026-11-02T20:13:45.158+00:00",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "address": {
+        "postalAddress": {
+          "addressCountry": "USA"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0002",
+      "applyUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0002/application",
+      "descriptionPlain": "Own the close."
+    },
+    {
+      "id": "TOKEN-d3bc1ced-0004",
+      "title": "Tax Manager",
+      "department": "Finance",
+      "team": "Tax",
+      "employmentType": "FullTime",
+      "location": "New York, NY (HQ)",
+      "secondaryLocations": [],
+      "publishedAt": "2026-11-03T20:13:45.158+00:00",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Hybrid",
+      "address": {
+        "postalAddress": {
+          "addressRegion": "NY",
+          "addressCountry": "USA",
+          "addressLocality": "New York City"
+        }
+      },
+      "jobUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0004",
+      "applyUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0004/application",
+      "descriptionPlain": "Three days a week in the office."
+    },
+    {
+      "id": "TOKEN-d3bc1ced-0003",
+      "title": "Hidden Role",
+      "department": "Finance",
+      "team": "Accounting",
+      "employmentType": "FullTime",
+      "location": "Pittsburgh, PA",
+      "secondaryLocations": [],
+      "publishedAt": "2026-11-02T20:13:45.158+00:00",
+      "isListed": false,
+      "isRemote": false,
+      "workplaceType": "OnSite",
+      "jobUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0003",
+      "applyUrl": "https://jobs.ashbyhq.com/example/TOKEN-d3bc1ced-0003/application",
+      "descriptionPlain": "Not listed."
+    }
+  ]
+}
