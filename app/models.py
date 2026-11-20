@@ -210,12 +210,13 @@ class Employer(Base):
     user: no `user_id`, and nothing here says whose search it came from.
 
     `system` and `token` name the employer's public job board: the board at
-    boards.greenhouse.io/<token>, jobs.lever.co/<token> or jobs.ashbyhq.com/<token>.
+    boards.greenhouse.io/<token>, jobs.lever.co/<token> or jobs.ashbyhq.com/<token>; for
+    Workday (#59) the token is "<tenant>/wd<N>/<site>", for <tenant>.wd<N>.myworkdayjobs.com/<site>.
     The nightly crawl (#44) fetches the enabled ones and records how it went."""
 
     __tablename__ = "employers"
     __table_args__ = (
-        CheckConstraint("system IN ('greenhouse', 'lever', 'ashby')", name="employers_system"),
+        CheckConstraint("system IN ('greenhouse', 'lever', 'ashby', 'workday')", name="employers_system"),
         UniqueConstraint("system", "token", name="employers_board"),
     )
 
@@ -244,7 +245,9 @@ class Posting(Base):
 
     __tablename__ = "postings"
     __table_args__ = (
-        CheckConstraint("source IN ('greenhouse', 'lever', 'ashby', 'adzuna', 'usajobs')", name="postings_source"),
+        CheckConstraint(
+            "source IN ('greenhouse', 'lever', 'ashby', 'workday', 'adzuna', 'usajobs')", name="postings_source"
+        ),
         CheckConstraint("area IN ('in_area', 'remote', 'out_of_area', 'unknown')", name="postings_area"),
         CheckConstraint("char_length(description) <= 50000", name="postings_description_length"),
         UniqueConstraint("source", "external_id", name="postings_source_job"),
