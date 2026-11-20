@@ -12,7 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.orm import Session
 from starlette.datastructures import UploadFile  # what request.form() holds (FastAPI's is a subclass)
 
-from app import ai, answers, resumes, spend, tokens
+from app import answers, resumes, tokens
 from app import profile as profiles
 from app.db import get_db
 from app.flash import flash
@@ -30,13 +30,11 @@ def _page(
     *,
     status: int = 200,
     error: str | None = None,
-    build_error: str | None = None,
     new_token: str | None = None,
 ) -> HTMLResponse:
     found = resumes.for_user(db, user)
     base = found[0] if found else None
     profile = profiles.get(db, user)
-    refusal = spend.refusal(db, user.id)
     context = {
         "user": user,
         "resumes": found,
@@ -45,8 +43,6 @@ def _page(
         "base": base,
         "profile": profile,
         "stale": bool(profile and base and profile.resume_id != base.id),
-        "ai_message": ai.MESSAGES[refusal] if refusal else None,
-        "build_error": build_error,
         "role_line": profiles.role_line,
         "tokens": tokens.for_user(db, user),
         "new_token": new_token,
@@ -93,24 +89,6 @@ def download(resume_id: int, user: User = Depends(require_user), db: Session = D
         media_type=resumes.MEDIA_TYPES[resume.kind],
         headers={"Content-Disposition": disposition, "Cache-Control": "private, no-store"},
     )
-
-
-@router.post("/build", response_class=HTMLResponse)
-async def build(request: Request, user: User = Depends(require_user), db: Session = Depends(get_db)):
-    """Build the profile from the base resume: one Claude call, charged to this user."""
-    form = await request.form()
-    existing = profiles.get(db, user)
-    if existing and form.get("replace") != "yes":
-        return _page(request, db, user, status=400, build_error="Tick the box to replace your current profile first.")
-    base = profiles.base_resume(db, user)
-    if base is None or not base.text:
-        return _page(request, db, user, status=400, build_error="Upload a resume with text in it first.")
-    try:
-        profiles.build(db, user)
-    except ai.AIUnavailable as exc:
-        return _page(request, db, user, status=503 if exc.reason == "error" else 200, build_error=exc.message)
-    flash(request, "Your profile is built. Check every line below against your resume, fix anything wrong, then confirm.")
-    return RedirectResponse("/profile/review", status_code=303)
 
 
 @router.get("/review", response_class=HTMLResponse)

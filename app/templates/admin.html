@@ -26,7 +26,7 @@
   <h2>Everyone</h2>
   <div class="table-wrap">
   <table>
-    <thead><tr><th>Email</th><th>Joined</th><th>Last login</th><th>Status</th><th>AI this month</th><th></th></tr></thead>
+    <thead><tr><th>Email</th><th>Joined</th><th>Last login</th><th>Status</th><th></th></tr></thead>
     <tbody>
     {% for account in accounts %}
       <tr>
@@ -34,7 +34,6 @@
         <td>{{ account.created_at.strftime('%Y-%m-%d') }}</td>
         <td>{{ account.last_login_at.strftime('%Y-%m-%d') if account.last_login_at else '—' }}</td>
         <td>{{ 'Disabled' if account.disabled_at else 'Active' }}</td>
-        <td>${{ '%.2f' % ((spend.get(account.id, 0)) / 100000000) }} <span class="muted">of ${{ '%.2f' % (user_budget_cents / 100) }}</span></td>
         <td class="actions">
           <form method="post" action="/admin/accounts/{{ account.id }}/link" class="inline">
             <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">

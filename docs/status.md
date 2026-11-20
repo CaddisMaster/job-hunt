@@ -29,8 +29,9 @@ and makes the PDF) and fills the application through Playwright MCP; he clicks S
 6. **Greenhouse job pages carry no job data** (checked 2026-11-20), so pasted Greenhouse links
    ask for the text. Lever, Ashby and SmartRecruiters pages read in full.
 7. **The local branch `59-workday`** (unpushed, `6e14af9`) is dead: delete it when Sean OKs.
-8. **The `ANTHROPIC_API_KEY` on the droplet** matters only for the profile build now (0.2);
-   tailoring runs in Claude Code.
+8. **The app makes no Claude calls any more:** `ANTHROPIC_API_KEY` and the AI budget keys in the
+   droplet's `.env` are ignored and can be removed (Mac session, and from `job-hunt-env-prod`).
+   The `ai_spend` table is dropped in a later release than the one that stops using it.
 9. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
    the VM's Python 3.12. Close them and exclude `infra/` the way Job Hunt's #38 did.
 

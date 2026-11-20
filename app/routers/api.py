@@ -160,3 +160,18 @@ def tailored_pdf(job_id: int, user: User = Depends(require_token), db: Session =
         raise HTTPException(status_code=404)
     return tailor.pdf_response(row, job)
 
+
+
+# ---- The profile (#24, built in Claude Code) -------------------------------------------------
+
+
+@router.post("/profile", status_code=201)
+def send_profile(body: profiles.ProfileData, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """What a Claude Code session read from the base resume. Only items whose quoted
+    line is in the resume are kept; the rest come back as `left_out`. The profile is
+    unconfirmed until Sean reviews it on /profile/review, and nothing uses it before."""
+    try:
+        profile, left_out = profiles.store(db, user, body)
+    except profiles.NoResume:
+        return JSONResponse({"error": "Upload a resume with text in it first, on the Profile page."}, status_code=409)
+    return {"profile": profile.data, "left_out": left_out, "confirmed": False, "review": "/profile/review"}
