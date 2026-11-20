@@ -1,10 +1,10 @@
 # Job Hunt
 
-A daily control center for job applications at **apply.seandesmet.com**. Each night it finds
-Pittsburgh-area jobs that match the user's resume and drafts the materials; each morning the user
-approves the ones they want, and a worker fills out the forms. A person always clicks the final
-Submit. **Sean's alone** (since 2026-11-20); the multi-user plumbing built in 0.1–0.2 stays. FastAPI + Postgres in Docker,
-the third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by copying Orbit Ops.
+Sean's job application helper at **apply.seandesmet.com**, for him alone (since 2026-11-20).
+He pastes links to jobs he found; Job Hunt saves each posting, tailors his resume to it (a PDF),
+and Playwright fills in the application. A person always clicks the final Submit. No crawling and
+no ranking. The multi-user plumbing built in 0.1–0.2 stays. FastAPI + Postgres in Docker, the
+third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by copying Orbit Ops.
 
 > ⚠️ **This file is the always-loaded core and is kept small.** Detail lives in `docs/` and is
 > *not* loaded automatically — **read the relevant file before acting.**
@@ -44,26 +44,23 @@ app/profile.py       the profile from a resume: build (one Claude call), ground 
 app/answers.py       the answer bank: starter questions, their only defaults (EEO decline, remote off), validation
 app/grounding.py     non-negotiable 7 in code: a claim vs confirmed facts → supported / unsupported / needs the user
 app/admin.py         the admin panel's queries — accounts and job runs, never anyone's private data
-app/area.py          is a location in Greater Pittsburgh? offline, from app/data/places.csv (built by scripts/build_places.py)
-app/employers.py     the shared employer registry: careers URL → (system, token), one live board check, to_fetch(), the starter list (app/data/employers.csv)
-app/worker.py        the `worker` service: scheduled jobs (JOBS: crawl, housekeeping), due once a day, advisory-locked, runs in job_runs
-app/sources/         one module per hiring system's public API (greenhouse, lever, ashby): fetch → Found; plain_text() for descriptions
-app/saved.py         saved jobs (#63): a pasted link → board API, the page's JobPosting (JSON-LD or microdata), or pasted text; SSRF-guarded
-app/postings.py      the shared postings: record() a fetch (update, add, close after 3 misses), shown(), unknown_locations()
+app/worker.py        the `worker` service: scheduled jobs (JOBS: housekeeping), due once a day, advisory-locked, runs in job_runs
+app/saved.py         saved jobs (#63): a pasted link → the page's JobPosting (JSON-LD or microdata), or pasted text; SSRF-guarded
+app/text.py          markup in, plain text out: plain_text(), tidy(), clip()
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin, /admin/employers), profile.py (/profile), saved.py (/saved)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin), profile.py (/profile), saved.py (/saved)
 alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 employers, 0010 postings, 0011 workday, 0012 saved_jobs)
 .claude/             /wrap (end of session), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
-scripts/             create_user.py (bootstrap the first admin), build_places.py (app/data), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
+scripts/             create_user.py (bootstrap the first admin), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)
 ```
 
 ## Non-negotiables
 
 1. **Every query that reads a user's private data is scoped to the current user.** Resumes, the
-   answer bank, matches and applications all carry `user_id`. Shared tables (employers, postings)
-   are the only exception, plus the admin module, which names its target user explicitly.
+   answer bank, saved jobs and applications all carry `user_id`. The admin module is the only
+   exception, and it names its target user explicitly.
 2. **Rate limits live in Postgres** (`app/rate_limit.py`), never in process memory: they must hold
    for many users, across restarts.
 3. **Never show an exception to the user.** The catch-all handler logs and renders `error.html`.

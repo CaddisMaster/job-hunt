@@ -2,8 +2,7 @@
 {% block title %}Admin · Job Hunt{% endblock %}
 {% block content %}
 <h1>Accounts</h1>
-<p><a href="/admin/employers">The employer registry →</a></p>
-<p class="muted">Invite only. The admin pages show accounts, the employer registry, the scheduled jobs and postings' location text, never anyone's resumes, answers or applications.</p>
+<p class="muted">The admin pages show accounts and the scheduled jobs, never anyone's resumes, answers or applications.</p>
 
 {% if new_link %}
 <section class="card notice" aria-live="polite">
@@ -78,25 +77,6 @@
     </tbody>
   </table>
   </div>
-</section>
-
-<section class="card">
-  <h2>Locations Job Hunt couldn't place</h2>
-  {% if unknown_locations %}
-  <p class="muted">Open postings whose location text isn't a place Job Hunt knows. They're stored but shown to no one. A common one is worth adding to the places table (app/data).</p>
-  <div class="table-wrap">
-  <table>
-    <thead><tr><th>Location text</th><th>Open postings</th></tr></thead>
-    <tbody>
-    {% for location, count in unknown_locations %}
-      <tr><td>{{ location or '(blank)' }}</td><td>{{ count }}</td></tr>
-    {% endfor %}
-    </tbody>
-  </table>
-  </div>
-  {% else %}
-  <p class="muted">None: every open posting's location was placed.</p>
-  {% endif %}
 </section>
 
 {% if pending %}

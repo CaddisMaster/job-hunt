@@ -3,8 +3,7 @@
 ⚠️ The one place that names users other than the current one, and only
 `require_admin` routes call it. It deliberately shows accounts only — never
 anyone's resumes, answers or applications (plan §2): keep it that way. The
-worker's job runs are shared, not anyone's data, and say only counts. Postings
-are shared too: the admin page shows only their location text (postings.py).
+worker's job runs are shared, not anyone's data, and say only counts.
 """
 
 from datetime import UTC, datetime

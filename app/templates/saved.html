@@ -3,7 +3,7 @@
 {% block content %}
 <section class="card">
   <h1>Saved jobs</h1>
-  <p class="muted">Found a job somewhere? Paste its link. Job Hunt reads the posting from the employer's hiring system or the page itself, and if it can't, asks you to paste the text. It never opens LinkedIn or Indeed.</p>
+  <p class="muted">Found a job somewhere? Paste its link. Job Hunt reads the posting from the page, and if it can't, asks you to paste the text. It never opens LinkedIn or Indeed.</p>
   {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
   <form method="post" action="/saved" class="row">
     <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
@@ -23,7 +23,7 @@
       <tr>
         <td><a href="/saved/{{ job.id }}">{{ job.title or job.url }}</a>{% if job.source == 'pending' %} <span class="alert">Needs the text</span>{% endif %}</td>
         <td>{{ job.company or '—' }}</td>
-        <td>{{ job.location or '—' }}{% if job.area == 'out_of_area' %} <span class="muted">(outside Pittsburgh)</span>{% elif job.area == 'remote' %} <span class="muted">(remote)</span>{% endif %}</td>
+        <td>{{ job.location or '—' }}{% if job.remote %} <span class="muted">(remote)</span>{% endif %}</td>
         <td>{{ job.created_at.strftime('%Y-%m-%d') }}</td>
       </tr>
     {% endfor %}

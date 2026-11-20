@@ -1,21 +1,22 @@
-"""Saved jobs (#63): the user pastes a link to a job they found, and Job Hunt reads it.
+"""Saved jobs (#63): Sean pastes a link to a job he found, and Job Hunt reads it.
 
-Discovery by the user (plan §4, §10 decision 8). The posting is read, in this order:
+The only way jobs get in (plan §10 decision 10: no crawling, no ranking). The
+posting is read in this order:
 
-1. **A Greenhouse, Lever or Ashby job link** is read from that system's public API,
-   for that one job (no page is loaded).
-2. **Any other page** gets one GET, identified as Job Hunt, and its schema.org
-   `JobPosting` (JSON-LD, which most career pages embed for search engines) is read.
-3. **Otherwise** the job is saved as `pending` with the reason, and the user pastes
-   the posting's text.
+1. The page gets one GET, identified as Job Hunt, and its schema.org `JobPosting` is
+   read: JSON-LD first (many career pages embed it for search engines; Lever's and
+   Ashby's do), then microdata (SmartRecruiters and others). Greenhouse's job pages
+   carry neither (checked 2026-11-20), so they ask for the text.
+2. Otherwise the job is saved as `pending` with the reason, and the user pastes the
+   posting's text.
 
 Never fetched: LinkedIn or Indeed (non-negotiable 9). A bot challenge, a login wall
 or a refusal stops at that one request; it's never retried or got around.
 
-The GET to an arbitrary page is guarded, because the server makes it for a URL a
-person typed (SSRF): http(s) on the standard ports only, every address the host
-resolves to must be public, each redirect is checked the same way (at most
-MAX_REDIRECTS), and the body is capped. What's read is stored as plain text.
+The GET is guarded, because the server makes it for a URL a person typed (SSRF):
+http(s) on the standard ports only, every address the host resolves to must be
+public, each redirect is checked the same way (at most MAX_REDIRECTS), and the body
+is capped. What's read is stored as plain text (app/text.py).
 
 ⚠️ Private data: every function takes the current user and touches only their rows
 (non-negotiable 1); someone else's job id is a 404.
@@ -34,25 +35,12 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app import area
-from app.models import Employer, SavedJob, User
-from app.sources import (
-    _BLOCK,
-    _DROP,
-    DESCRIPTION_MAX,
-    FetchError,
-    ashby,
-    banned_link,
-    clip,
-    get_json,
-    greenhouse,
-    lever,
-    plain_text,
-    tidy,
-    user_agent,
-)
+from app.config import get_settings
+from app.models import SavedJob, User
+from app.text import BLOCK_TAGS, DESCRIPTION_MAX, DROP_TAGS, clip, plain_text, tidy
 
 URL_MAX = 1000
+APP_URL = "https://apply.seandesmet.com"
 PAGE_MAX_BYTES = 2 * 1024 * 1024
 TIMEOUT_SECONDS = 10
 MAX_REDIRECTS = 3
@@ -82,6 +70,21 @@ class Read:
     remote: bool = False
 
 
+# Never LinkedIn or Indeed, not even a link to them (non-negotiable 9).
+BANNED_HOSTS = ("linkedin.com", "lnkd.in", "indeed.com")
+
+
+def banned_link(url: str) -> bool:
+    """Is this link on LinkedIn or Indeed (any subdomain)?"""
+    host = (urlsplit(url).hostname or "").lower()
+    return any(host == banned or host.endswith("." + banned) for banned in BANNED_HOSTS)
+
+
+def user_agent() -> str:
+    """Job Hunt always says who it is."""
+    return f"JobHunt/{get_settings().app_version} (+{APP_URL})"
+
+
 # ---- The link --------------------------------------------------------------------------
 
 
@@ -99,69 +102,6 @@ def clean_url(url: str) -> str:
         raise LinkError(f"That link is longer than {URL_MAX} characters.")
     return url
 
-
-_BOARD_HOSTS = {
-    "boards.greenhouse.io": "greenhouse",
-    "job-boards.greenhouse.io": "greenhouse",
-    "jobs.lever.co": "lever",
-    "jobs.ashbyhq.com": "ashby",
-}
-_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$")
-_UUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
-
-
-def board_job(url: str) -> tuple[str, str, str] | None:
-    """(system, board token, job id) for a link to one job on Greenhouse
-    (…/<token>/jobs/<number>), Lever (jobs.lever.co/<token>/<uuid>) or Ashby
-    (jobs.ashbyhq.com/<token>/<uuid>); a trailing /apply or /application is fine.
-    None for anything else."""
-    parts = urlsplit(url)
-    system = _BOARD_HOSTS.get((parts.hostname or "").lower())
-    segments = [s for s in parts.path.split("/") if s]
-    if system is None or len(segments) < 2 or not _SLUG.match(segments[0]):
-        return None
-    if system == "greenhouse":
-        if len(segments) >= 3 and segments[1] == "jobs" and segments[2].isdigit():
-            return system, segments[0], segments[2]
-        return None
-    return (system, segments[0], segments[1].lower()) if _UUID.match(segments[1]) else None
-
-
-# ---- Reading from a hiring system's API --------------------------------------------------
-
-
-def _company(db: Session, system: str, token: str, given: object = None) -> str:
-    """The registry's name for the board, else the system's own, else the token."""
-    known = db.scalar(select(Employer.name).where(Employer.system == system, Employer.token == token))
-    if known:
-        return known
-    if isinstance(given, str) and given.strip():
-        return tidy(given, 200)
-    return token.replace("-", " ").replace("_", " ").title()[:200]
-
-
-def read_board(db: Session, system: str, token: str, job_id: str) -> Read:
-    """One job from its hiring system's API. Unreadable if it isn't there."""
-    try:
-        if system == "greenhouse":
-            payload = get_json(f"https://boards-api.greenhouse.io/v1/boards/{token}/jobs/{job_id}")
-            company = payload.get("company_name") if isinstance(payload, dict) else None
-            found = greenhouse.parse({"jobs": [payload]})
-        elif system == "lever":
-            company = None
-            found = lever.parse([get_json(f"https://api.lever.co/v0/postings/{token}/{job_id}?mode=json")])
-        else:
-            company = None  # Ashby has no one-job endpoint: the board, then this job
-            found = [job for job in ashby.parse(get_json(ashby.url(token))) if job.external_id.lower() == job_id]
-    except FetchError as error:
-        label = {"greenhouse": "Greenhouse", "lever": "Lever", "ashby": "Ashby"}[system]
-        if "404" in str(error):
-            raise Unreadable(f"{label} has no open job at that link. It may have closed.") from None
-        raise Unreadable(f"{label} {error}. Try again later, or paste the posting's text.") from None
-    if not found:
-        raise Unreadable("That job isn't listed any more. It may have closed.")
-    job = found[0]
-    return Read(system, job.title, _company(db, system, token, company), job.location, job.description, job.remote)
 
 
 # ---- Reading any other page ------------------------------------------------------------
@@ -298,14 +238,14 @@ class _Microdata(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attrs = {k: v or "" for k, v in attrs}
-        if tag in _DROP:
+        if tag in DROP_TAGS:
             self.dropping += 1
         outer = self.scopes[-1] if self.scopes else None
         prop = attrs.get("itemprop", "").strip() or None
         if tag in self._VOID or tag == "meta":
             if prop and "content" in attrs:
                 self._put(outer, prop, attrs["content"].strip())
-            if tag in _BLOCK:
+            if tag in BLOCK_TAGS:
                 self._text("\n")
             return
         scope = None
@@ -317,13 +257,13 @@ class _Microdata(HTMLParser):
         if prop and scope is None and "content" in attrs:
             self._put(outer, prop, attrs["content"].strip())
         self.stack.append((tag, scope, prop, capture, outer))
-        if tag in _BLOCK:
+        if tag in BLOCK_TAGS:
             self._text("\n")
 
     def handle_endtag(self, tag):
-        if tag in _DROP:
+        if tag in DROP_TAGS:
             self.dropping = max(0, self.dropping - 1)
-        if tag in _BLOCK:
+        if tag in BLOCK_TAGS:
             self._text("\n")
         if not any(entry[0] == tag for entry in self.stack):
             return  # a stray end tag
@@ -430,18 +370,14 @@ def _apply(job: SavedJob, read: Read) -> None:
     job.read_error = None
     job.title, job.company = read.title, read.company or job.company
     job.location, job.remote = read.location, read.remote
-    where = area.classify(read.location)
-    job.area = area.Where.REMOTE.value if read.remote and where is not area.Where.IN_AREA else where.value
     job.description = clip(read.description, DESCRIPTION_MAX)
 
 
-def read(db: Session, url: str) -> Read:
-    """Read the posting a link leads to: its hiring system's API, else the page's
-    JobPosting. Unreadable, with the reason, when neither works."""
+def read(url: str) -> Read:
+    """Read the posting a link leads to, from the page's JobPosting. Unreadable,
+    with the reason, when it can't be."""
     if banned_link(url):
         raise Unreadable(BANNED)
-    if (board := board_job(url)) is not None:
-        return read_board(db, *board)
     return read_page(fetch_page(url))
 
 
@@ -458,7 +394,7 @@ def paste(db: Session, user: User, url: str) -> tuple[SavedJob, bool]:
     elif job.source != "pending":
         return job, False
     try:
-        _apply(job, read(db, url))
+        _apply(job, read(url))
     except Unreadable as reason:
         job.source, job.read_error = "pending", str(reason)[:300]
     db.flush()

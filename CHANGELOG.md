@@ -6,56 +6,26 @@ and why it matters, not what the diff says.
 
 ## [Unreleased]
 
+Job Hunt is now Sean's alone, and the only way jobs get in is the link he pastes: no crawling,
+no ranking (plan §10, decisions 7, 8 and 10). The discovery built earlier in 0.3 (an employer
+registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater Pittsburgh filter)
+never shipped and has been removed.
+
 ### Added
 - Saved jobs (#63): paste a link to a job you found anywhere, and Job Hunt reads the posting into
-  your list at /saved. A Greenhouse, Lever or Ashby link is read from that system's own API. Any
-  other page is opened once, and the job details most career pages embed for search engines are
-  read from it (both schema.org forms, JSON-LD and microdata, so SmartRecruiters pages work). When
-  neither works (a page built by script, a login, a bot check), the job is saved with the reason and
-  you paste the posting's text. Job Hunt never opens LinkedIn or Indeed links, stops at a bot check
-  rather than getting round it, and only opens pages on the public internet, checking every
-  redirect. Saved jobs are yours alone, and one outside Pittsburgh is kept and labelled, not
-  hidden: you chose it.
-- A `worker` service (#41) that runs scheduled jobs outside the web app: it's where the nightly
-  search for postings will run from 0.3. Each job runs once a day at its time in New York time; if
+  your list at /saved. The page is opened once and the job details it embeds for search engines
+  are read (both schema.org forms, JSON-LD and microdata, so Lever, Ashby and SmartRecruiters
+  pages work). When that fails (a page built by script, a login, a bot check, and Greenhouse's
+  job pages, which carry no job details), the job is saved with the reason and you paste the
+  posting's text. Job Hunt never opens LinkedIn or Indeed links, stops at a bot check rather than
+  getting round it, and only opens pages on the public internet, checking every redirect. Saved
+  jobs are yours alone.
+- A `worker` service (#41) that runs scheduled jobs outside the web app: it's where tailoring
+  and other background work will run. Each job runs once a day at its time in New York time; if
   the server was down for a few nights, it runs once when it's back, not once per missed night,
   and two workers can never run the same job at once. A job that fails is recorded and logged, and
   the others still run. The admin page lists each job with its last run and how it went. The first
   job is housekeeping, which keeps 90 days of that history.
-- A shared registry of Pittsburgh-area employers (#43), at Admin → The employer registry. The admin
-  pastes an employer's careers page on Greenhouse, Lever or Ashby. Job Hunt reads which hiring
-  system it is and the board's name from the URL, asks that system once to make sure the board
-  exists, and only then saves it. Any other URL is refused with the list of what's supported. An
-  employer can be disabled, and the nightly search (coming in 0.3) skips it. The registry is
-  shared by everyone and shows employers only, never whose search led to one.
-- A fixed definition of "Greater Pittsburgh" (#42), ready for job discovery in 0.3: the seven-county
-  metro (Allegheny, Armstrong, Beaver, Butler, Fayette, Washington, Westmoreland) plus anywhere
-  within 50 miles of downtown. Every job's location text is read against a table of the area's
-  towns, townships and boroughs from the Census Gazetteer, plus post-office names like Wexford
-  and Warrendale from GeoNames (CC BY 4.0). The result is in the area, remote, somewhere else,
-  or unknown, and unknown jobs are kept out rather than guessed. Pittsburg, Kansas is not
-  Pittsburgh, and a hybrid job in Cranberry is in the area.
-- The nightly search for jobs (#44). At 02:30 the worker asks each enabled employer in the registry
-  for its open jobs, one request each, through Greenhouse's, Lever's or Ashby's public job-board
-  API: no logins and no scraping. Each job is stored once, however many nights it's seen. One
-  that's missing from three successful fetches in a row is closed and kept for history, and a
-  board that's down doesn't close anything. If one employer's board fails, the rest are still
-  fetched, and the reason shows beside that employer on the registry page. Descriptions are kept
-  as plain text, never markup. A job whose location Job Hunt can't place is shown to no one, and
-  the admin page lists those locations with a count, so the places table grows from real misses.
-  Locations in another country ("Tokyo, Japan") and "Washington, D.C." are now read as outside
-  the area rather than unknown.
-- "Lancaster, PA" is no longer read as Pittsburgh-area. 25 townships in the seven counties share
-  their name with a town elsewhere in Pennsylvania: Lancaster Township in Butler County and the
-  city of Lancaster, Fairfield, Hanover, Hampton and others. A posting naming one of them alone is
-  now unknown, kept out and listed for the admin, while "Hampton Township, PA" is still in the
-  area. Found while seeding the registry: a Lancaster job was showing as local.
-- A Pittsburgh starter list for the employer registry. Admin → The employer registry → "Add the
-  starter list" adds every employer on it that isn't already there, in one click, so the nightly
-  search has boards to read from the first night instead of waiting for each one to be pasted in.
-  The list holds employers whose own Greenhouse, Lever or Ashby board had jobs in the area when it
-  was built. Any of them can be disabled, and a disabled one stays disabled if the list is added
-  again.
 
 ## [0.2.0] - 2026-11-19
 
