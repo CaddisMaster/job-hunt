@@ -5,8 +5,8 @@ answered on 2026-11-18, so the next step is filing the 0.1 issues.*
 
 A control center for job applications. Each night it finds jobs in the Pittsburgh area that match
 the user's resume and drafts the materials. Each morning the user opens one page, approves the
-applications they want, and a worker on the droplet fills them out. It is for Sean first, then
-invited family and friends.
+applications they want, and a worker fills them out. It is for Sean alone (2026-11-20, §10
+decision 7; it was planned for family and friends too).
 
 ## 1. Where it lives and what it's built on
 
@@ -51,6 +51,11 @@ Claude Code CLI into the image when no other app needs them.
   and measure.
 
 ## 2. Multiple users (family and friends)
+
+> **Superseded 2026-11-20 (§10 decision 7): Job Hunt is Sean's alone.** What's below was built in
+> 0.1–0.2 and stays: invites (now how Sean resets his own password), `user_id` on every private
+> table and the scoping rule, the Postgres rate limits, the spend caps. Nothing new is built for
+> other users, and one AI cap is enough.
 
 - **Invite only.** The admin creates accounts (Orbit Ops already has this, #282). No public
   sign-up.
@@ -116,8 +121,10 @@ default** (decided, §10).
    endpoints). Seed it from the target titles in the users' profiles (§3), not from a list
    decided up front: the first seed waits for Sean's resume (0.2). Widen it when other users join. Most reliable because the data is
    clean and structured.
-2. **Aggregator APIs:** Adzuna (free tier, radius search) and USAJobs (federal, free). These catch
-   employers missing from the registry, and a new one can be suggested for the registry.
+2. ~~Aggregator APIs: Adzuna and USAJobs~~. **Dropped 2026-11-20** (§10 decision 8): Adzuna's free
+   tier is 25 calls a day, and its links go through its own page. Built and closed unmerged (#65).
+   **Instead: paste a link (#63).** Sean finds a job anywhere, and Job Hunt reads the posting: from
+   the hiring system's API, from the page's schema.org `JobPosting`, or from text he pastes.
 3. **Never:** scraping LinkedIn or Indeed, or automating Easy Apply. Both ban it and do ban
    accounts, which is an especially bad risk to put family members' accounts at.
 
@@ -212,10 +219,10 @@ people's personal data, so check where `backup-export` sends them.
 |---|---|
 | **0.1** | Skeleton copied from Orbit Ops: auth, admin creating users, droplet tenant, release pipeline, `/healthz` |
 | **0.2** | Resume upload → structured profile → answer bank |
-| **0.3** | Discovery: employer registry, Greenhouse/Lever/Ashby, Adzuna, location filter, removing duplicates |
+| **0.3** | Discovery: employer registry, Greenhouse/Lever/Ashby, location filter, paste a link (#63), removing duplicates |
 | **0.4** | Scoring and the morning queue, with email and push. **Useful on its own:** apply by hand from good matches |
 | **0.5** | Tailored resumes and drafted answers, with the diff view |
-| **0.6** | Applier for Greenhouse/Lever/Ashby (review, then a human clicks Submit), plus Needs you. **Resize the droplet to 4 GB and measure memory before this ships** |
+| **0.6** | Applier for Greenhouse/Lever/Ashby (review, then a human clicks Submit), plus Needs you. The browser runs on Sean's Mac (#66, §10 decision 9), so revisit the droplet resize |
 | **0.7** | Pipeline board, reminders, stats |
 | **0.8+** | Email forwarding for status, general agent for unknown sites, Workday |
 
@@ -231,4 +238,12 @@ a 2 GB droplet) comes after the matching has proven worth it.
 | 3 | Droplet | **Resize to 4 GB before 0.6.** One host and one host role. The applier still runs one browser at a time with a memory limit. |
 | 4 | Remote jobs | **Per-user toggle, off by default.** Pittsburgh metro only unless the user turns remote on. |
 | 5 | Auto-submit | **Never.** A person always clicks the final Submit after seeing the screenshot. Not a setting, and not on the roadmap. |
-| 6 | First users | **Sean only** for now. No target roles are decided here: they come from Sean's uploaded resume (§3), and the registry is seeded from them (0.3). Multi-user scoping (§2) still gets built from 0.1. |
+| 6 | First users | **Sean only** for now (made permanent by decision 7). No target roles are decided here: they come from Sean's uploaded resume (§3), and the registry is seeded from them (0.3). Multi-user scoping (§2) still gets built from 0.1. |
+
+**Decided 2026-11-20 (Sean):**
+
+| # | Question | Decision |
+|---|---|---|
+| 7 | Who it's for | **Sean alone.** No family or friends. The multi-user plumbing already built stays; nothing new is built for others. |
+| 8 | Discovery beyond the registry | **Paste a link (#63)**, not aggregators: Adzuna and USAJobs dropped (#45 closed). Greenhouse, Lever and Ashby stay. |
+| 9 | Where the browser runs, and logins | **On Sean's Mac** (#66): a visible Playwright browser where he logs in himself. No password is ever stored. An honest browser: no stealth, and a challenge stops it (non-negotiable 9). |

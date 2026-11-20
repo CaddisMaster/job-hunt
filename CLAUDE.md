@@ -3,7 +3,7 @@
 A daily control center for job applications at **apply.seandesmet.com**. Each night it finds
 Pittsburgh-area jobs that match the user's resume and drafts the materials; each morning the user
 approves the ones they want, and a worker fills out the forms. A person always clicks the final
-Submit. Multi-user, invite only: Sean first, then family and friends. FastAPI + Postgres in Docker,
+Submit. **Sean's alone** (since 2026-11-20); the multi-user plumbing built in 0.1–0.2 stays. FastAPI + Postgres in Docker,
 the third tenant on the droplet shared with Budget Buddy and Orbit Ops. Built by copying Orbit Ops.
 
 > ⚠️ **This file is the always-loaded core and is kept small.** Detail lives in `docs/` and is

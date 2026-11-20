@@ -2,7 +2,7 @@
 
 A daily control center for job applications: finds Pittsburgh-area jobs that match a user's
 resume, drafts tailored materials overnight, and fills out the applications the user approves
-each morning. Multi-user, invite only, for Sean and family and friends.
+each morning. For Sean alone.
 
 **Status: v0.1.0 (the skeleton) in progress.** The whole plan is in [`docs/plan.md`](docs/plan.md).
 Its §10 decisions were answered on 2026-11-18. Running it locally: `CONTRIBUTING.md` §1.
