@@ -2,31 +2,63 @@
 
 *Reconcile this against `git log` and `gh issue list` at the start of a session.*
 
-**v0.2.0 is live** at apply.seandesmet.com (deployed 2026-11-19). v0.1.0 and v0.2.0 are closed.
-On `main` for v0.3.0: the worker (#41) and the employer registry (#43). #42 and #44–#47 are open.
+**v0.2.0 is live** at apply.seandesmet.com (deployed 2026-11-19). On `main` for v0.3.0, not yet
+released: the worker (#41), the employer registry (#43) with its Pittsburgh starter list, the
+area check (#42) and the nightly crawl from Greenhouse, Lever and Ashby (#44). Open in 0.3: #45,
+#46, #47, and #59 (parked).
 
 ## Pick up here
 
-1. **The API key (Mac):** the Mac session was briefed on 2026-11-19 (delivery unconfirmed) to put
-   `ANTHROPIC_API_KEY` into the droplet's `.env` and `job-hunt-env-prod`, then `up -d --no-deps web`.
-   Check it reported `True`. Then Sean builds his profile from his real resume: the first real
-   Claude call. Watch the cost it records against the $2/user and $10/key caps.
-2. **#44: fetch from Greenhouse, Lever and Ashby.** It's the next buildable issue. It reads
-   `employers.to_fetch(db)` (enabled only) and registers a `crawl` job at 02:30 in
-   `app/worker.py`'s `JOBS`. It records each employer's `last_fetched_at` and `last_error`, and the
-   counts only in `job_runs.summary`. The live APIs answer from the VM (checked 2026-11-19). The
-   registry is empty: Sean seeds it at /admin/employers from his confirmed target titles.
-3. **#42 (draft PR #48):** GeoNames' `US.zip` is blocked from **both** the VM and the Mac on this
-   network (connection refused within ~5 ms). Fetch it from another network, or find another
-   source for post-office names (Wexford, Warrendale). Then rebuild `app/data/places.csv` and
-   finish the PR.
-4. **Then** #46 (duplicates), #45 (Adzuna, USAJobs) and #47 (the Jobs page).
-5. **When v0.3.0 deploys:** the first release with the worker. Check `docker stats` on the
-   droplet (192 MB cap, 60 MB idle in dev) and that /admin shows housekeeping ran.
-6. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
+1. **#45: Adzuna and USAJobs.** Next to build; no migration needed (`postings.source` already
+   allows both). Blank keys = that source skipped. This is how UPMC, PNC, Highmark, CMU and
+   Covestro get in (see 3). Daily budget: `RateLimiter(name, budget, 86400)` from
+   `app/rate_limit.py`. Adzuna's `redirect_url` is Adzuna's own page, so the LinkedIn/Indeed drop
+   can only check the URL we're given. Unverified in the docs (check once Sean has keys): Adzuna's
+   US path (`/v1/api/jobs/us/search/<page>`), its radius parameter and unit, its free-tier limits,
+   and USAJobs' radius unit. The crawl's `Skip` when the registry is empty must change: skip only
+   if no source at all can run.
+2. **The API key (Mac), still unconfirmed:** check `ANTHROPIC_API_KEY` reached the droplet's
+   `.env` and `job-hunt-env-prod`, then Sean builds his profile from his real resume.
+3. **#59 Workday is parked.** The migration shipped (#62); the fetcher is on the **local,
+   unpushed** branch `59-workday` (`6e14af9`). Cloudflare answered the app's requests with a bot
+   challenge (`429`, `cf-mitigated: challenge`) after about 15 requests in a few minutes, so it's
+   off the table unless Adzuna's coverage of those employers is thin. UPMC's feed refuses anything
+   but a browser on UPMC's page. Neither is to be got around (non-negotiable 9, and Job Hunt always
+   identifies itself).
+4. **Then #46 (duplicates) and #47 (the Jobs page).** #63 (paste a link, Job Hunt does the rest)
+   is a fallback idea, only if discovery stays thin after 0.3 runs for a couple of weeks.
+5. **Area follow-ups seen in the first real crawl's unknown list:** "Mexico City" (no country
+   named), "Onsite- Salem, OR" (a dash without a space isn't split), "United States" alone.
+6. **When v0.3.0 deploys:** run `alembic upgrade head` (the release does it), press "Add the
+   starter list" at /admin/employers, and watch the worker's memory during the 02:30 crawl
+   (`docker stats`, 192 MB cap; 62 MB in dev after a crawl run as a separate process).
+7. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
    the VM's Python 3.12. Close them and exclude `infra/` the way Job Hunt's #38 did.
 
 ## Sessions
+
+**2026-11-19 (evening).**
+- **Merged:** #48 (closes #42: Greater Pittsburgh, with GeoNames' post-office names), #57 + #58
+  (closes #44: the `postings` table, then the crawl), #60 (same-named townships), #61 (the
+  starter list), #62 (Workday's migration). Filed #59 (Workday, parked) and #63 (the fallback).
+- **Verified in dev:** the starter list's 25 employers crawled for real: 4,151 jobs, 365 shown,
+  119 unknown, no errors.
+- **Learned:**
+  - Run new parsers against live boards before merging. That found Ashby's `isRemote` being
+    true for hybrid jobs, foreign cities and "D.C." coming out `unknown`, and Lancaster/Fairfield
+    (townships here, towns out east) counting as local.
+  - Seeding the registry from target titles (plan §4) left the search idle; a probed starter
+    list replaced it. Most of the region's biggest employers aren't on Greenhouse, Lever or
+    Ashby.
+  - Cloudflare in front of Workday challenges bursts of automated requests; UPMC's job feed
+    checks where requests come from. Auto mode also blocks calling a vendor's undocumented
+    endpoint until Sean approves it.
+  - `./test.sh` migrates only `apply_test`; the dev database needs `alembic upgrade head` after
+    pulling migrations.
+  - `gh pr merge --delete-branch` also deletes the local branch, so `git rebase --onto` needs
+    the old commit, not the branch name.
+  - GeoNames was reachable from the VM in the evening (blocked in the morning on the work network).
+- **From now on:** no Claude attribution in commits or PR bodies (Sean, 2026-11-19).
 
 **2026-11-19 (afternoon).**
 - **0.3 started:** `job_runs` (#50), the worker (#51, closes #41), `employers` (#52) and the
@@ -67,13 +99,5 @@ On `main` for v0.3.0: the worker (#41) and the employer registry (#43). #42 and 
   - `request.form()` holds Starlette's `UploadFile`, not FastAPI's subclass.
   - The VM can reach census.gov but not geonames.org from Sean's work network.
   - unattended-upgrades does cover `noble-security` on the droplet.
-
-**2026-11-18.** Planned the app, answered the §10 decisions, created the repo and filed #1–#5.
-Built all five: #1–#4 merged (#6–#9), #10 open. Stacked PRs were landed by merging `main` into
-each next branch (force-push is blocked), keeping the branch's side of each add/add conflict and
-checking the tree didn't change. Found that Orbit Ops's `infra/requirements-infra.txt` pins
-`ansible-core==2.22.0` (its Dependabot #419), which needs Python 3.13 — the VM has 3.12, and
-droplet-infra pins 2.21.5. Job Hunt pins 2.21.5; Orbit Ops's own `infra/test.sh` is broken until
-it does too.
 
 Decisions are in `docs/plan.md` §10 (answered 2026-11-18).
