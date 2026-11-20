@@ -9,11 +9,11 @@ saved job is a 404, the same as one that doesn't exist.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from app import answers, saved, tailor
+from app import answers, applications, saved, tailor
 from app import profile as profiles
 from app.db import get_db
 from app.models import SavedJob, User
@@ -33,6 +33,18 @@ def _tailored(db: Session, user: User, job: SavedJob) -> dict | None:
         "left_out": row.left_out,
         "pdf": f"/api/jobs/{job.id}/resume.pdf",
         "pdf_filename": tailor.filename(row, job),
+    }
+
+
+def _application(row) -> dict | None:
+    if row is None:
+        return None
+    return {
+        "outcome": row.outcome,
+        "note": row.note,
+        "answers_used": row.answers_used,
+        "has_screenshot": row.screenshot is not None,
+        "recorded_at": row.recorded_at.isoformat(),
     }
 
 
@@ -70,9 +82,13 @@ def package(job_id: int, user: User = Depends(require_token), db: Session = Depe
     confirmed = profile is not None and profile.reviewed_at is not None
     bank = answers.for_user(db, user)
     tailored = _tailored(db, user, job)
+    host = applications.host_of(job.url)
+    note = applications.site_note(db, user, host)
     return {
         "job": {**_job(job, tailored), "posting": job.description},
         "tailored_resume": tailored,
+        "application": _application(applications.get(db, user, job)),
+        "site": {"host": host, "note": note.note if note else None},
         "resume": {"filename": resume.filename, "text": resume.text} if resume else None,
         "profile": profile.data if confirmed else None,
         "answers": {
@@ -175,3 +191,71 @@ def send_profile(body: profiles.ProfileData, user: User = Depends(require_token)
     except profiles.NoResume:
         return JSONResponse({"error": "Upload a resume with text in it first, on the Profile page."}, status_code=409)
     return {"profile": profile.data, "left_out": left_out, "confirmed": False, "review": "/profile/review"}
+
+
+# ---- Applying (#76) ----------------------------------------------------------------------------
+
+
+@router.get("/apply/next")
+def next_job(user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """The oldest job with an approved tailored resume and nothing recorded yet;
+    204 when there's none."""
+    job = applications.next_job(db, user)
+    if job is None:
+        return Response(status_code=204)
+    return _job(job, _tailored(db, user, job))
+
+
+class AnswerUsed(BaseModel):
+    question: str = Field(max_length=500)
+    answer: str = Field(max_length=2000)
+
+
+class Recorded(BaseModel):
+    outcome: str = Field(max_length=16)
+    note: str = Field(default="", max_length=applications.NOTE_MAX + 100)
+    answers_used: list[AnswerUsed] = Field(default_factory=list, max_length=200)
+    screenshot_png_base64: str | None = Field(default=None, max_length=7_200_000)
+
+
+@router.post("/jobs/{job_id}/application", status_code=201)
+def record_application(job_id: int, body: Recorded, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """What happened when a session applied: submitted (Sean clicked Submit), or
+    stopped and why. Recording again replaces it."""
+    job = saved.get(db, user, job_id)
+    try:
+        row = applications.record(
+            db, user, job, outcome=body.outcome, note=body.note,
+            answers_used=[a.model_dump() for a in body.answers_used], screenshot_b64=body.screenshot_png_base64,
+        )  # fmt: skip
+    except applications.Invalid as error:
+        db.rollback()
+        return JSONResponse({"error": str(error)}, status_code=422)
+    db.commit()
+    return _application(row)
+
+
+@router.get("/site-notes/{host}")
+def get_site_note(host: str, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    try:
+        host = applications.clean_host(host)
+    except applications.Invalid as error:
+        return JSONResponse({"error": str(error)}, status_code=422)
+    note = applications.site_note(db, user, host)
+    return {"host": host, "note": note.note if note else None, "updated_at": note.updated_at.isoformat() if note else None}
+
+
+class SiteNoteBody(BaseModel):
+    note: str = Field(max_length=applications.SITE_NOTE_MAX + 100)
+
+
+@router.put("/site-notes/{host}")
+def put_site_note(host: str, body: SiteNoteBody, user: User = Depends(require_token), db: Session = Depends(get_db)):
+    """Save what was learned about a site's application flow, replacing the old note."""
+    try:
+        row = applications.save_site_note(db, user, host, body.note)
+    except applications.Invalid as error:
+        db.rollback()
+        return JSONResponse({"error": str(error)}, status_code=422)
+    db.commit()
+    return {"host": row.host, "note": row.note}
