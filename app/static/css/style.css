@@ -82,6 +82,7 @@ th { font-size: .85rem; color: var(--muted); font-weight: 600; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: .25rem 1rem; margin: .75rem 0; }
 .facts dt { font-weight: 500; }
 .facts dd { margin: 0; }
+code.token { overflow-wrap: anywhere; user-select: all; }
 .posting { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 70ch; }
 .sources { font-size: .9rem; color: var(--muted, inherit); margin: .25rem 0 1rem; padding-left: 1.1rem; }
 .sources li { margin: .15rem 0; overflow-wrap: anywhere; }

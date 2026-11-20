@@ -9,6 +9,7 @@ and xdist workers share the database.
 
 import os
 import re
+import time
 import uuid
 
 # Must be set before app.config is first imported (Settings is cached).
@@ -37,6 +38,15 @@ _CSRF_RE = re.compile(r'name="csrf_token" value="([^"]+)"')
 
 def unique_address() -> str:
     return f"test-{uuid.uuid4().hex[:16]}"
+
+
+def fresh_rate_window(window_seconds: int = 60, need_seconds: float = 15) -> None:
+    """Wait, if need be, until a fixed rate-limit window has `need_seconds` left.
+    Windows are aligned to the clock (app/rate_limit.py), so a burst of requests that
+    straddles a minute boundary is counted in two windows and a limit test flakes."""
+    left = window_seconds - time.time() % window_seconds
+    if left < need_seconds:
+        time.sleep(left + 0.05)
 
 
 def _forget_rate_limits(address: str) -> None:

@@ -12,6 +12,13 @@ registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater P
 never shipped and has been removed.
 
 ### Added
+- Access tokens and a small JSON API (#74), so Claude Code on Sean's Mac can work with Job Hunt:
+  list his saved jobs, fetch everything for one (the posting, his resume's text, his confirmed
+  profile and his answer bank), and add an answer he gave during an application to the answer
+  bank, checked the way the answers page checks it. Tokens are made on the Profile page, shown
+  once, stored only as a hash, and can be revoked. The API takes only a token, never the login
+  cookie, and wrong tokens are rate-limited. This is the bridge that tailoring and applying from
+  Claude Code are built on.
 - Saved jobs (#63): paste a link to a job you found anywhere, and Job Hunt reads the posting into
   your list at /saved. The page is opened once and the job details it embeds for search engines
   are read (both schema.org forms, JSON-LD and microdata, so Lever, Ashby and SmartRecruiters
