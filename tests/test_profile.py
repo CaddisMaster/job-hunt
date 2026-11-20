@@ -209,3 +209,13 @@ def test_someone_elses_profile_is_never_shown(with_resume, user, client, make_us
     login(client, other.email)
     assert client.get("/profile/review", follow_redirects=False).status_code == 303  # they have none
     assert "Allegheny" not in client.get("/profile").text
+
+
+def test_a_session_can_read_the_resume_and_profile_to_build_from(with_resume, user):
+    before = with_resume.get("/api/profile", headers=bearer(with_resume.token)).json()
+    assert before["resume"]["text"].startswith("Jordan Example") and before["profile"] is None
+    assert before["confirmed"] is False and before["built_from_newest_resume"] is False
+    build(with_resume)
+    after = with_resume.get("/api/profile", headers=bearer(with_resume.token)).json()
+    assert after["profile"]["skills"][0]["value"] == "account reconciliation" and after["built_from_newest_resume"] is True
+    assert with_resume.get("/api/profile").status_code == 401  # the session cookie alone doesn't open it

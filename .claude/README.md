@@ -7,6 +7,8 @@ fixing. Ported from Orbit Ops (#13).
 ```
 .claude/
   commands/wrap.md          # /wrap — the end-of-session sequence
+  skills/apply/SKILL.md     # /apply — tailor the resume, fill the application, Sean clicks Submit (docs/apply.md)
+  skills/profile/SKILL.md   # /profile — read the resume into the profile, for Sean to confirm
   hooks/changelog-guard.sh  # Stop hook: the CHANGELOG rule, locally (mirrors changelog.yml)
   settings.json             # permission allowlist + hook wiring
 ```

@@ -115,6 +115,10 @@ def get_job_package(args: dict) -> object:
     return _call("GET", f"/api/jobs/{_job_id(args)}/package")
 
 
+def get_resume_and_profile(args: dict) -> object:
+    return _call("GET", "/api/profile")
+
+
 def send_profile(args: dict) -> object:
     return _call("POST", "/api/profile", args.get("profile") or {})
 
@@ -176,6 +180,7 @@ TOOLS: dict[str, tuple] = {
     "list_jobs": (list_jobs, "List my saved jobs in Job Hunt, newest first, with whether each is ready to apply to.", {}, []),
     "next_job": (next_job, "The next job to apply to: the oldest one with an approved tailored resume and nothing recorded yet.", {}, []),
     "get_job_package": (get_job_package, "Everything for one job: the posting, my resume's text, my confirmed profile, my answer bank, the tailored resume if any, and Claude's note for the job's site.", _JOB, ["job_id"]),
+    "get_resume_and_profile": (get_resume_and_profile, "My base resume's text and my current profile (and whether I've confirmed it), to build or rebuild the profile from.", {}, []),
     "send_profile": (send_profile, "Send what was read from my resume, to be checked against it and stored as my profile (I confirm it on the website). Every item must quote its exact resume line in `source`.", {"profile": {"type": "object", "description": "roles: [{title, employer, start, end, source}], skills/education/certifications: [{value, source}], total_years, seniority (entry|mid|senior|lead|executive|unknown), target_titles: [str]", "properties": {"roles": {"type": "array"}, "skills": {"type": "array", "items": _ROLE_ITEM}, "education": {"type": "array", "items": _ROLE_ITEM}, "certifications": {"type": "array", "items": _ROLE_ITEM}}}}, ["profile"]),
     "send_tailored_resume": (send_tailored_resume, "Send a tailored resume for one job: which of my resume's lines to use, in order. Job Hunt checks every line against my resume and confirmed profile, makes the PDF, and says what it left out and why. Copy lines verbatim; choose roles by role_number (1 = the profile's first role).", {**_JOB, "resume": {"type": "object", "description": "name, contact: [str], summary: [str], roles: [{role_number, bullets: [str]}], skills: [str], education: [str], certifications: [str]"}}, ["job_id", "resume"]),
     "approve_tailored_resume": (approve_tailored_resume, "Approve the job's tailored resume, only after I've said so: it's then the one used to apply.", _JOB, ["job_id"]),
