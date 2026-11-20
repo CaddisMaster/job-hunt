@@ -233,3 +233,30 @@ class SavedJob(Base):
     description: Mapped[str] = mapped_column(Text, default="", server_default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class TailoredResume(Base):
+    """A resume tailored to one saved job (#73). **Private** to its user
+    (non-negotiable 1); one per saved job, replaced when remade.
+
+    `content` is what the PDF shows, every line already checked against the resume
+    (non-negotiable 7); `left_out` is what the model wrote that the resume doesn't
+    support, shown to the user and never printed. Only an approved one
+    (`approved_at`) is used to apply."""
+
+    __tablename__ = "tailored_resumes"
+    __table_args__ = (
+        UniqueConstraint("saved_job_id", name="tailored_resumes_saved_job"),
+        Index("tailored_resumes_user", "user_id"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    saved_job_id: Mapped[int] = mapped_column(ForeignKey("saved_jobs.id", ondelete="CASCADE"))
+    resume_id: Mapped[int | None] = mapped_column(ForeignKey("resumes.id", ondelete="SET NULL"))
+    content: Mapped[dict] = mapped_column(JSONB)
+    left_out: Mapped[list] = mapped_column(JSONB, default=list, server_default="[]")
+    pdf: Mapped[bytes] = mapped_column(LargeBinary)
+    model: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    approved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
