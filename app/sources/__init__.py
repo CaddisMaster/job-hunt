@@ -17,6 +17,7 @@ import time
 from dataclasses import dataclass
 from html import unescape
 from html.parser import HTMLParser
+from urllib.parse import urlsplit
 
 import httpx2
 
@@ -45,6 +46,16 @@ class Found:
     remote: bool = False
     latitude: float | None = None
     longitude: float | None = None
+
+
+# Never LinkedIn or Indeed, not even a link to them (non-negotiable 9).
+BANNED_HOSTS = ("linkedin.com", "lnkd.in", "indeed.com")
+
+
+def banned_link(url: str) -> bool:
+    """Is this link on LinkedIn or Indeed (any subdomain)?"""
+    host = (urlsplit(url).hostname or "").lower()
+    return any(host == banned or host.endswith("." + banned) for banned in BANNED_HOSTS)
 
 
 def user_agent() -> str:

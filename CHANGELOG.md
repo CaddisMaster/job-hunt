@@ -7,6 +7,15 @@ and why it matters, not what the diff says.
 ## [Unreleased]
 
 ### Added
+- Saved jobs (#63): paste a link to a job you found anywhere, and Job Hunt reads the posting into
+  your list at /saved. A Greenhouse, Lever or Ashby link is read from that system's own API. Any
+  other page is opened once, and the job details most career pages embed for search engines are
+  read from it (both schema.org forms, JSON-LD and microdata, so SmartRecruiters pages work). When
+  neither works (a page built by script, a login, a bot check), the job is saved with the reason and
+  you paste the posting's text. Job Hunt never opens LinkedIn or Indeed links, stops at a bot check
+  rather than getting round it, and only opens pages on the public internet, checking every
+  redirect. Saved jobs are yours alone, and one outside Pittsburgh is kept and labelled, not
+  hidden: you chose it.
 - A `worker` service (#41) that runs scheduled jobs outside the web app: it's where the nightly
   search for postings will run from 0.3. Each job runs once a day at its time in New York time; if
   the server was down for a few nights, it runs once when it's back, not once per missed night,

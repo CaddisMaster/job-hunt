@@ -8,7 +8,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import get_settings
-from app.routers import admin, auth, invite, main, profile
+from app.routers import admin, auth, invite, main, profile, saved
 from app.security import CSRFError, HeadAsGetMiddleware, LoginRequired, SecurityHeadersMiddleware, csrf_protect
 from app.static_files import STATIC_DIR, CachedStaticFiles
 from app.templating import templates
@@ -50,6 +50,7 @@ def create_app() -> FastAPI:
     app.include_router(invite.router)
     app.include_router(admin.router)
     app.include_router(profile.router)
+    app.include_router(saved.router)
 
     @app.exception_handler(LoginRequired)
     async def _login_required(request: Request, exc: LoginRequired) -> Response:

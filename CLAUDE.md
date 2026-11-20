@@ -48,11 +48,12 @@ app/area.py          is a location in Greater Pittsburgh? offline, from app/data
 app/employers.py     the shared employer registry: careers URL → (system, token), one live board check, to_fetch(), the starter list (app/data/employers.csv)
 app/worker.py        the `worker` service: scheduled jobs (JOBS: crawl, housekeeping), due once a day, advisory-locked, runs in job_runs
 app/sources/         one module per hiring system's public API (greenhouse, lever, ashby): fetch → Found; plain_text() for descriptions
+app/saved.py         saved jobs (#63): a pasted link → board API, the page's JobPosting (JSON-LD or microdata), or pasted text; SSRF-guarded
 app/postings.py      the shared postings: record() a fetch (update, add, close after 3 misses), shown(), unknown_locations()
 app/templating.py    the shared Jinja env (app_version, static_url, pop_flash globals)
 app/static_files.py  static_url (?v= per release) and Cache-Control on /static
-app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin, /admin/employers), profile.py (/profile)
-alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 employers, 0010 postings, 0011 workday)
+app/routers/         main.py (dashboard, /healthz), auth.py (login/logout), invite.py (/invite/<token>), admin.py (/admin, /admin/employers), profile.py (/profile), saved.py (/saved)
+alembic/versions/    migrations (0001 the apply_app role, 0002 users + rate_limits, 0003 invites + disabled_at, … 0008 job_runs, 0009 employers, 0010 postings, 0011 workday, 0012 saved_jobs)
 .claude/             /wrap (end of session), the changelog Stop hook, the allowlist — see its README
 infra/               the droplet as code: ansible/ (the app role on droplet-infra's pinned host role), systemd/ (backup units), test.sh (LXD)
 scripts/             create_user.py (bootstrap the first admin), build_places.py (app/data), check_criteria.py (CI), install_compose.sh + backup_db.sh (deploy)

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title or 'Saved job' }} · Job Hunt{% endblock %}
+{% block content %}
+<p><a href="/saved">← Saved jobs</a></p>
+<section class="card">
+  <h1>{{ job.title or 'A job waiting for its text' }}</h1>
+  <dl class="facts">
+    <dt>Company</dt><dd>{{ job.company or '—' }}</dd>
+    <dt>Where</dt><dd>{{ job.location or '—' }}{% if job.area == 'out_of_area' %} (outside Pittsburgh){% elif job.area == 'remote' %} (remote){% endif %}</dd>
+    <dt>Link</dt><dd><a href="{{ job.url }}" rel="noopener noreferrer" target="_blank">{{ job.url }}</a></dd>
+    <dt>Read from</dt><dd>{{ {'greenhouse': 'Greenhouse', 'lever': 'Lever', 'ashby': 'Ashby', 'page': 'the page', 'text': 'your text', 'pending': 'nothing yet'}[job.source] }}</dd>
+  </dl>
+  {% if job.description %}<div class="posting">{{ job.description }}</div>{% endif %}
+</section>
+
+{% if job.source == 'pending' %}
+<section class="card">
+  <h2>Paste the posting</h2>
+  {% if job.read_error %}<p class="alert" role="alert">{{ job.read_error }}</p>{% endif %}
+  {% if error %}<p class="alert" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/saved/{{ job.id }}/text">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <label>Title <input name="title" required maxlength="300" value="{{ form.title if form else '' }}"></label>
+    <label>Company <input name="company" maxlength="200" value="{{ form.company if form else job.company }}"></label>
+    <label>Location <input name="location" maxlength="500" value="{{ form.location if form else '' }}" placeholder="Pittsburgh, PA"></label>
+    <label>The posting's text <textarea name="text" rows="14" required>{{ form.text if form else '' }}</textarea></label>
+    <button type="submit" class="primary">Save the text</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="card">
+  <form method="post" action="/saved/{{ job.id }}/delete" class="inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <button type="submit" class="danger">Remove this job</button>
+  </form>
+</section>
+{% endblock %}
