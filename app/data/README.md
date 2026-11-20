@@ -13,3 +13,15 @@ it by hand.
   [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Changes: filtered to the seven
   counties, one row per name, with each one's county and coordinates. They add the names job
   postings use that aren't municipalities (Wexford, Warrendale, Gibsonia…).
+
+## employers.csv
+
+The Pittsburgh starter list for the employer registry (Admin → The employer registry → "Add the
+starter list"). Each row is an employer whose own Greenhouse, Lever or Ashby job board answered
+its public API on 2026-11-19 with at least one job that `app/area.py` placed in the area.
+
+How it was built: about 330 candidate employers (Pittsburgh companies, and national ones with
+Pittsburgh offices) were tried on all three systems under the obvious board names; 99 boards
+answered, and the 25 with jobs in the area are here. Employers on Workday, Taleo and other systems
+aren't (#59, #45). A board that has since closed shows as an error on its employer, not a failure.
+

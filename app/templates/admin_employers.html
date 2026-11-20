@@ -18,6 +18,15 @@
 </section>
 
 <section class="card">
+  <h2>The Pittsburgh starter list</h2>
+  <p class="muted">{{ starter_count }} employers whose own job board had jobs in the area when the list was built. Adds the ones not already here; a disabled one stays disabled.</p>
+  <form method="post" action="/admin/employers/starters" class="inline">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+    <button type="submit">Add the starter list</button>
+  </form>
+</section>
+
+<section class="card">
   <h2>Employers</h2>
   {% if employers %}
   <div class="table-wrap">

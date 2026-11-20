@@ -109,6 +109,7 @@ def _employers_page(request: Request, db: Session, me: User, *, status: int = 20
         "employers": employers.all_employers(db),
         "systems": employers.SYSTEMS,
         "supported": employers.SUPPORTED,
+        "starter_count": len(employers.starters()),
         **extra,
     }
     return templates.TemplateResponse(request, "admin_employers.html", context, status_code=status)
@@ -134,6 +135,14 @@ def add_employer(
         return _employers_page(request, db, me, error=str(error), form={"careers_url": careers_url, "name": name}, status=422)
     db.commit()
     flash(request, f"Added {employer.name} ({employers.SYSTEMS[employer.system]}, “{employer.token}”).")
+    return RedirectResponse("/admin/employers", status_code=303)
+
+
+@router.post("/employers/starters")
+def add_starter_employers(request: Request, me: User = Depends(require_admin), db: Session = Depends(get_db)):
+    added, already = employers.add_starters(db, me)
+    db.commit()
+    flash(request, f"Added {added} employer{'' if added == 1 else 's'} from the Pittsburgh starter list ({already} already here).")
     return RedirectResponse("/admin/employers", status_code=303)
 
 

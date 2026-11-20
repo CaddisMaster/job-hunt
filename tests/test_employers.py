@@ -210,3 +210,55 @@ def test_a_user_who_isnt_the_admin_gets_404(client, make_user, board_api, token)
     assert saved(token).enabled is True
     assert board_api.asked == []
 
+
+
+# ---- The starter list -----------------------------------------------------------------
+
+
+@pytest.fixture
+def starter_csv(tmp_path, monkeypatch):
+    """A starter list of three made-up boards, one with a bad token, cleaned up after."""
+    tokens = [f"test-{uuid.uuid4().hex[:12]}" for _ in range(2)]
+    path = tmp_path / "employers.csv"
+    path.write_text(
+        "name,system,token\n"
+        f"Alpha Co,greenhouse,{tokens[0]}\n"
+        f"Beta Co,ashby,{tokens[1]}\n"
+        "Evil Co,greenhouse,../../etc\n"
+        f"Gamma Co,workday,{tokens[0]}\n"
+    )
+    monkeypatch.setattr(employers, "STARTERS", path)
+    yield tokens
+    with SessionLocal() as db:
+        db.execute(delete(Employer).where(Employer.token.in_(tokens)))
+        db.commit()
+
+
+def test_the_starter_list_adds_only_valid_rows_once(admin_client, starter_csv, board_api):
+    response = admin_client.post("/admin/employers/starters", data={"csrf_token": csrf(admin_client)}, follow_redirects=True)
+    assert "Added 2 employers from the Pittsburgh starter list (0 already here)." in response.text
+    alpha, beta = saved(starter_csv[0]), saved(starter_csv[1])
+    assert (alpha.name, alpha.system, alpha.careers_url) == ("Alpha Co", "greenhouse", f"https://boards.greenhouse.io/{starter_csv[0]}")
+    assert (beta.system, beta.careers_url) == ("ashby", f"https://jobs.ashbyhq.com/{starter_csv[1]}")
+    assert board_api.asked == []  # no live check per row
+
+    with SessionLocal() as db:
+        db.scalar(select(Employer).where(Employer.token == starter_csv[0])).enabled = False
+        db.commit()
+    response = admin_client.post("/admin/employers/starters", data={"csrf_token": csrf(admin_client)}, follow_redirects=True)
+    assert "Added 0 employers from the Pittsburgh starter list (2 already here)." in response.text
+    assert saved(starter_csv[0]).enabled is False  # a disabled one stays disabled
+
+
+def test_the_starter_list_needs_an_admin(client, logged_in, starter_csv):
+    response = client.post("/admin/employers/starters", data={"csrf_token": csrf(client)}, follow_redirects=False)
+    assert response.status_code == 404
+    assert saved(starter_csv[0]) is None
+
+
+def test_the_shipped_starter_list_is_valid():
+    rows = employers.starters()
+    assert len(rows) >= 20
+    with employers.STARTERS.open() as f:
+        assert sum(1 for _ in f) - 1 == len(rows)  # every row passed the checks
+    assert len({board for _, board in rows}) == len(rows)  # no board twice
