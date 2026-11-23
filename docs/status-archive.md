@@ -2,6 +2,26 @@
 
 Older sessions from `docs/status.md`, unchanged, newest first.
 
+**2026-11-19 (afternoon).**
+- **0.3 started:** `job_runs` (#50), the worker (#51, closes #41), `employers` (#52) and the
+  registry at /admin/employers (#53, closes #43). The 0.3 PRs other than #50 were held, green,
+  until v0.2.0 shipped.
+- **v0.2.0 released and deployed** (#55, run 44591442318). The backup chain was run early
+  instead of waiting for the timers: the droplet dump started from the Mac, the VM pull, then
+  the Mac's restore drill. That closed #5 and #21 (#54).
+- **Learned:**
+  - Releases are cut from `main`, so the next milestone mustn't merge before the current one is
+    released. #50 slipped into 0.2.0; it's an empty table, so it's harmless.
+  - Merging `main` into a held branch after `[Unreleased]` became `[0.2.0]` put the branch's
+    changelog entry in the released section, with no conflict.
+  - `gh pr merge --delete-branch` on a stack's base **closes** the PR above it. Retarget first.
+  - Before a tenant's first nightly timer, `backup-export` hands over the pre-deploy dump, which
+    has no tables.
+  - A dump restores into a fresh Postgres only once the roles `apply` and `apply_app` exist
+    (RUNBOOK §6).
+  - `gh release create --target` takes a branch or a full SHA, not a short one.
+  - GeoNames is blocked from the Mac too, not just the VM.
+
 **2026-11-19 (morning).**
 - **v0.1.0:** landed #10 after its LXD test caught a real ordering bug (the role checked `.env`
   before the deploy key and had already changed the host). Made the repo public, because a private
