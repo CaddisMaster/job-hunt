@@ -12,6 +12,8 @@ registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater P
 never shipped and has been removed.
 
 ### Added
+- Rebuild my profile (#96): the Profile page offers it whenever a profile exists, not only when a
+  newer resume has made it stale. The rebuilt profile needs confirming again.
 - Apply from the web app (#88). An Apply button on a saved job's page (and Build my profile on the
   Profile page) queues a run. The runner on the VM picks it up and does it with Claude Code. A Run
   panel on the page shows what it's doing and asks Sean anything it needs, right there. That

@@ -41,6 +41,14 @@
       <button type="submit" class="primary">{{ 'Rebuild' if profile else 'Build' }} my profile</button>
     </form>
     {% endif %}
+  {% elif base and base.text and profile %}
+    {% if not run or run.status not in ('queued', 'running') %}
+    <form method="post" action="/profile/build" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token(request) }}">
+      <button type="submit">Rebuild my profile</button>
+    </form>
+    <p class="muted">Claude Code reads {{ base.filename }} again. The rebuilt profile replaces this one, and you confirm it again on the review page.</p>
+    {% endif %}
   {% elif base and not base.text and not profile %}
     <p class="muted">Your base resume has no text in it, so a profile can't be built from it.</p>
   {% endif %}

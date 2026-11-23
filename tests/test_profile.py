@@ -200,6 +200,32 @@ def test_rebuilding_resets_the_review(with_resume, user):
     assert stored(user).reviewed_at is None
 
 
+def profile_runs(user) -> list:
+    from app.models import Run
+
+    with SessionLocal() as db:
+        return list(db.scalars(select(Run.status).where(Run.user_id == user.id, Run.kind == "profile")))
+
+
+@pytest.mark.criterion(96, "I can rebuild a current profile")
+def test_a_current_profile_can_be_rebuilt(with_resume, user):
+    build(with_resume)
+    page = with_resume.get("/profile").text
+    assert "isn't the one this profile was built from" not in page  # current, not stale
+    assert "Rebuild my profile" in page and "you confirm it again on the review page" in page
+    with_resume.post("/profile/build", data={"csrf_token": csrf(with_resume)})
+    assert profile_runs(user) == ["queued"]
+
+
+@pytest.mark.criterion(96, "No second run while one is going")
+def test_no_build_button_while_a_profile_run_is_going(with_resume, user):
+    with_resume.post("/profile/build", data={"csrf_token": csrf(with_resume)})  # no profile yet
+    assert "Build my profile" not in with_resume.get("/profile").text
+    build(with_resume)  # a profile arrives while the run is still queued
+    assert "Rebuild my profile" not in with_resume.get("/profile").text
+    assert profile_runs(user) == ["queued"]
+
+
 def test_someone_elses_profile_is_never_shown(with_resume, user, client, make_user):
     from tests.conftest import login
 
