@@ -2,8 +2,9 @@
 
 *Reconcile this against `git log` and `gh issue list` at the start of a session.*
 
-**v0.2.0 is live** at apply.seandesmet.com (deployed 2026-11-19). **Everything below is on `main`,
-not released**: production is still at migration 0008, and v0.3.0 goes straight to 0013.
+**v0.3.0 is live** at apply.seandesmet.com (deployed 2026-11-23, release run 45253184143, migration
+0013). The runner on the VM and the `jobhunt` MCP server point at production, with a production
+token. `main` is one tooling fix past the release (#100).
 
 **How it works now** (plan §10 decisions 7–11, and the box at the top of the plan): Job Hunt is
 Sean's alone. He pastes job links into **Saved jobs**. Pressing **Apply** on a job (or **Build my
@@ -16,22 +17,23 @@ The web app makes no Claude calls. No crawling, no ranking. Setup and use: `docs
 
 ## Pick up here
 
-1. **Release v0.3.0** (the release PR moves `[Unreleased]` to `[0.3.0]`). It needs Sean's
-   `production` approval. Production goes from migration 0008 straight to 0013. Then:
-   - Sean makes a token on **production's** Profile page and replaces `~/.config/jobhunt/token`;
-   - `tools/apply-services.sh install` (no URL means production) points the runner at it;
-   - `claude mcp` for `jobhunt` is re-added without `JOBHUNT_URL`.
-2. **After the release, the Mac session:** take `ANTHROPIC_API_KEY` and the two
-   `AI_MONTHLY_BUDGET_*` keys out of the droplet's `.env` and `job-hunt-env-prod`. They're unused
-   since #80, and harmless until then (`extra="ignore"`).
-3. **Still untested end to end:** filling a real form and the Submit step. The one real run (UPMC,
-   Taleo) stopped at the site's sign-in page. A Lever or Ashby job has no account wall.
+1. **Sean sets up production's data** (nothing came over from dev): upload the resume, press
+   **Build my profile** and confirm it, fill in the answer bank. Production has no profile yet.
+2. **The first full apply, on production:** a Lever or Ashby job (no account wall), Screen Sharing
+   open, **Apply**. Filling a real form and the Submit step are still untested: the one real run
+   (UPMC, Taleo, 2026-11-20) stopped at the site's sign-in. Watch `tools/apply-services.sh logs`.
+3. **The Mac session:** take `ANTHROPIC_API_KEY` and the two `AI_MONTHLY_BUDGET_*` keys out of the
+   droplet's `.env` and `job-hunt-env-prod` (unused since #80; harmless, `extra="ignore"`). Also
+   check the new `worker` container is up there (`docker compose ps` in `/opt/apply`): `/healthz`
+   only covers `web`.
 4. **Open issues waiting on Sean's choice before criteria:** #94 (tailored resume in his own
    format: is there a .docx?), #92 (the browser inside the web app: noVNC, a view-only picture, or
    both), #93 (a calmer saved-job page: mock first).
 5. **Small things:**
    - pasted Greenhouse links ask for the text, because their pages carry no job data;
-   - drop the `ai_spend` table in a later release than v0.3.0 (non-negotiable 5).
+   - drop the `ai_spend` table now that v0.3.0 is out (its own migration PR, non-negotiable 5);
+   - revoke the old dev token on `localhost:5004/profile`. The dev runner is no longer pointed at
+     dev; `tools/apply-services.sh install http://localhost:5004` (with a dev token) switches back.
 6. **Dev databases from before 2026-11-20 midday:** 0009–0011 were deleted and renumbered (#72).
    One at 0010–0012 from then must go back to 0008 with the old files (`git checkout f7c0ea6`)
    before upgrading.
@@ -39,17 +41,28 @@ The web app makes no Claude calls. No crawling, no ranking. Setup and use: `docs
 ## Sessions
 
 **2026-11-23.**
-- **The first web-driven run held up** (run 1, 2026-11-20, a UPMC job on Taleo): `claude -p`
+- **v0.3.0 released and deployed** (#98, run 45253184143, approved by Sean). Production went from
+  migration 0008 to 0013. Then the runner and the `jobhunt` MCP server were moved to production
+  with a token Sean wrote.
+- **The first web-driven run had held up** (run 1, 2026-11-20, a UPMC job on Taleo): `claude -p`
   started under the runner with no first-run prompts, the MCP tools worked, two questions were
   answered on the page, the tailored PDF was fetched, and the browser was handed to Sean at
   Taleo's sign-in. It stopped there.
-- **Merged:** #95 (Dependabot: fastapi, pydantic, SQLAlchemy, ruff) and #97 (Rebuild my profile,
-  closing #96). droplet-infra #16 holds `ansible-core` below 2.22 and stops the root scan bumping
+- **Merged:** #95 (Dependabot: fastapi 0.165, pydantic, SQLAlchemy, ruff), #97 (Rebuild my
+  profile, closing #96), #100 (`apply-services.sh install` restarts a running runner, closing
+  #99). droplet-infra #16 holds `ansible-core` below 2.22 and stops the root scan bumping
   `infra/`; its #5 and #6 were closed.
 - **Cleaned up:** 16 merged local branches and the dead `59-workday`.
-- **Learned:** the VM's battery drain on the Mac is mostly k8s-lab's control plane (always busy)
-  and 12 containers across five projects; the guest itself sits about 97% idle.
-
+- **Learned:**
+  - `systemctl --user enable --now` leaves a running unit alone, so re-installing the runner kept
+    the old process on dev with production's token: a 401 every 5 seconds (#99).
+  - A `!`-prefixed command in Claude Code gets no keyboard input, so `read -s` silently writes
+    nothing. Secrets prompts go in Sean's own terminal.
+  - The deny on `~/.config/jobhunt/` covers `stat` too, so Sean checks the token file himself.
+  - The VM's drain on the Mac's battery is mostly k8s-lab's control plane (always busy) and 12
+    containers across five projects; the guest itself sits about 97% idle.
+  - The changelog's entries from earlier in a milestone go stale when the design moves (Mac to
+    VM): reread the whole section before releasing.
 
 **2026-11-20.**
 - **The aggregators were built, then closed unmerged** (#65, #45): Adzuna's free tier is 25 calls
@@ -113,23 +126,3 @@ The web app makes no Claude calls. No crawling, no ranking. Setup and use: `docs
     the old commit, not the branch name.
   - GeoNames was reachable from the VM in the evening (blocked in the morning on the work network).
 - **From now on:** no Claude attribution in commits or PR bodies (Sean, 2026-11-19).
-
-**2026-11-19 (afternoon).**
-- **0.3 started:** `job_runs` (#50), the worker (#51, closes #41), `employers` (#52) and the
-  registry at /admin/employers (#53, closes #43). The 0.3 PRs other than #50 were held, green,
-  until v0.2.0 shipped.
-- **v0.2.0 released and deployed** (#55, run 44591442318). The backup chain was run early
-  instead of waiting for the timers: the droplet dump started from the Mac, the VM pull, then
-  the Mac's restore drill. That closed #5 and #21 (#54).
-- **Learned:**
-  - Releases are cut from `main`, so the next milestone mustn't merge before the current one is
-    released. #50 slipped into 0.2.0; it's an empty table, so it's harmless.
-  - Merging `main` into a held branch after `[Unreleased]` became `[0.2.0]` put the branch's
-    changelog entry in the released section, with no conflict.
-  - `gh pr merge --delete-branch` on a stack's base **closes** the PR above it. Retarget first.
-  - Before a tenant's first nightly timer, `backup-export` hands over the pre-deploy dump, which
-    has no tables.
-  - A dump restores into a fresh Postgres only once the roles `apply` and `apply_app` exist
-    (RUNBOOK §6).
-  - `gh release create --target` takes a branch or a full SHA, not a short one.
-  - GeoNames is blocked from the Mac too, not just the VM.
