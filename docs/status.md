@@ -16,39 +16,40 @@ The web app makes no Claude calls. No crawling, no ranking. Setup and use: `docs
 
 ## Pick up here
 
-1. **The first real web-driven run, on dev.** The runner is installed and running on the VM,
-   pointed at `http://localhost:5004`. Sean:
-   - confirms his profile at `/profile/review` (built today by `/profile`: 4 roles, 30 skills,
-     1 degree; unconfirmed);
-   - fills in his answer bank;
-   - pastes a Lever or Ashby job;
-   - opens Screen Sharing and presses **Apply**.
-
-   Watch `tools/apply-services.sh logs`. Untested so far: `claude -p` itself under the service,
-   meaning first-run prompts, MCP startup and whether `--allowedTools mcp__jobhunt` covers the
-   server's tools. Also the first real look at a tailored PDF (its layout was only checked as
-   extracted text).
-2. **Release v0.3.0** once that run holds up (`VERSIONING.md`). It needs Sean's `production`
-   approval. Then:
+1. **Release v0.3.0** (the release PR moves `[Unreleased]` to `[0.3.0]`). It needs Sean's
+   `production` approval. Production goes from migration 0008 straight to 0013. Then:
    - Sean makes a token on **production's** Profile page and replaces `~/.config/jobhunt/token`;
    - `tools/apply-services.sh install` (no URL means production) points the runner at it;
    - `claude mcp` for `jobhunt` is re-added without `JOBHUNT_URL`.
-3. **After the release, the Mac session:** take `ANTHROPIC_API_KEY` and the two
+2. **After the release, the Mac session:** take `ANTHROPIC_API_KEY` and the two
    `AI_MONTHLY_BUDGET_*` keys out of the droplet's `.env` and `job-hunt-env-prod`. They're unused
    since #80, and harmless until then (`extra="ignore"`).
-4. **Small things:**
-   - the Profile page shows **Build my profile** only when there's no profile or it's stale, so
-     add a rebuild button;
+3. **Still untested end to end:** filling a real form and the Submit step. The one real run (UPMC,
+   Taleo) stopped at the site's sign-in page. A Lever or Ashby job has no account wall.
+4. **Open issues waiting on Sean's choice before criteria:** #94 (tailored resume in his own
+   format: is there a .docx?), #92 (the browser inside the web app: noVNC, a view-only picture, or
+   both), #93 (a calmer saved-job page: mock first).
+5. **Small things:**
    - pasted Greenhouse links ask for the text, because their pages carry no job data;
    - drop the `ai_spend` table in a later release than v0.3.0 (non-negotiable 5).
-5. **Dev databases from before 2026-11-20 midday:** 0009–0011 were deleted and renumbered (#72).
+6. **Dev databases from before 2026-11-20 midday:** 0009–0011 were deleted and renumbered (#72).
    One at 0010–0012 from then must go back to 0008 with the old files (`git checkout f7c0ea6`)
    before upgrading.
-6. **The local branch `59-workday`** (unpushed, `6e14af9`) is dead: delete it when Sean OKs.
-7. **droplet-infra's Dependabot:** #5 and #6 there bump `ansible-core` to 2.22, which breaks on
-   the VM's Python 3.12. Close them and exclude `infra/` the way Job Hunt's #38 did.
 
 ## Sessions
+
+**2026-11-23.**
+- **The first web-driven run held up** (run 1, 2026-11-20, a UPMC job on Taleo): `claude -p`
+  started under the runner with no first-run prompts, the MCP tools worked, two questions were
+  answered on the page, the tailored PDF was fetched, and the browser was handed to Sean at
+  Taleo's sign-in. It stopped there.
+- **Merged:** #95 (Dependabot: fastapi, pydantic, SQLAlchemy, ruff) and #97 (Rebuild my profile,
+  closing #96). droplet-infra #16 holds `ansible-core` below 2.22 and stops the root scan bumping
+  `infra/`; its #5 and #6 were closed.
+- **Cleaned up:** 16 merged local branches and the dead `59-workday`.
+- **Learned:** the VM's battery drain on the Mac is mostly k8s-lab's control plane (always busy)
+  and 12 containers across five projects; the guest itself sits about 97% idle.
+
 
 **2026-11-20.**
 - **The aggregators were built, then closed unmerged** (#65, #45): Adzuna's free tier is 25 calls

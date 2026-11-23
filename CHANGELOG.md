@@ -6,6 +6,13 @@ and why it matters, not what the diff says.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-23
+
+Paste a job, press Apply. Job Hunt saves the posting, Claude Code on the VM tailors Sean's resume
+to it and fills in the application in a browser he watches, and he clicks Submit himself. The web
+app checks every line Claude sends against his resume and confirmed profile, and makes no Claude
+calls of its own.
+
 Job Hunt is now Sean's alone, and the only way jobs get in is the link he pastes: no crawling,
 no ranking (plan §10, decisions 7, 8 and 10). The discovery built earlier in 0.3 (an employer
 registry, a nightly crawl of Greenhouse, Lever and Ashby boards, and a Greater Pittsburgh filter)
@@ -36,7 +43,7 @@ never shipped and has been removed.
   the oldest one with an approved resume and nothing recorded yet. What Claude learns about a
   site's application flow is kept as a note and handed to the next application on that site, so
   it gets faster. `tools/jobhunt_mcp.py` gives Claude Code all of this as tools: a small MCP
-  server with no dependencies, reading the access token from the Mac's Keychain.
+  server with no dependencies, reading the access token from a file only Sean can read.
 - Tailored resumes (#73). In a Claude Code session, Claude chooses which lines of Sean's resume
   lead for one saved job and sends them to Job Hunt, which checks every line before making a PDF.
   Roles, titles and dates always come from his confirmed profile. A bullet must be in his resume
@@ -45,7 +52,7 @@ never shipped and has been removed.
   real text, which applicant tracking systems can read. It's stored with the job, and it's only
   used to apply once he approves it, on the job's page or in the session. A new version needs
   approving again.
-- Access tokens and a small JSON API (#74), so Claude Code on Sean's Mac can work with Job Hunt:
+- Access tokens and a small JSON API (#74), so Claude Code can work with Job Hunt:
   list his saved jobs, fetch everything for one (the posting, his resume's text, his confirmed
   profile and his answer bank), and add an answer he gave during an application to the answer
   bank, checked the way the answers page checks it. Tokens are made on the Profile page, shown
@@ -60,8 +67,7 @@ never shipped and has been removed.
   posting's text. Job Hunt never opens LinkedIn or Indeed links, stops at a bot check rather than
   getting round it, and only opens pages on the public internet, checking every redirect. Saved
   jobs are yours alone.
-- A `worker` service (#41) that runs scheduled jobs outside the web app: it's where tailoring
-  and other background work will run. Each job runs once a day at its time in New York time; if
+- A `worker` service (#41) that runs scheduled jobs outside the web app. Each job runs once a day at its time in New York time; if
   the server was down for a few nights, it runs once when it's back, not once per missed night,
   and two workers can never run the same job at once. A job that fails is recorded and logged, and
   the others still run. The admin page lists each job with its last run and how it went. The first
@@ -70,11 +76,10 @@ never shipped and has been removed.
 ### Changed
 - The sign-in page no longer says "Job Hunt is invite only. Ask Sean for an invite." (#67). Job
   Hunt is Sean's alone, and the page shouldn't invite strangers to ask, or name him.
-- Building the profile from a resume moved to Claude Code (plan §10 decision 11). On Sean's Mac,
-  `/profile` reads his resume and sends what it found to Job Hunt, which keeps only items whose
-  quoted line really is in the resume, lists what it dropped, and waits for him to confirm the
-  profile on the review page as before. The Profile page's Build button is gone; it says to run
-  `/profile` instead.
+- Building the profile from a resume moved to Claude Code (plan §10 decision 11). Build my profile
+  queues a run on the VM, where `/profile` reads his resume and sends what it found to Job Hunt,
+  which keeps only items whose quoted line really is in the resume, lists what it dropped, and
+  waits for him to confirm the profile on the review page as before.
 
 ### Removed
 - The app's own Claude calls, and with them the Anthropic API key, the monthly AI budgets and the
@@ -154,6 +159,7 @@ The skeleton milestone: an empty app you can log in to, deployed at `apply.seand
   on droplet-infra's host role pinned by SHA, with an LXD test. `RUNBOOK.md` covers first-time
   setup, the database role, deploys, backups and restore.
 
-[Unreleased]: https://github.com/CaddisMaster/job-hunt/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/CaddisMaster/job-hunt/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/CaddisMaster/job-hunt/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/CaddisMaster/job-hunt/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/CaddisMaster/job-hunt/releases/tag/v0.1.0
