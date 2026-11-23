@@ -39,6 +39,8 @@ install() {
   sed -e "s#@REPO@#$REPO#g" -e "s#@URL@#$url#g" "$HERE/systemd/jobhunt-runner.service.in" >"$USER_UNITS/jobhunt-runner.service"
   systemctl --user daemon-reload
   echo "  The runner talks to $url"
+  # enable --now leaves a running runner alone, so one already running would keep the old URL.
+  systemctl --user try-restart jobhunt-runner.service
   systemctl --user enable --now "${UNITS[@]}" 2>/dev/null
   status
   echo "  From the Mac: ssh -N -L 5901:localhost:5901 sean@jupiter, then open vnc://localhost:5901"
